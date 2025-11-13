@@ -1,0 +1,1002 @@
+     <!-- app-header -->
+     <header class="app-header header sticky container-background">
+
+        <!-- Start::main-header-container -->
+        <div class="main-header-container container-fluid glass-card">
+
+            <!-- Start::header-content-left -->
+            <div class="header-content-left align-items-center">
+
+                <div class="header-element">
+                    <div style="        padding: 0.85rem 0;
+                        display: block;">
+                        <a routerLink="/datamplify/home" class="header-logo">
+                            <img *ngIf="isPublicUrl" src="./assets/images/brand/datamplify_white.png" alt="logo" class="public-logo-header">
+                        </a>
+                    </div>
+                  
+
+                    <div class="horizontal-logo">
+                        <a routerLink="/dashboard" class="header-logo">
+                            <!-- <img *ngIf="isPublicUrl" src="./assets/images/brand/insightApps-logo.png" alt="logo" class="desktop-dark logo-width"> -->
+                            <img src="./assets/images/brand/datamplify_white.png" style="height: 40px;" alt="logo" class="desktop-logo">
+                            <img src="./assets/images/brand/datamplify_white.png" alt="logo" class="toggle-logo mobile-icon-public">
+                            <img src="./assets/images/brand/datamplify_white.png" style="height: 40px;" alt="logo" class="desktop-dark">
+                            <img src="./assets/images/brand/datamplify_white.png" alt="logo" class="toggle-dark">
+                        </a>
+                    </div>                            
+                </div>
+                <!-- <div class="main-sidebar-header">
+                    <a routerLink="/insights/home" class="header-logo">
+                        <img *ngIf="isPublicUrl" src="./assets/images/brand/insightApps-logo.png" alt="logo" class="desktop-dark logo-width">
+
+                    </a>
+                  </div> -->
+                <!-- Start::header-element -->
+                <div *ngIf="!isPublicUrl" class="header-element">
+                    <!-- Start::header-link -->
+                   <a href="javascript:void(0);" class="sidemenu-toggle header-link" data-bs-toggle="sidebar"(click)="toggleSidebar()"
+                    >
+                        <span class="open-toggle">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="header-link-icon"
+                                viewBox="0 0 24 24">
+                                <path d="M24 0v24H0V0h24z" fill="none" opacity=".87" />
+                                <path
+                                    d="M18.41 16.59L13.82 12l4.59-4.59L17 6l-6 6 6 6 1.41-1.41zM6 6h2v12H6V6z" />
+                            </svg>
+                        </span>
+                        <span class="close-toggle">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="header-link-icon" viewBox="0 0 24 24"
+                                fill="#000000">
+                                <path d="M0 0h24v24H0V0z" fill="none" />
+                                <path
+                                    d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
+                            </svg>
+                        </span>
+                    </a> 
+                    <!-- End::header-link -->
+                </div>
+                <!-- End::header-element -->
+
+
+                
+      
+            
+              
+                <!-- <div class="main-header-center  d-none d-lg-block  header-link">
+                    <input type="text" class="form-control" id="typehead" placeholder="Search for results..."
+                        autocomplete="off" (click)="SearchHeader()" [(ngModel)]="text" [ngModelOptions]="{standalone: true}"
+                        (keyup)="Search(text)">
+                    <button class="btn pe-1" (click)="SearchHeader()"><i class="fe fe-search" aria-hidden="true"></i></button>
+                    <div id="headersearch" class="header-search">
+                        <div class="p-3">
+                            <div class="">
+                                <p class="fw-semibold text-muted mb-2 fs-13">Recent Searches</p>
+                                <div class="ps-2">
+                                    <a href="javascript:void(0);" class="search-tags me-2"><i
+                                            class="fe fe-search me-3"></i>People<span></span></a>
+                                    <a href="javascript:void(0);" class="search-tags me-2"><i
+                                            class="fe fe-search me-3"></i>Pages<span></span></a>
+                                    <a href="javascript:void(0);" class="search-tags me-2"><i
+                                            class="fe fe-search me-2"></i>Articles<span></span></a>
+                                </div>
+                            </div>
+                            @if("menuItems?.length>0"){
+                                    <div class="mt-3">
+                                        <p class="fw-semibold text-muted mb-2 fs-13">Apps and pages</p>
+                                    <ul class="ps-2" (click)="clearSearch()">
+
+                                        @for(menuItem of menuItems | slice:0:5;track $index){
+                                            <li class="p-1 d-flex align-items-center text-muted mb-2 search-app"  [routerLink]="menuItem?.path" (click)="clearSearch()">
+                                                <a [routerLink]="menuItem?.path"><span><i
+                                                            class='fa fa-angle-double-right me-2'></i>{{menuItem?.title}}</span></a>
+                                            </li>
+                                        }
+                                        <li class="p-1 d-flex align-items-center text-muted mb-2 search-app">
+                                            <a routerLink="/adminui/full-calendar"><span><i
+                                                        class='bi bi-calendar me-2 fs-14 bg-primary-transparent avatar rounded-circle '></i>Calendar</span></a>
+                                        </li>
+                                        <li class="p-1 d-flex align-items-center text-muted mb-2 search-app">
+                                            <a routerLink="/pages/mail-inbox"><span><i
+                                                        class='bi bi-envelope me-2 fs-14 bg-primary-transparent avatar rounded-circle'></i>Mail</span></a>
+                                        </li>
+                                        <li class="p-1 d-flex align-items-center text-muted mb-2 search-app">
+                                            <a routerLink="/uikit/buttons"><span><i
+                                                        class='bi bi-dice-1 me-2 fs-14 bg-primary-transparent avatar rounded-circle '></i>Buttons</span></a>
+                                        </li>
+                                    </ul>
+                                </div>
+                                }
+                                @else{
+                                    <ng-template>
+                                        <ul class="ps-2">
+                                            <li class="p-1 d-flex align-items-center text-muted mb-2 search-app">
+                                                <a ><span><i
+                                                            class='fa fa-angle-double-right me-2'></i>No Search Result Found with "{{text}}"</span></a>
+                                            </li>
+                                         
+                                        </ul>
+                                      </ng-template>
+                                }
+                            <div class="mt-3">
+                                <p class="fw-semibold text-muted mb-2 fs-13">Links</p>
+                                <ul class="ps-2">
+                                    <li class="p-1 align-items-center text-muted mb-1 search-app">
+                                        <a href="javascript:void(0);"
+                                            class="text-primary"><u>http://spruko/html/spruko.com</u></a>
+                                    </li>
+                                    <li class="p-1 align-items-center text-muted mb-1 search-app">
+                                        <a href="javascript:void(0);"
+                                            class="text-primary"><u>http://spruko/demo/spruko.com</u></a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="py-3 border-top px-0">
+                            <div class="text-center">
+                                <a href="javascript:void(0);"
+                                    class="text-primary text-decoration-underline fs-15">View all</a>
+                            </div>
+                        </div>
+                    </div>
+                </div> -->
+         
+                <!-- header search -->
+
+                <div class="mt-2">
+                    <h4 class="gradient-text">Welcome back, {{userName}}</h4>
+                </div>
+            </div>
+            <!-- End::header-content-left -->
+
+    
+            <!-- End::header-content-right -->
+              <!-- Start::header-content-right -->
+              <div class="header-content-right">
+                <button class="navbar-toggler navresponsive-toggler d-lg-none ms-auto" type="button" (click)="collapse.toggle()"
+                [attr.aria-expanded]="!isCollapsed"
+                    data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent-4"
+                    aria-controls="navbarSupportedContent-4" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon fe fe-more-vertical"></span>
+                </button>
+                <div class="navbar navbar-collapse responsive-navbar p-0">
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent-4"   #collapse="ngbCollapse"
+                    [(ngbCollapse)]="isCollapsed">
+                        <div class="d-flex align-items-center">
+                            <!-- Start::header-element -->
+                            <!-- Start::country select collapse -->
+                            <!-- <div class="header-element country-dropdown dropdown-center"  ngbDropdown>
+                                <a href="javascript:void(0);" class="header-link dropdown-toggle" ngbDropdownToggle
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                    <img src="./assets/images/flags-img/us_flag.jpg"
+                                        class="rounded-circle header-link-icon" alt="img">
+                                </a>
+                                <div class="main-header-dropdown dropdown-menu dropdown-menu-end" ngbDropdownMenu
+                                    data-popper-placement="none">
+                                    <ul class="mb-0">
+                                        <li class="dropdown-item mb-1" ngbDropdownItem>
+                                            <div class="d-flex align-items-center">
+                                                <div class="pe-2">
+                                                    <img src="./assets/images/flags-img/india_flag.jpg"
+                                                        class="rounded-circle country-img" alt="img">
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <p class="mb-0 fs-15">India</p>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="dropdown-item mb-1" ngbDropdownItem>
+                                            <div class="d-flex align-items-center">
+                                                <div class="pe-2">
+                                                    <img src="./assets/images/flags-img/malaysia.jpg"
+                                                        class="rounded-circle country-img" alt="img">
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <p class="mb-0 fs-15">Malaysia</p>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="dropdown-item mb-1" ngbDropdownItem>
+                                            <div class="d-flex align-items-center">
+                                                <div class="pe-2">
+                                                    <img src="./assets/images/flags-img/italy_flag.jpg"
+                                                        class="rounded-circle country-img" alt="img">
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <p class="mb-0 fs-15">Italy</p>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="dropdown-item mb-1" ngbDropdownItem>
+                                            <div class="d-flex align-items-center">
+                                                <div class="pe-2">
+                                                    <img src="./assets/images/flags-img/argentina.jpg"
+                                                        class="rounded-circle country-img" alt="img">
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <p class="mb-0 fs-15">Argentina</p>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="dropdown-item active mb-1" ngbDropdownItem>
+                                            <div class="d-flex align-items-center">
+                                                <div class="pe-2">
+                                                    <img src="./assets/images/flags-img/us_flag.jpg"
+                                                        class="rounded-circle country-img" alt="img">
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <p class="mb-0 fs-15">USA</p>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="dropdown-item mb-1" ngbDropdownItem>
+                                            <div class="d-flex align-items-center">
+                                                <div class="pe-2">
+                                                    <img src="./assets/images/flags-img/turkey.jpg"
+                                                        class="rounded-circle country-img" alt="img">
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <p class="mb-0 fs-15">Turkey</p>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div> -->
+                            <!-- End::country select collapse --> 
+
+                           
+ <!-- Start::header-element -->
+ <div class="header-element header-theme-mode" >
+    <!-- Start::header-link|layout-setting -->
+    <a href="javascript:void(0);" class="header-link layout-setting">
+      <span
+        class="light-layout"
+        data-hs-theme-click-value="dark"
+        (click)="themeChange('dark', 'dark','dark')"
+      >
+        <!-- Start::header-link-icon -->
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="header-link-icon"
+          height="24"
+          viewBox="0 -960 960 960"
+          width="24"
+          ngbTooltip="Dark" container="body"
+        >
+          <path
+            d="M480-120q-150 0-255-105T120-480q0-150 105-255t255-105q14 0 27.5 1t26.5 3q-41 29-65.5 75.5T444-660q0 90 63 153t153 63q55 0 101-24.5t75-65.5q2 13 3 26.5t1 27.5q0 150-105 255T480-120Zm0-80q88 0 158-48.5T740-375q-20 5-40 8t-40 3q-123 0-209.5-86.5T364-660q0-20 3-40t8-40q-78 32-126.5 102T200-480q0 116 82 198t198 82Zm-10-270Z"
+          />
+        </svg>
+        <!-- End::header-link-icon -->
+      </span> 
+      <span class="dark-layout"
+        data-hs-theme-click-value="light"
+        (click)="themeChange('light', 'light','light')"
+      >
+        <!-- Start::header-link-icon -->
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="header-link-icon"
+          fill="currentColor"
+          height="24"
+          viewBox="0 -960 960 960"
+          width="24"
+          ngbTooltip="light" container="body"
+        >
+          <path
+            d="M480-360q50 0 85-35t35-85q0-50-35-85t-85-35q-50 0-85 35t-35 85q0 50 35 85t85 35Zm0 80q-83 0-141.5-58.5T280-480q0-83 58.5-141.5T480-680q83 0 141.5 58.5T680-480q0 83-58.5 141.5T480-280ZM200-440H40v-80h160v80Zm720 0H760v-80h160v80ZM440-760v-160h80v160h-80Zm0 720v-160h80v160h-80ZM256-650l-101-97 57-59 96 100-52 56Zm492 496-97-101 53-55 101 97-57 59Zm-98-550 97-101 59 57-100 96-56-52ZM154-212l101-97 55 53-97 101-59-57Zm326-268Z"
+          />
+        </svg>
+        <!-- End::header-link-icon -->
+      </span>
+    </a>
+    <!-- End::header-link|layout-setting -->
+  </div>
+  <!-- End::header-element -->
+
+                            <!-- Start::header-element -->
+                            <!-- <div class="header-element header-search ">
+                                Start::header-link
+                                <a href="javascript:void(0);" class="header-link d-lg-none d-block"
+                                    data-bs-toggle="modal" data-bs-target="#searchModal" (click)="SearchModal(searchModal)">
+                                    <i class="bi bi-search-alt-2   ps-0"></i>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="header-link-icon"
+                                        viewBox="0 0 24 24" width="24px">
+                                        <path d="M0 0h24v24H0V0z" fill="none" />
+                                        <path
+                                            d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                                    </svg>
+                                </a>
+                                End::header-link
+                            </div> -->
+                            <!-- End::header-element -->
+
+                            <!-- Start::header-element -->
+                            <div class="header-element dropdown-center cart-dropdown" ngbDropdown [autoClose]="'outside'">
+                                <!-- Start::header-link|dropdown-toggle -->
+                                <!-- <a href="javascript:void(0);" class="header-link dropdown-toggle" ngbDropdownToggle
+                                    data-bs-toggle="dropdown">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="header-link-icon"
+                                        viewBox="0 0 24 24">
+                                        <path d="M0 0h24v24H0V0z" fill="none" />
+                                        <path
+                                            d="M15.55 13c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.37-.66-.11-1.48-.87-1.48H5.21l-.94-2H1v2h2l3.6 7.59-1.35 2.44C4.52 15.37 5.48 17 7 17h12v-2H7l1.1-2h7.45zM6.16 6h12.15l-2.76 5H8.53L6.16 6zM7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
+                                    </svg>
+                                    <span class="badge bg-primary rounded-pill header-icon-badge"
+                                        id="cart-icon-badge">{{ cartItemCount }}</span>
+                                </a> -->
+                                <!-- End::header-link|dropdown-toggle -->
+                                <!-- Start::main-header-dropdown -->
+                                <!-- <div class="main-header-dropdown dropdown-menu dropdown-menu-end" ngbDropdownMenu
+                                    data-popper-placement="none">
+                                    <div class="p-3 border-bottom">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <p class="mb-0 fs-15 fw-semibold">Cart Items</p>
+                                            <span class="badge bg-secondary-transparent" id="cart-data">{{ cartItemCount }}
+                                                Items</span>
+                                        </div>
+                                    </div>
+                                    <ul class="mb-0 overflow-auto" id="header-cart-items-scroll">
+                                        <li class="dropdown-item" ngbDropdownItem (click)="handleCardClick($event)" id="row">
+                                            <div class="d-flex align-items-start cart-dropdown-item" >
+                                                <img src="./assets/images/products/1.jpg" alt="img"
+                                                    class="avatar avatar-md br-5 me-3">
+                                                <div class="flex-grow-1">
+                                                    <div
+                                                        class="d-flex align-items-start justify-content-between mb-0">
+                                                        <div class="mb-0 fs-14 fw-semibold">
+                                                            <a routerLink="/pages/ecommerce/shopping-cart" class="text-dark">SomeThing
+                                                                Phone</a>
+                                                        </div>
+                                                        <div>
+                                                            <span class="fs-15 mb-1">$1,299.00</span>
+                                                            <a href="javascript:void(0);"
+                                                                class="header-cart-remove float-end dropdown-item-close" (click)="removeRow('row')"><i
+                                                                    class="ti ti-trash"></i></a>
+                                                        </div>
+                                                    </div>
+                                                    <div
+                                                        class="min-w-fit-content d-flex align-items-start justify-content-between">
+                                                        <ul class="header-product-item">
+                                                            <li>Quantity: 1</li>
+                                                            <li>Size: XL</li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="dropdown-item" ngbDropdownItem   (click)="handleCardClick($event)" id="row1" >
+                                            <div class="d-flex align-items-start cart-dropdown-item">
+                                                <img src="./assets/images/products/2.jpg" alt="img"
+                                                    class="avatar avatar-md br-5 me-3">
+                                                <div class="flex-grow-1">
+                                                    <div
+                                                        class="d-flex align-items-start justify-content-between mb-0">
+                                                        <div class="mb-0 fs-14 text-dark fw-semibold">
+                                                            <a routerLink="/pages/ecommerce/shopping-cart" class="text-dark">Stop Watch</a>
+                                                        </div>
+                                                        <div>
+                                                            <span class="fs-15 mb-1">$179.29</span>
+                                                            <a href="javascript:void(0);"
+                                                                class="header-cart-remove float-end dropdown-item-close" (click)="removeRow('row1')"><i
+                                                                    class="ti ti-trash"></i></a>
+                                                        </div>
+                                                    </div>
+                                                    <div
+                                                        class="min-w-fit-content d-flex align-items-start justify-content-between">
+                                                        <ul class="header-product-item">
+                                                            <li>Quantity: 2</li>
+                                                            <li>Size: L</li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="dropdown-item" ngbDropdownItem (click)="handleCardClick($event)" id="row2">
+                                            <div class="d-flex align-items-start cart-dropdown-item">
+                                                <img src="./assets/images/products/1.jpg" alt="img"
+                                                    class="avatar avatar-md br-5 me-3">
+                                                <div class="flex-grow-1">
+                                                    <div
+                                                        class="d-flex align-items-start justify-content-between mb-0">
+                                                        <div class="mb-0 fs-14 text-dark fw-semibold">
+                                                            <a routerLink="/pages/ecommerce/shopping-cart" class="text-dark">Photo
+                                                                Frame</a>
+                                                        </div>
+                                                        <div>
+                                                            <span class="fs-15 mb-1">$29.00</span>
+                                                            <a href="javascript:void(0);"
+                                                                class="header-cart-remove float-end dropdown-item-close" (click)="removeRow('row2')"><i
+                                                                    class="ti ti-trash" ></i></a>
+                                                        </div>
+                                                    </div>
+                                                    <div
+                                                        class="min-w-fit-content d-flex align-items-start justify-content-between">
+                                                        <ul class="header-product-item">
+                                                            <li>Quantity: 5</li>
+                                                            <li>Size: M</li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="dropdown-item" ngbDropdownItem (click)="handleCardClick($event)" id="row3" >
+                                            <div class="d-flex align-items-start cart-dropdown-item">
+                                                <img src="./assets/images/products/3.jpg" alt="img"
+                                                    class="avatar avatar-md br-5 me-3">
+                                                <div class="flex-grow-1">
+                                                    <div
+                                                        class="d-flex align-items-start justify-content-between mb-0">
+                                                        <div class="mb-0 fs-14 text-dark fw-semibold">
+                                                            <a routerLink="/pages/ecommerce/shopping-cart" class="text-dark">Kikon
+                                                                Camera</a>
+                                                        </div>
+                                                        <div>
+                                                            <span class="fs-15 mb-1">$4,999.00</span>
+                                                            <a href="javascript:void(0);"
+                                                                class="header-cart-remove float-end dropdown-item-close" (click)="removeRow('row3')"><i
+                                                                    class="ti ti-trash"></i></a>
+                                                        </div>
+                                                    </div>
+                                                    <div
+                                                        class="min-w-fit-content d-flex align-items-start justify-content-between">
+                                                        <ul class="header-product-item">
+                                                            <li>Quantity: 2</li>
+                                                            <li>Size: XXL</li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="dropdown-item" ngbDropdownItem (click)="handleCardClick($event)" id="row4">
+                                            <div class="d-flex align-items-start cart-dropdown-item">
+                                                <img src="./assets/images/products/5.jpg" alt="img"
+                                                    class="avatar avatar-md br-5 me-3">
+                                                <div class="flex-grow-1">
+                                                    <div
+                                                        class="d-flex align-items-start justify-content-between mb-0">
+                                                        <div class="mb-0 fs-14 text-dark fw-semibold">
+                                                            <a routerLink="/pages/ecommerce/shopping-cart" class="text-dark">Canvas
+                                                                Shoes</a>
+                                                        </div>
+                                                        <div>
+                                                            <span class="fs-15 mb-1">$129.00</span>
+                                                            <a href="javascript:void(0);"
+                                                                class="header-cart-remove float-end dropdown-item-close" (click)="removeRow('row4')"><i
+                                                                    class="ti ti-trash"></i></a>
+                                                        </div>
+                                                    </div>
+                                                    <div
+                                                        class="min-w-fit-content d-flex align-items-start justify-content-between">
+                                                        <ul class="header-product-item">
+                                                            <li>Quantity: 4</li>
+                                                            <li>Size: XS</li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                    @if(!isCartEmpty){
+
+                                        <div class="p-3 empty-header-item border-top" >
+                                            <div class="d-grid">
+                                                <a routerLink="/pages/ecommerce/checkout" class="btn btn-primary">Proceed to
+                                                    checkout</a>
+                                            </div>
+                                        </div>
+                                    }
+                                    <div class="p-5 empty-item " [class.d-none]="!isCartEmpty">
+                                        <div class="text-center">
+                                            <span class="avatar avatar-xl rounded-2 bg-warning-transparent">
+                                                <i class="ri-shopping-cart-2-line fs-2"></i>
+                                            </span>
+                                            <h6 class="fw-bold mb-1 mt-3">Your Cart is Empty</h6>
+                                            <a routerLink="/pages/ecommerce/shop" class="btn btn-primary btn-wave btn-sm m-1"
+                                                data-abc="true">Back to Shop <i
+                                                    class="bi bi-arrow-right ms-1"></i></a>
+                                        </div>
+                                    </div>
+                                </div> -->
+                                <!-- End::main-header-dropdown -->
+                            </div>
+                            <!-- End::header-element -->
+
+                            <!-- Start::header-element -->
+                            <div class="header-element dropdown-center notifications-dropdown" ngbDropdown [autoClose]="'outside'">
+                                <!-- Start::header-link|dropdown-toggle -->
+                                <!-- <a href="javascript:void(0);" class="header-link dropdown-toggle" ngbDropdownToggle
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="header-link-icon"
+                                        viewBox="0 0 24 24">
+                                        <path d="M0 0h24v24H0V0z" fill="none" />
+                                        <path
+                                            d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z" />
+                                    </svg>
+                                    <span
+                                        class="badge bg-secondary rounded-pill header-icon-badge pulse pulse-secondary"
+                                        id="notification-icon-badge">{{ notificationCount }}</span>
+                                </a> -->
+                                <!-- End::header-link|dropdown-toggle -->
+                                <!-- Start::main-header-dropdown -->
+                                <!-- <div class="main-header-dropdown dropdown-menu dropdown-menu-end" ngbDropdownMenu
+                                    data-popper-placement="none">
+                                    <div class="p-3">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <p class="mb-0 fs-15 fw-semibold">Notifications</p>
+                                            <a href="javascript:void(0);" class="badge bg-secondary-transparent"
+                                                id="notifiation-data">{{ notificationCount }} Items</a>
+                                        </div>
+                                    </div>
+                                    <div class="dropdown-divider my-0"></div>
+                                    <ul class="list-unstyled mb-0" (click)="handleCardClick($event)">
+                                        <li class="dropdown-item mb-1" ngbDropdownItem id="not1">
+                                            <div class="d-flex align-items-start">
+                                                <div class="pe-2">
+                                                    <span class="avatar avatar-md bg-primary rounded-circle"><i
+                                                            class="ti ti-gift fs-18"></i></span>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <div
+                                                        class="d-flex align-items-start justify-content-between">
+                                                        <div>
+                                                            <a routerLink="/pages/notification-list"
+                                                                class="mb-0 fs-13 font-weight-semibold text-dark">Nile
+                                                                Robetz send to a HTML file for Upload</a>
+                                                            <div class="p-1 text-warning">
+                                                                <span class="fs-12 me-2"><i
+                                                                        class="bi bi-folder2-open me-1 fs-14"></i>HTML
+                                                                    File</span>
+                                                                <span class="fs-13"><i
+                                                                        class="bi bi-download"></i></span>
+                                                            </div>
+                                                        </div>
+                                                        <a href="javascript:void(0);"
+                                                            class="min-w-fit-content text-muted text-opacity-75 ms-1 dropdown-item-close1" (click)="removeNotify('not1')"><i
+                                                                class="ti ti-x fs-16"></i></a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="dropdown-item mb-1" ngbDropdownItem id="not2">
+                                            <div class="d-flex align-items-start">
+                                                <div class="pe-2">
+                                                    <span
+                                                        class="avatar avatar-md bg-secondary rounded-circle"><i
+                                                            class="ti ti-discount-2 fs-18"></i></span>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <div
+                                                        class="d-flex align-items-start justify-content-between">
+                                                        <div>
+                                                            <a routerLink="/pages/notification-list"
+                                                                class="mb-0 fs-13 font-weight-semibold text-dark">Conference
+                                                                meeting about client project</a>
+                                                            <div class="p-1">
+                                                                <span class="fs-11 text-muted me-3"><i
+                                                                        class="bi bi-calendar me-1"></i>Monday -
+                                                                    11:00 AM - 45 minutes</span>
+                                                            </div>
+                                                            <a routerLink="/pages/profile"
+                                                                class="d-flex align-items-center mt-1">
+                                                                <span class="avatar avatar-sm brround">
+                                                                    <img src="./assets/images/users/1.jpg"
+                                                                        class="brround" alt="img">
+                                                                </span>
+                                                                <span class="ms-2 fs-13 text-gray-600">Nile
+                                                                    Rebort</span>
+                                                            </a>
+                                                        </div>
+                                                        <a href="javascript:void(0);"
+                                                            class="min-w-fit-content text-muted text-opacity-75 ms-1 dropdown-item-close1" (click)="removeNotify('not2')"><i
+                                                                class="ti ti-x fs-16"></i></a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="dropdown-item mb-1" ngbDropdownItem id="not3">
+                                            <div class="d-flex align-items-start">
+                                                <div class="pe-2">
+                                                    <span class="avatar avatar-md bg-pink rounded-circle"><i
+                                                            class="ti ti-user-check fs-18"></i></span>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <div
+                                                        class="d-flex align-items-start justify-content-between">
+                                                        <a routerLink="/pages/notification-list"
+                                                            class="mb-0 fs-13 font-weight-semibold text-dark">Taylor
+                                                            invite to a design channel</a>
+                                                        <a href="javascript:void(0);"
+                                                            class="min-w-fit-content text-muted text-opacity-75 ms-1 dropdown-item-close1" (click)="removeNotify('not3')"><i
+                                                                class="ti ti-x fs-16"></i></a>
+                                                    </div>
+                                                    <div class="fs-12">
+                                                        <small class="text-muted fs-12">Hi, can i change my
+                                                            commission amount?</small>
+                                                        <div class="mt-2">
+                                                            <button type="button"
+                                                                class="btn btn-primary-light btn-sm me-1 fs-11">Accept</button>
+                                                            <button type="button"
+                                                                class="btn btn-danger-light btn-sm fs-11">Reject</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="dropdown-item mb-1" ngbDropdownItem id="not4">
+                                            <div class="d-flex align-items-start">
+                                                <div class="pe-2">
+                                                    <span class="avatar avatar-md bg-warning rounded-circle"><i
+                                                            class="ti ti-circle-check fs-18"></i></span>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <div
+                                                        class="d-flex align-items-start justify-content-between">
+                                                        <a routerLink="/pages/notification-list"
+                                                            class="mb-0 fs-13 font-weight-semibold text-dark">Order
+                                                            Placed <span class="text-primary">ID:
+                                                                #1116773</span></a>
+                                                        <a href="javascript:void(0);"
+                                                            class="min-w-fit-content text-muted text-opacity-75 ms-1 dropdown-item-close1" (click)="removeNotify('not4')"><i
+                                                                class="ti ti-x fs-16"></i></a>
+                                                    </div>
+                                                    <div
+                                                        class="d-flex align-items-center justify-conent-between fs-12">
+                                                        <span class="text-muted">Order Placed
+                                                            Successfully</span>
+                                                        <span
+                                                            class="align-self-end min-w-fit-content text-muted mg-s-5">12:46</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                    <div class="p-3 empty-header-item1" *ngIf="!isNotifyEmpty">
+                                        <div class="d-grid">
+                                            <a routerLink="/pages/notification-list" class="btn btn-primary">View All</a>
+                                        </div>
+                                    </div>
+                                    <div class="p-5 empty-item1 " [class.d-none]="!isNotifyEmpty">
+                                        <div class="text-center">
+                                            <span class="avatar avatar-xl rounded-2 bg-secondary-transparent">
+                                                <i class="ri-notification-off-line fs-2"></i>
+                                            </span>
+                                            <h6 class="fw-semibold mt-3">No New Notifications</h6>
+                                        </div>
+                                    </div>
+                                </div> -->
+                                <!-- End::main-header-dropdown -->
+                            </div>
+                            <!-- End::header-element -->
+
+                            <!-- Start::header-element -->
+                            <div class="header-element dropdown-center header-shortcuts-dropdown" ngbDropdown>
+                                <!-- Start::header-link|dropdown-toggle -->
+                                <!-- <a href="javascript:void(0);" class="header-link dropdown-toggle" ngbDropdownToggle
+                                    data-bs-toggle="dropdown" id="notificationDropdown" aria-expanded="false">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="header-link-icon"
+                                        viewBox="0 0 24 24">
+                                        <path d="M0 0h24v24H0V0z" fill="none" />
+                                        <path
+                                            d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z" />
+                                    </svg>
+                                </a> -->
+                                <!-- End::header-link|dropdown-toggle -->
+                                <!-- Start::main-header-dropdown -->
+                                <!-- <div class="main-header-dropdown header-shortcuts-dropdown dropdown-menu pb-0 dropdown-menu-end" ngbDropdownMenu
+                                    aria-labelledby="notificationDropdown">
+                                    <div class="p-3">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <p class="mb-0 fs-17 fw-semibold">Related Apps</p>
+                                        </div>
+                                    </div>
+                                    <div class="dropdown-divider my-0"></div>
+                                    <div class="main-header-shortcuts py-1 px-4" id="header-shortcut-scroll">
+                                        <div class="row">
+                                            <div class="col-4 p-1 mt-0">
+                                                <a routerLink="/adminui/chat">
+                                                    <div class="text-center p-3 related-app border rounded-2">
+                                                        <span>
+                                                            <i
+                                                                class="mdi mdi-message-outline text-primary fs-24"></i>
+                                                        </span>
+                                                        <span class="d-block fs-12 text-dark">Chat</span>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                            <div class="col-4 p-1 mt-0">
+                                                <a routerLink="/pages/file-manager/filemanager">
+                                                    <div class="text-center p-3 related-app border rounded-2">
+                                                        <span>
+                                                            <i
+                                                                class="mdi mdi-file-multiple-outline text-info fs-24"></i>
+                                                        </span>
+                                                        <span class="d-block fs-12 text-dark">Files</span>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                            <div class="col-4 p-1 mt-0">
+                                                <a routerLink="/adminui/full-calendar">
+                                                    <div class="text-center p-3 related-app border rounded-2">
+                                                        <span>
+                                                            <i
+                                                                class="mdi mdi-calendar-range-outline text-warning fs-24"></i>
+                                                        </span>
+                                                        <span class="d-block fs-12 text-dark">Calendar</span>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                            <div class="col-4 p-1 mt-0">
+                                                <a routerLink="/pages/extension/settings">
+                                                    <div class="text-center p-3 related-app border rounded-2">
+                                                        <span>
+                                                            <i class="mdi mdi-cog-outline text-info fs-24"></i>
+                                                        </span>
+                                                        <span class="d-block fs-12 text-dark">Settings</span>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                            <div class="col-4 p-1 mt-0">
+                                                <a routerLink="/pages/extension/faqs">
+                                                    <div class="text-center p-3 related-app border rounded-2">
+                                                        <span>
+                                                            <i
+                                                                class="mdi mdi-help-circle-outline text-success fs-24"></i>
+                                                        </span>
+                                                        <span class="d-block fs-12 text-dark">Help</span>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                            <div class="col-4 p-1 mt-0">
+                                                <a routerLink="/pages/profile">
+                                                    <div class="text-center p-3 related-app border rounded-2">
+                                                        <span>
+                                                            <i
+                                                                class="mdi mdi-account-outline text-primary fs-24"></i>
+                                                        </span>
+                                                        <span class="d-block fs-12 text-dark">Profile</span>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                            <div class="col-4 p-1 mt-0">
+                                                <a routerLink="/pages/extension/about-company">
+                                                    <div class="text-center p-3 related-app border rounded-2">
+                                                        <span>
+                                                            <i class="mdi mdi-phone text-primary fs-24"></i>
+                                                        </span>
+                                                        <span class="d-block fs-12 text-dark">Contact</span>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                            <div class="col-4 p-1 mt-0">
+                                                <a routerLink="/adminui/rating">
+                                                    <div class="text-center p-3 related-app border rounded-2">
+                                                        <span>
+                                                            <i
+                                                                class="mdi mdi-comment-quote-outline text-secondary fs-24"></i>
+                                                        </span>
+                                                        <span class="d-block fs-12 text-dark">Feeback</span>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                            <div class="col-4 p-1 mt-0">
+                                                <a routerLink="/authentication/login">
+                                                    <div class="text-center p-3 related-app border rounded-2">
+                                                        <span>
+                                                            <i class="mdi mdi-logout text-warning fs-24" (click)="logOut()"></i>
+                                                        </span>
+                                                        <span class="d-block fs-12 text-dark">Logout</span>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="p-3 border-top">
+                                        <div class="d-grid">
+                                            <a href="javascript:void(0);" class="btn btn-primary">View All</a>
+                                        </div>
+                                    </div>
+                                </div> -->
+                                <!-- End::main-header-dropdown -->
+                            </div>
+                            <!-- End::header-element -->
+
+                            <!-- Start::header-element -->
+                            <div class="header-element header-fullscreen" appFullscreen>
+                                <!-- Start::header-link -->
+                                <a  href="javascript:void(0);" class="header-link" (click)="toggleFullscreen()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" ngbTooltip="Full screen" container="body"
+                                        class="header-link-icon full-screen-open" viewBox="0 0 24 24"  [ngClass]="{ 'd-none': isFullscreen }">
+                                        <path d="M0 0h24v24H0V0z" fill="none" />
+                                        <path
+                                            d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
+                                    </svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" ngbTooltip="Exit full screen" container="body"
+                                        class="header-link-icon full-screen-close d-none" viewBox="0 0 24 24"
+                                        width="24px" fill="none"  [ngClass]="{ 'd-none': !isFullscreen }">
+                                        <path d="M0 0h24v24H0V0z" fill="none" />
+                                        <path
+                                            d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z" />
+                                    </svg>
+                                </a>
+                                <!-- End::header-link -->
+                            </div>
+                            <!-- End::header-element -->
+                            <div *ngIf="isPublicUrl" class="header-element">
+                                <!-- Start::header-link -->
+                                <a  href="javascript:void(0);" class="header-link" (click)="refreshPublicDashboard()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" 
+                                    class="header-link-icon refresh-icon" viewBox="0 0 24 24" [ngClass]="{ 'd-none': isFullscreen }">
+                                 <path d="M0 0h24v24H0V0z" fill="none" />
+                                 <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
+                               </svg>
+                                </a>
+                                <a  href="javascript:void(0);" class="header-link" (click)="downloadPublicDashbaord()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" 
+                                    class="header-link-icon " viewBox="0 0 24 24">
+                                 <path d="M0 0h24v24H0V0z" fill="none" />
+                                 <path d="M5 20h14v-2H5v2zm7-18v10l-4-4H7l5 5 5-5h-2l-4 4V2z" />
+                               </svg>
+                                </a>
+                                <!-- End::header-link -->
+                            </div>
+                            <!-- Start::header-element|main-profile-user -->
+                            <!-- <div *ngIf="!isPublicUrl" class="header-element main-profile-user">
+                                <a href="javascript:void(0);" class="header-link d-flex align-items-center"
+                                    id="mainHeaderProfile" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span class="me-2">
+                                        <img src="./assets/images/users/21.jpg" alt="img" width="30"
+                                            height="30" class="rounded-circle">
+                                    </span>
+                                    <div class="d-xl-block d-none lh-1">
+                                        <h6 class="fs-13 font-weight-semibold mb-0">{{userName}}</h6>
+                                    </div>
+                                </a>
+                            </div> -->
+
+
+                        </div>
+                    </div>
+                </div>
+                <!-- Start::header-element -->
+                <div *ngIf="!isPublicUrl" class="header-element" ngbDropdown container="body">
+                    <!-- Start::header-link|switcher-icon -->
+                    <a href="javascript:void(0);" class="header-link dropdown-toggle" ngbDropdownToggle>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                            class="header-link-icon fa-spin">
+                            <path d="M0 0h24v24H0V0z" fill="none" />
+                            <path
+                                d="M19.43 12.98c.04-.32.07-.64.07-.98 0-.34-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.09-.16-.26-.25-.44-.25-.06 0-.12.01-.17.03l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.06-.02-.12-.03-.18-.03-.17 0-.34.09-.43.25l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98 0 .33.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.09.16.26.25.44.25.06 0 .12-.01.17-.03l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.06.02.12.03.18.03.17 0 .34-.09.43-.25l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zm-1.98-1.71c.04.31.05.52.05.73 0 .21-.02.43-.05.73l-.14 1.13.89.7 1.08.84-.7 1.21-1.27-.51-1.04-.42-.9.68c-.43.32-.84.56-1.25.73l-1.06.43-.16 1.13-.2 1.35h-1.4l-.19-1.35-.16-1.13-1.06-.43c-.43-.18-.83-.41-1.23-.71l-.91-.7-1.06.43-1.27.51-.7-1.21 1.08-.84.89-.7-.14-1.13c-.03-.31-.05-.54-.05-.74s.02-.43.05-.73l.14-1.13-.89-.7-1.08-.84.7-1.21 1.27.51 1.04.42.9-.68c.43-.32.84-.56 1.25-.73l1.06-.43.16-1.13.2-1.35h1.39l.19 1.35.16 1.13 1.06.43c.43.18.83.41 1.23.71l.91.7 1.06-.43 1.27-.51.7 1.21-1.07.85-.89.7.14 1.13zM12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" />
+                        </svg>
+                    </a>
+                    <!-- End::header-link|switcher-icon -->
+                    <ul class="dropdown-menu glass-dropdown pt-0 overflow-hidden dropdown-menu-end mt-1" ngbDropdownMenu
+                        aria-labelledby="mainHeaderProfile">
+                        <!-- <li><a ngbDropdownItem class="dropdown-item" routerLink="/pages/profile"><i
+                                                                    class="ti ti-user-circle fs-18 me-2 op-7"></i>Profile</a></li>
+                                                        <li><a ngbDropdownItem class="dropdown-item" routerLink="/dashboard"><i
+                                                                    class="ti ti-inbox fs-18 me-2 op-7"></i>Dashboard</a></li>
+                                                        <li><a ngbDropdownItem class="dropdown-item border-block-end" routerLink="/pages/extension/blog"><i
+                                                                    class="ti ti-clipboard-check fs-18 me-2 op-7"></i>Posts &
+                                                                Activities</a></li>
+                                                        <li><a ngbDropdownItem class="dropdown-item" routerLink="/pages/extension/settings"><i
+                                                                    class="ti ti-adjustments-horizontal fs-18 me-2 op-7"></i>Settings
+                                                                & Privacy</a></li>
+                                                        <li><a ngbDropdownItem class="dropdown-item border-block-end" routerLink="/pages/extension/faqs"><i
+                                                                    class="ti ti-help fs-18 me-2 op-7"></i>Help Center</a></li>
+                                                        <li>
+                                                            <hr class="dropdown-divider my-0">
+                                                        </li>
+                                                        <li><a ngbDropdownItem class="dropdown-item" routerLink="/authentication/register"><i
+                                                                    class="ti ti-user-plus fs-18 me-2 op-7"></i>Add Another
+                                                                Account</a></li> -->
+                        <li *ngIf="viewUsers"><a ngbDropdownItem class="dropdown-item" (click)="routeToUserDashboard()"><i
+                                    class="ti ti-user-circle fs-18 me-2 op-7"></i>List Users</a></li>
+                        <li *ngIf="viewRoles"><a ngbDropdownItem class="dropdown-item" (click)="routeToRolesDashboard()"><i
+                                    class="ti ti-clipboard-check fs-18 me-2 op-7"></i>List Roles</a></li>
+                    
+                        <li><a ngbDropdownItem class="dropdown-item" (click)="routeToConfigurePage()"><i
+                                    class="ti ti-settings fs-18 me-2 op-7"></i>Configure</a></li>
+                        <!-- <li><a ngbDropdownItem class="dropdown-item" (click)="routeToUpdatePasswordPage()"><i
+                                    class="ti ti-lock fs-18 me-2 op-7"></i>Update password</a></li> -->
+                        <li><a ngbDropdownItem class="dropdown-item" (click)="logOut()"><i class="ti ti-power fs-18 me-2 op-7"></i>Sign
+                                Out</a></li>
+                        <li>
+                            <hr class="dropdown-divider my-0">
+                        </li>
+                        <!-- <li class="d-flex justify-content-center p-2">
+                            <span><a class="fs-12 px-2 border-end" href="javascript:void(0);">Privacy Policy</a></span>
+                            <span><a class="fs-12 px-2 border-end" href="javascript:void(0);">Terms</a></span>
+                            <span><a class="fs-12 px-2 cursor" (click)="routehelpGuide()">Help</a></span>
+                        </li> -->
+                    </ul>
+                </div>
+                <!-- End::header-element -->
+
+            </div>
+            <!-- End::header-content-right -->
+        </div>
+        <!-- End::main-header-container -->
+
+    </header>
+    <!-- /app-header -->
+    <ng-template #searchModal let-modal>
+
+        <!-- <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModal" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content"> -->
+                    <div class="modal-body">
+                        <span class="input-group">
+                            <input type="search" class="form-control px-2 " placeholder="Search..."
+                                aria-label="Username" (click)="SearchHeader()" [(ngModel)]="text" [ngModelOptions]="{standalone: true}"
+                                (keyup)="Search(text)">
+                            <a href="javascript:void(0);" class="input-group-text bg-primary text-white"
+                                id="Search-Grid"><i class="fe fe-search header-link-icon tx-fixed-white fs-18"></i></a>
+                        </span>
+                        <div class="mt-3">
+                            <div class="">
+                                <p class="fw-semibold text-muted mb-2 fs-13">Recent Searches</p>
+                                <div class="ps-2">
+                                    <a href="javascript:void(0);" class="search-tags me-2"><i
+                                            class="fe fe-search me-2"></i> People<span></span></a>
+                                    <a href="javascript:void(0);" class="search-tags me-2"><i
+                                            class="fe fe-search me-2"></i>Pages<span></span></a>
+                                    <a href="javascript:void(0);" class="search-tags me-2"><i
+                                            class="fe fe-search me-2"></i>Articles<span></span></a>
+                                </div>
+                            </div>
+                            @if("menuItems?.length>0"){
+                                <div class="mt-3">
+                                    <p class="fw-semibold text-muted mb-2 fs-13">Apps and pages</p>
+                                <ul class="ps-2" (click)="clearSearch()" (click)="modal.close('cross click')">
+
+                                    @for(menuItem of menuItems | slice:0:5;track $index){
+                                        <li class="p-1 d-flex align-items-center text-muted mb-2 search-app"  [routerLink]="menuItem?.path" (click)="clearSearch()">
+                                            <a [routerLink]="menuItem?.path"><span><i
+                                                        class='fa fa-angle-double-right me-2'></i>{{menuItem?.title}}</span></a>
+                                        </li>
+                                    }
+                                    <li class="p-1 d-flex align-items-center text-muted mb-2 search-app">
+                                        <a routerLink="/adminui/full-calendar"><span><i
+                                                    class='bi bi-calendar me-2 fs-14 bg-primary-transparent avatar rounded-circle '></i>Calendar</span></a>
+                                    </li>
+                                    <li class="p-1 d-flex align-items-center text-muted mb-2 search-app">
+                                        <a routerLink="/pages/mail-inbox"><span><i
+                                                    class='bi bi-envelope me-2 fs-14 bg-primary-transparent avatar rounded-circle'></i>Mail</span></a>
+                                    </li>
+                                    <li class="p-1 d-flex align-items-center text-muted mb-2 search-app">
+                                        <a routerLink="/uikit/buttons"><span><i
+                                                    class='bi bi-dice-1 me-2 fs-14 bg-primary-transparent avatar rounded-circle '></i>Buttons</span></a>
+                                    </li>
+                                </ul>
+                            </div>
+                            }
+                            <div class="mt-3">
+                                <p class="fw-semibold text-muted mb-2 fs-13">Links</p>
+                                <ul class="ps-2">
+                                    <li class="p-1 align-items-center  mb-1 search-app">
+                                        <a href="javascript:void(0);"
+                                            class="text-primary"><u>http://spruko/html/spruko.com</u></a>
+                                    </li>
+                                    <li class="p-1 align-items-center mb-1 search-app">
+                                        <a href="javascript:void(0);"
+                                            class="text-primary"><u>http://spruko/demo/spruko.com</u></a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer d-block">
+                        <div class="text-center">
+                            <a href="javascript:void(0);" class="text-primary text-decoration-underline fs-15">View all
+                                results</a>
+                        </div>
+                    </div>
+                <!-- </div>
+            </div>
+          </div> -->
+    </ng-template>
+            
+

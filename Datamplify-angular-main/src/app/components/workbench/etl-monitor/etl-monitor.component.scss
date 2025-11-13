@@ -1,0 +1,222 @@
+.table td {
+    font-size: 14px;
+}
+
+.table thead th {
+    color: #fff;
+    font-size: 14px;
+    background-color: var(--primary-color);
+}
+
+.echart {
+    width: 100%;
+    height: 300px;
+    /* Adjusted from 300px if needed */
+}
+
+.echart1 {
+    /* Sidebar chart */
+    width: 100%;
+    height: 180px;
+    /* Adjusted from 215px */
+}
+
+#resize-container {
+    display: flex;
+    width: 100%;
+    // position: absolute;
+    background: var(--custom-white);
+    /* Consider adding a min-height if content can be very short */
+    /* min-height: calc(100vh - 200px); /* Example: viewport height minus header/footer */
+}
+
+#sidebar {
+    border-right: 1px solid #dee2e6;
+    width: 360px;
+    min-width: 250px;
+    /* Increased min-width for more content */
+    max-width: 40%;
+    /* Adjusted max-width */
+    flex: 0 0 auto;
+    position: relative;
+    overflow-y: auto;
+    /* Allow sidebar to scroll if content overflows */
+}
+
+#divider {
+    width: 0px;
+    /* Slightly wider for easier grabbing */
+    cursor: col-resize;
+    // background-color: #e9ecef;
+    /* Lighter divider */
+    align-self: stretch;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#divider::before {
+    /* Optional: visual cue for draggability */
+    content: "...";
+    color: #adb5bd;
+    font-size: 1.5rem;
+    line-height: 0;
+    transform: rotate(90deg);
+}
+
+#main {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    /* Allow main content to scroll */
+}
+
+.row {
+    flex-wrap: nowrap !important;
+}
+
+.resizable-left {
+    min-width: 100px;
+    flex-shrink: 0;
+}
+
+.resizable-right {
+    min-width: 200px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+
+    /* Adjusted breakpoint for better mobile view */
+    .row {
+        flex-wrap: wrap !important;
+    }
+
+    #sidebar,
+    #main {
+        min-width: 100%;
+        max-width: 100%;
+        flex: 1 0 100%;
+    }
+
+    #divider {
+        display: none;
+        /* Hide divider on small screens */
+    }
+
+    .d-md-flex {
+        /* Ensure headers for tables also stack */
+        flex-wrap: wrap !important;
+    }
+
+    .col-md-2.clickable,
+    .col-md-3.clickable,
+    .col-md-1.clickable {
+        width: 50% !important;
+        /* Make sortable headers take more space on mobile */
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Custom utility class */
+.bg-danger-light {
+    background-color: rgba(220, 53, 69, 0.1) !important;
+    /* Light red for failed rows */
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.clickable:hover {
+    color: var(--bs-primary-dark) !important;
+    /* Or your theme's hover color */
+}
+
+.text-break {
+    word-break: break-all;
+}
+
+// Ensure active state for run list items is noticeable
+.list-group-item.active {
+  background-color: #e9ecef; // A light grey or your theme's active color
+  border-color: #ced4da;
+  color: #212529; // Ensure text is readable
+  // If you want to keep the primary link color for the run ID:
+  // a.link-primary { color: var(--bs-primary) !important; }
+}
+
+// Smaller tabs for the details pane
+// .nav-sm .nav-link {
+//   font-size: 0.875rem; /* 14px if base is 16px */
+//   padding: 0.4rem 0.8rem;
+// }
+
+.log-container {
+  white-space: pre; // Default to no wrap
+  &.text-nowrap { // This class is applied conditionally
+    white-space: nowrap;
+  }
+  // More precise coloring for log levels if Bootstrap emphasis classes aren't enough
+  .log-level-INFO { color: #17a2b8; } // Example: Bootstrap info color
+  .log-level-WARNING { color: #ffc107; } // Example: Bootstrap warning color
+  .log-level-ERROR { color: #dc3545; } // Example: Bootstrap danger color
+  .log-level-DEBUG { color: #6c757d; } // Example: Bootstrap secondary color
+
+  .log-line-number {
+    display: inline-block;
+    width: 3em; // Adjust as needed
+    text-align: right;
+    opacity: 0.7;
+  }
+}
+
+::ng-deep #taskLogs .tab-pane {
+    height: 100%;
+}
+
+.main-container {
+  background: var(--custom-white);
+//   border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+//   overflow: hidden;
+//   height: 100%;
+}
+
+.glass-card .card-header {
+        background: transparent;
+    }
+
+    .glass-card .tabs-menu-boxed .panel-tabs {
+        border-bottom: none !important;
+    }
+
+    .glass-card .tabs-menu-boxed .nav-link {
+        border: 0;
+        border-radius: 8px !important;
+        color: #958e8e;
+        // background-color: rgba(0,0,0,0.2);
+        margin-right: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .glass-card .tabs-menu-boxed .nav-link.active {
+        color: #fff;
+        font-weight: 600;
+        box-shadow: 0 2px 10px rgba(54, 124, 255, 0.4);
+    }
+    
+    .glass-card .tabs-menu-boxed .nav-link:not(.active):hover {
+       background-color: rgba(255,255,255,0.1);
+       color: #fff;
+    }
+
+    .glass-card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  // border-radius: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  color: var(--default-text-color);
+}

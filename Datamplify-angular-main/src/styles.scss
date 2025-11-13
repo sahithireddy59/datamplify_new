@@ -1,0 +1,148 @@
+@import "../node_modules/@angular/material/prebuilt-themes/indigo-pink.css";
+/* You can add global styles to this file, and also import other style files */
+@import "./assets/css/style.css";
+@import"./assets/css/icons.css";
+@import "../node_modules/@angular/cdk/overlay-prebuilt.css";
+// @import "~@angular/material/prebuilt-themes/deeppurple-amber.css";
+@import '../node_modules/ngx-owl-carousel-o/lib/styles/prebuilt-themes/owl.carousel.css';
+@import '../node_modules/dropzone/dist/dropzone.css';
+@import "../node_modules/ngx-toastr/toastr.css";
+
+@import "../node_modules/@ng-select/ng-select/themes/default.theme.css";
+@import "../node_modules/leaflet/dist/leaflet.css";
+//keen-slider
+@import "../node_modules/keen-slider/keen-slider.min.css";
+//swiperjs
+@import "swiper/scss";
+@import "swiper/scss/navigation";
+@import "swiper/scss/pagination";
+// @import '../node_modules/leaflet/dist/leaflet.css';
+// Full calendar
+@import "../node_modules/angular-calendar/scss/angular-calendar.scss";
+// ngx bar rating
+@import "../node_modules/ngx-bar-rating/themes/br-default-theme.scss";
+@import "../node_modules/ngx-bar-rating/themes/br-horizontal-theme.scss";
+@import "../node_modules/ngx-bar-rating/themes/br-vertical-theme.scss";
+@import "../node_modules/ngx-bar-rating/themes/br-movie-theme.scss";
+@import "../node_modules/ngx-bar-rating/themes/br-square-theme.scss";
+@import "../node_modules/ngx-bar-rating/themes/br-stars-theme.scss";
+
+//flatpicker
+@import "../node_modules/flatpickr/dist/flatpickr.css";
+//ng2-nouislider
+@import "nouislider/dist/nouislider.css";
+@import "../node_modules/filepond/dist/filepond.css";
+// @import "../node_modules/ngx-easy-table/style.css";
+@import "../node_modules/ngx-easy-table/style.css";
+@import "../src/assets/scss/variables";
+
+.ng-select .ng-select-container .ng-value-container .ng-input>input {
+    color: var(--default-text-color);
+}
+[data-theme-mode="dark"] {
+    .btn-default:not(:disabled):not(.disabled):active, .btn-default:not(:disabled):not(.disabled).active {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+    .show > .btn-default.dropdown-toggle {
+        color: var(--default-text-color);
+        background-color: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+}
+.tooltip-warning.bs-tooltip-auto[data-popper-placement^=bottom] .tooltip-arrow::before, 
+.tooltip-warning.bs-tooltip-bottom .tooltip-arrow::before {
+    border-block-end-color: rgb(var(--warning-rgb));
+}
+.tooltip-danger.bs-tooltip-auto[data-popper-placement^=bottom] .tooltip-arrow::before, 
+.tooltip-danger.bs-tooltip-bottom .tooltip-arrow::before {
+    border-block-end-color: rgb(var(--danger-rgb));
+}
+.tooltip-light.bs-tooltip-auto[data-popper-placement^=bottom] .tooltip-arrow::before, 
+.tooltip-light.bs-tooltip-bottom .tooltip-arrow::before {
+    border-block-end-color: rgb(var(--light-rgb));
+}
+.tooltip-dark.bs-tooltip-auto[data-popper-placement^=bottom] .tooltip-arrow::before, 
+.tooltip-dark.bs-tooltip-bottom .tooltip-arrow::before {
+    border-block-end-color: rgb(var(--dark-rgb));
+}
+.input-group {
+    .ng-select:last-child.ng-select-single .ng-select-container {
+        border-start-start-radius: 0;
+        border-end-start-radius: 0;
+    }
+    .ng-select:first-child.ng-select-single .ng-select-container {
+        border-start-end-radius: 0;
+        border-end-end-radius: 0;
+    }
+}
+.ng-dropdown-header {
+     input {
+        background-color: var(--custom-white);
+        border: 1px solid var(--default-border);
+        color: var(--default-text-color);
+        &:focus-visible {
+            outline: none !important;
+        }
+    }
+}
+.ng-dropdown-panel .ng-dropdown-header {
+    border-color: var(--default-border) !important;
+}
+.mdc-text-field--filled:not(.mdc-text-field--disabled) .mdc-floating-label, .mdc-text-field--filled:not(.mdc-text-field--disabled) .mdc-floating-label--float-above,
+.mdc-text-field--filled:not(.mdc-text-field--disabled) .mdc-text-field__input {
+    color: var(--default-text-color) !important; 
+}
+.mdc-checkbox .mdc-checkbox__native-control:enabled:not(:checked):not(:indeterminate):not([data-indeterminate=true])~.mdc-checkbox__background {
+    border-color: var(--default-border) !important;
+}
+.ngx-table__table--normal > tbody > tr > td, .ngx-table__table--normal > thead > tr > th {
+    border-bottom-color: var(--default-border) !important;
+}
+.ngx-table__table--hoverable > tbody tr:hover,
+.ngx-pagination a:hover, .ngx-pagination button:hover {
+    background: rgb(var(--light-rgb)) !important;
+}
+.ngx-pagination li {
+    border-color: var(--default-border) !important;
+}
+.ngx-pagination a, .ngx-pagination button {
+    color: var(--default-text-color) !important;
+}
+input#globalSearch {
+    background-color: var(--custom-white);
+    border: 1px solid var(--default-border);
+    color: var(--default-text-color);
+    &:focus-visible {
+        outline: none !important;
+    }
+}
+.main-profile-contact-list .media-icon {
+    line-height: 2.3 !important;
+}
+
+
+
+.ds-th {
+    height: 468px;
+    overflow-y: scroll;
+  }
+  .dragT-H{
+    height: 250px;
+  }
+  .chevron-left-icon{
+    border: 1px solid;
+  }
+  .joining-T-H{
+    height: 350px;
+  }
+ 
+  .no-icon-bg{
+    border: 0;
+  }
+
+  .SearchBarCu p {
+    display: flex;
+    align-items: center;
+    height: 100%;
+  }

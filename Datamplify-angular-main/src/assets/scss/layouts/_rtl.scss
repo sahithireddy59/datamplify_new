@@ -1,0 +1,139 @@
+// RTL template styles //
+
+[dir="rtl"] {
+  .sidemenu-toggle.header-link .open-toggle {
+    transform: rotate(180deg);
+  }
+
+  .text-break {
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+  }
+
+  .mdi-chevron-double-right::before {
+    content: "\F013D";
+  }
+  .ribbon-top-left span {
+    transform: rotate(45deg);
+  }
+
+  .ribbone-top-left span {
+    transform: rotate(45deg);
+  }
+  .ribbone-top-right span {
+    transform: rotate(315deg);
+  }
+  .power-ribbone-top-right span {
+    transform: rotate(-45deg);
+  }
+  .power-ribbone-top-right span i {
+    transform: rotate(45deg);
+  }
+  .power-ribbone-bottom-right span {
+    transform: rotate(45deg);
+  }
+  .power-ribbone-bottom-right span i {
+    transform: rotate(-45deg);
+  }
+  .power-ribbone-bottom-left span {
+    transform: rotate(-45deg);
+  }
+  .power-ribbone-bottom-left span i {
+    transform: rotate(45deg);
+  }
+  .power-ribbone-top-left span {
+    transform: rotate(45deg);
+  }
+  .power-ribbone-top-left span i {
+    transform: rotate(-45deg);
+  }
+  div.dt-datetime {
+    direction: ltr;
+  }
+  .ribbon-price .badge {
+    transform: rotate(315deg);
+  }
+  [type="number"],
+  [type="url"],
+  [type="tel"],
+  [type="email"] {
+    direction: rtl;
+  }
+//   .form-input-spinners .form-control.is-valid {
+//     background-position: right calc(52.055em + 0.1875rem) top calc(0.375em + 0.1875rem);
+//   }
+  .progress-slider__mask {
+    direction: ltr;
+  }
+  .slick-list {
+    direction: ltr;
+  }
+  #map,
+  #map1,
+  #map-popup,
+  #map-custom-icon,
+  #interactive-map {
+    direction: ltr;
+  }
+  .star-rating {
+    direction: ltr;
+  }
+  .activity-avatar-before:hover::after {
+    content: "\f12c";
+    font-family: "bootstrap-icons";
+  }
+  text {
+    text-anchor: start !important;
+  }
+  #morrisBar8,
+  #morrisBar9 {
+    text {
+      text-anchor: middle !important;
+    }
+  }
+  #chart-tasks {
+    text {
+      text-anchor: end !important;
+    }
+  }
+  .irs {
+    direction: ltr;
+  }
+  .notification .notification-icon {
+    &::before {
+      content: "\f12f";
+      font-family: bootstrap-icons;
+    }
+  }
+  .list-group.blog-list a i {
+    transform: rotate(175deg);
+  }
+
+  .bi-arrow-right::before {
+    content: "\f12f";
+  }
+  .si-arrow-right-circle:before {
+    content: "\e07a";
+  }
+  .fe-arrow-right:before {
+    content: "\e90f";
+  }
+  .pcr-app.visible {
+    left: 52px;
+    right: inherit;
+  }
+  .c3-chart-arc.c3-target {
+    direction: ltr;
+  }
+  .apexcharts-canvas text {
+    text-anchor: end !important;
+  }
+  @media (min-width: 992px) {
+    body {
+      padding-right: 0px !important;
+    }
+  }
+  .transform-arrow {
+    transform: rotate(180deg);
+  }
+}

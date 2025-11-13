@@ -1,0 +1,590 @@
+    <!-- Start Switcher -->
+    <div class="switcher-backdrop d-none" (click)="SwitcherClose()"></div>
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="switcher-canvas" aria-labelledby="offcanvasRightLabel">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title" id="offcanvasRightLabel">Switcher</h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close" (click)="SwitcherClose()"><i class="fe fe-x fs-18"></i></button>
+        </div>
+        <div class="offcanvas-body">
+            <ul ngbNav #nav="ngbNav" [(activeId)]="active" class="nav nav-tabs nav-justified" id="switcher-main-tab"  role="tablist">
+
+                <button [ngbNavItem]="1" class="nav nav-tabs nav-justified"  id="switcher-home-tab" role="presentation" ngbNavLink>Theme Styles
+                    <ng-template ngbNavContent>
+                        <div class="tab-pane fade show active border-0" id="switcher-home" role="tabpanel" aria-labelledby="switcher-home-tab"
+                        tabindex="0">
+                        <div class="">
+                            <p class="switcher-style-head">Theme Color Mode:</p>
+                            <div class="row switcher-style gx-0">
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-light-theme">
+                                            Light
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="theme-style" id="switcher-light-theme"
+                                        (click)="themeChange('light','light')" [checked]="localdata['insightappsdarktheme']!='dark'"
+                                            >
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-dark-theme">
+                                            Dark
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="theme-style" id="switcher-dark-theme"
+                                        (click)="themeChange('dark','dark')" [checked]="localdata['insightappsdarktheme']=='dark'">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="">
+                            <p class="switcher-style-head">Directions:</p>
+                            <div class="row switcher-style gx-0">
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-ltr">
+                                            LTR
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="direction" id="switcher-ltr" (click)="DirectionsChange('ltr')" [checked]="localdata['insightapps-dir'] != 'rtl'">
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-rtl">
+                                            RTL
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="direction" id="switcher-rtl" (click)="DirectionsChange('rtl')"
+                                        [checked]="localdata['insightapps-dir'] == 'rtl'">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="">
+                            <p class="switcher-style-head">Navigation Styles:</p>
+                            <div class="row switcher-style gx-0">
+                                <div class="col-sm-4 col-6">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-vertical">
+                                            Vertical
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="navigation-style" id="switcher-vertical"
+                                        (click)="NavigationChange('vertical')"
+                                        [checked]="localdata['insightapps-nav-mode'] != 'horizontal'">
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 col-6">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-horizontal">
+                                            Horizontal
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="navigation-style"
+                                            id="switcher-horizontal" [checked]="localdata['insightapps-nav-mode'] == 'horizontal'"
+                                            (click)="NavigationChange('horizontal')">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div *ngIf = "false" class="navigation-menu-styles">
+                            <p class="switcher-style-head">Vertical & Horizontal Menu Styles:</p>
+                            <div class="row switcher-style gx-0 pb-2 gy-2">
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-menu-click">
+                                            Menu Click
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="navigation-menu-styles"
+                                            id="switcher-menu-click" (click)="Menus('menu-click-closed', 'menu-click')"[checked]="localdata['insightappsMenu'] == 'menu-click'">
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-menu-hover">
+                                            Menu Hover
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="navigation-menu-styles"
+                                            id="switcher-menu-hover" (click)="Menus('menu-hover-closed', 'menu-hover')"
+                                            [checked]="localdata['insightappsMenu'] == 'menu-hover'">
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-icon-click">
+                                            Icon Click
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="navigation-menu-styles"
+                                            id="switcher-icon-click"  (click)="Menus('icon-click-closed', 'icon-click')"
+                                            [checked]="localdata['insightappsMenu'] == 'icon-click'">
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-icon-hover">
+                                            Icon Hover
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="navigation-menu-styles"
+                                            id="switcher-icon-hover" (click)="Menus('icon-hover-closed', 'icon-hover')"
+                                            [checked]="localdata['insightappsMenu'] == 'icon-hover'">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div *ngIf = "false" class="sidemenu-layout-styles">
+                            <p class="switcher-style-head">Sidemenu Layout Styles:</p>
+                            <div class="row switcher-style gx-0 pb-2 gy-2">
+                                <div class="col-sm-6">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-default-menu"  >
+                                            Default Menu
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="sidemenu-layout-styles"
+                                            id="switcher-default-menu"  (click)="SideMenus('overlay', '')"
+                                            [checked]="localdata['insightappsverticalstyles']  == 'default-menu'|| !localdata['insightappsverticalstyles']&&!localdata['insightappsMenu']">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-closed-menu">
+                                            Closed Menu
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="sidemenu-layout-styles"
+                                            id="switcher-closed-menu"(click)="SideMenus('close-menu-close', 'closed')"
+                                            [checked]="localdata['insightappsverticalstyles'] == 'closed'">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-icontext-menu">
+                                            Icon Text
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="sidemenu-layout-styles"
+                                            id="switcher-icontext-menu" (click)="SideMenus('icon-text-close', 'icontext')"
+                                            [checked]="localdata['insightappsverticalstyles'] == 'icontext'">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-icon-overlay">
+                                            Icon Overlay
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="sidemenu-layout-styles"
+                                            id="switcher-icon-overlay" (click)="SideMenus('icon-overlay-close', 'overlay')"
+                                            [checked]="localdata['insightappsverticalstyles'] == 'overlay'">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-detached">
+                                            Detached
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="sidemenu-layout-styles"
+                                            id="switcher-detached" (click)="SideMenus('detached-close', 'detached')"
+                                            [checked]="localdata['insightappsverticalstyles'] == 'detached'">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-double-menu">
+                                            Double Menu
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="sidemenu-layout-styles"
+                                            id="switcher-double-menu"  (click)="SideMenus('double-menu-open', 'doublemenu')"
+                                            [checked]="localdata['insightappsverticalstyles'] == 'doublemenu'">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div *ngIf = "false" class="">
+                            <p class="switcher-style-head">Page Styles:</p>
+                            <div class="row switcher-style gx-0">
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-regular">
+                                            Regular
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="page-styles" id="switcher-regular"
+                                        (click)="PageChange('regular')"
+                                        [checked]="localdata['insightapps-page-mode'] != 'classic'">
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-classic">
+                                            Classic
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="page-styles" id="switcher-classic" (click)="PageChange('classic')"
+                                        [checked]="localdata['insightapps-page-mode'] == 'classic'">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div *ngIf = "false" class="">
+                            <p class="switcher-style-head">Layout Width Styles:</p>
+                            <div class="row switcher-style gx-0">
+                                <div class="col-sm-4 col-6">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-full-width">
+                                            Full Width
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="layout-width" id="switcher-full-width"
+                                        (click)="WidthChange('full-width')"
+                                        [checked]="localdata['insightapps-width-mode'] != 'boxed'">
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 col-6">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-boxed">
+                                            Boxed
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="layout-width" id="switcher-boxed" (click)="WidthChange('boxed')"
+                                        [checked]="localdata['insightapps-width-mode'] == 'boxed'">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div *ngIf = "false" class="">
+                            <p class="switcher-style-head">Menu Positions:</p>
+                            <div class="row switcher-style gx-0">
+                                <div class="col-sm-4 col-6">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-menu-fixed">
+                                            Fixed
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="menu-positions" id="switcher-menu-fixed"
+                                        (click)="MenuChange('fixed')"
+                                        [checked]="localdata['insightapps-menu-mode'] != 'scrollable'">
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 col-6">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-menu-scroll">
+                                            Scrollable
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="menu-positions" id="switcher-menu-scroll" (click)="MenuChange('scrollable')"
+                                        [checked]="localdata['insightapps-menu-mode'] == 'scrollable'">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div *ngIf = "false" class="">
+                            <p class="switcher-style-head">Header Positions:</p>
+                            <div class="row switcher-style gx-0">
+                                <div class="col-sm-4 col-6">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-header-fixed">
+                                            Fixed
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="header-positions"
+                                            id="switcher-header-fixed" (click)="HeaderChange('fixed')"
+                                            [checked]="localdata['insightapps-header-position'] != 'scrollable'">
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 col-6">
+                                    <div class="form-check switch-select">
+                                        <label class="form-check-label" for="switcher-header-scroll">
+                                            Scrollable
+                                        </label>
+                                        <input class="form-check-input" type="radio" name="header-positions"
+                                            id="switcher-header-scroll" (click)="HeaderChange('scrollable')"
+                                            [checked]="localdata['insightapps-header-position'] == 'scrollable'">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                       
+                    </div>
+
+                        </ng-template>
+                        </button>
+                        <button [ngbNavItem]="2" class="nav nav-tabs nav-justified"  id="switcher-profile-tab" role="presentation" ngbNavLink  data-bs-target="#switcher-profile">Theme Colors
+                            <ng-template ngbNavContent>
+                                <div class="tab-pane  border-0" id="switcher-profile" role="tabpanel" aria-labelledby="switcher-profile-tab" tabindex="0">
+                                    <div>
+                                        <div class="theme-colors">
+                                            <p class="switcher-style-head">Menu Colors:</p>
+                                            <div class="d-flex switcher-style pb-2">
+                                                <div class="form-check switch-select me-3">
+                                                    <input class="form-check-input color-input color-white" data-bs-toggle="tooltip"
+                                                        data-bs-placement="top" title="Light Menu" type="radio" name="menu-colors"
+                                                        id="switcher-menu-light"  (click)="menuTheme('light')"
+                                                        [checked]="localdata['insightapps-menu-mode'] == 'light'">
+                                                </div>
+                                                <div class="form-check switch-select me-3">
+                                                    <input class="form-check-input color-input color-dark" data-bs-toggle="tooltip"
+                                                        data-bs-placement="top" title="Dark Menu" type="radio" name="menu-colors"
+                                                        id="switcher-menu-dark" (click)="menuTheme('dark')"
+                                                        [checked]="localdata['insightapps-menu-mode'] == 'dark'">
+                                                </div>
+                                                <div class="form-check switch-select me-3">
+                                                    <input class="form-check-input color-input color-primary" data-bs-toggle="tooltip"
+                                                        data-bs-placement="top" title="Color Menu" type="radio" name="menu-colors"
+                                                        id="switcher-menu-primary" (click)="menuTheme('color')"
+                                                        [checked]="localdata['insightapps-menu-mode'] == 'color'">
+                                                </div>
+                                                <div class="form-check switch-select me-3">
+                                                    <input class="form-check-input color-input color-gradient" data-bs-toggle="tooltip"
+                                                        data-bs-placement="top" title="Gradient Menu" type="radio" name="menu-colors"
+                                                        id="switcher-menu-gradient" (click)="menuTheme('gradient')"
+                                                        [checked]="localdata['insightapps-menu-mode'] == 'gradient'">
+                                                </div>
+                                                <div class="form-check switch-select me-3">
+                                                    <input class="form-check-input color-input color-transparent"
+                                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Transparent Menu"
+                                                        type="radio" name="menu-colors" id="switcher-menu-transparent" (click)="menuTheme('transparent')"
+                                                        [checked]="localdata['insightapps-menu-mode'] == 'transparent'">
+                                                </div>
+                                            </div>
+                                            <div class="px-4 pb-3 text-muted fs-11">Note:If you want to change color Menu dynamically change from below Theme Primary color picker</div>
+                                        </div>
+                                        <div class="theme-colors">
+                                            <p class="switcher-style-head">Header Colors:</p>
+                                            <div class="d-flex switcher-style pb-2">
+                                                <div class="form-check switch-select me-3">
+                                                    <input class="form-check-input color-input color-white" data-bs-toggle="tooltip"
+                                                        data-bs-placement="top" title="Light Header" type="radio" name="header-colors"
+                                                        id="switcher-header-light" (click)="headerTheme('light')"
+                                                        [checked]="localdata['insightappsHeader'] == 'light'">
+                                                </div>
+                                                <div class="form-check switch-select me-3">
+                                                    <input class="form-check-input color-input color-dark" data-bs-toggle="tooltip"
+                                                        data-bs-placement="top" title="Dark Header" type="radio" name="header-colors"
+                                                        id="switcher-header-dark" (click)="headerTheme('dark')"
+                                                        [checked]="localdata['insightappsHeader'] == 'dark'">
+                                                </div>
+                                                <div class="form-check switch-select me-3">
+                                                    <input class="form-check-input color-input color-primary" data-bs-toggle="tooltip"
+                                                        data-bs-placement="top" title="Color Header" type="radio" name="header-colors"
+                                                        id="switcher-header-primary" (click)="headerTheme('color')"
+                                                        [checked]="localdata['insightappsHeader'] == 'color'">
+                                                </div>
+                                                <div class="form-check switch-select me-3">
+                                                    <input class="form-check-input color-input color-gradient" data-bs-toggle="tooltip"
+                                                        data-bs-placement="top" title="Gradient Header" type="radio" name="header-colors"
+                                                        id="switcher-header-gradient"  (click)="headerTheme('gradient')"
+                                                        [checked]="localdata['insightappsHeader'] == 'gradient'">
+                                                </div>
+                                                <div class="form-check switch-select me-3">
+                                                    <input class="form-check-input color-input color-transparent" data-bs-toggle="tooltip"
+                                                        data-bs-placement="top" title="Transparent Header" type="radio" name="header-colors"
+                                                        id="switcher-header-transparent" (click)="headerTheme('transparent')"
+                                                        [checked]="localdata['insightappsHeader'] == 'transparent'">
+                                                </div>
+                                            </div>
+                                            <div class="px-4 pb-3 text-muted fs-11">Note:If you want to change color Header dynamically change from below Theme Primary color picker</div>
+                                        </div>
+                                        <div class="theme-colors">
+                                            <p class="switcher-style-head">Theme Primary:</p>
+                                            <div class="d-flex flex-wrap align-items-center switcher-style">
+                                                <div class="form-check switch-select me-3">
+                                                    <input class="form-check-input color-input color-primary-1" type="radio"
+                                                        name="theme-primary" id="switcher-primary" (click)="primary('58, 88, 146')">
+                                                </div>
+                                                <div class="form-check switch-select me-3">
+                                                    <input class="form-check-input color-input color-primary-2" type="radio"
+                                                        name="theme-primary" id="switcher-primary1"  (click)="primary('92, 144, 163')"
+                                                        [checked]="localdata['insightapps-primary-mode'] == '92 144 163'">
+                                                </div>
+                                                <div class="form-check switch-select me-3">
+                                                    <input class="form-check-input color-input color-primary-3" type="radio" name="theme-primary"
+                                                        id="switcher-primary2" (click)="primary('161, 90, 223')"
+                                                        [checked]="localdata['insightapps-primary-mode'] == '161 90 223'">
+                                                </div>
+                                                <div class="form-check switch-select me-3">
+                                                    <input class="form-check-input color-input color-primary-4" type="radio" name="theme-primary"
+                                                        id="switcher-primary3"  (click)="primary('78, 172 ,76')"
+                                                        [checked]="localdata['insightapps-primary-mode'] == '78 172 76'">
+                                                </div>
+                                                <div class="form-check switch-select me-3">
+                                                    <input class="form-check-input color-input color-primary-5" type="radio" name="theme-primary"
+                                                        id="switcher-primary4" (click)="primary('223, 90, 90')"
+                                                        [checked]="localdata['insightapps-primary-mode'] == '223 90 90'">
+                                                </div>
+                                                <div class="form-check switch-select ps-0 mt-1 color-primary-light">
+                                                    <div class="theme-container-primary"></div>
+                                                    <div class="pickr-container-primary">
+                                                        <div class="pickr">
+                                                            <button
+                                                              type="button"
+                                                              class="pcr-button"
+                                                              role="button"
+                                                              aria-label="toggle color picker dialog"
+                                                               id="lightPrimaryColorID"
+                                                               style="--pcr-color: rgba(132, 90, 223, 1);"
+                                                            [style.background]="color1"
+                                                            [cpAlphaChannel]="'disabled'"
+                                                            [cpOutputFormat]="'hex'"
+                                                            [(colorPicker)]="color1"
+                                                            (cpSliderDragEnd)="dynamicLightPrimary($event)"
+                                                            >
+                                                          </button>
+                                                          </div>
+                                                    </div>
+                                                   
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="theme-colors">
+                                            <p class="switcher-style-head">Theme Background:</p>
+                                            <div class="d-flex flex-wrap align-items-center switcher-style">
+                                                <div class="form-check switch-select me-3">
+                                                    <input class="form-check-input color-input color-bg-1" type="radio"
+                                                        name="theme-background" id="switcher-background"  (click)="
+                                                        background(
+                                                            '20, 30, 96',  '34, 44, 110','25, 38, 101', 'rgba(255,255,255,0.1)','rgb(25, 38, 101)', 
+                                                          'dark',
+                                                          'dark'
+                                                        )
+                                                      "
+                                                      [checked]="localdata['insightapps-background-mode-dark'] == '50 62 93'">
+                                                </div>
+                                                <div class="form-check switch-select me-3">
+                                                    <input class="form-check-input color-input color-bg-2" type="radio"
+                                                        name="theme-background" id="switcher-background1"  (click)="
+                                                      background(
+                                                            '8, 78, 115',  '22, 92, 129','13, 86, 120', 'rgba(255,255,255,0.1)','rgb(13, 86, 120)', 
+                                                          'dark',
+                                                          'dark'
+                                                        )
+                                                      "
+                                                      [checked]="localdata['insightapps-background-mode-dark'] == '81 93 50'">
+                                                </div>
+                                                <div class="form-check switch-select me-3">
+                                                    <input class="form-check-input color-input color-bg-3" type="radio" name="theme-background"
+                                                        id="switcher-background2"  (click)="
+                                                          background(
+                                                            '90, 37, 135',  '104, 51, 149','95, 45, 140', 'rgba(255,255,255,0.1)','rgb(95, 45, 140)', 
+                                                          'dark',
+                                                          'dark'
+                                                        )
+                                                      
+                                                      "
+                                                      [checked]="localdata['insightapps-background-mode-dark'] == '79 50 93'">
+                                                </div>
+                                                <div class="form-check switch-select me-3">
+                                                    <input class="form-check-input color-input color-bg-4" type="radio"
+                                                        name="theme-background" id="switcher-background3" (click)=" 
+                                                          background(
+                                                            '24, 101, 51',  '38, 115, 65','29, 109, 56', 'rgba(255,255,255,0.1)','rgb(29, 109, 56)', 
+                                                          'dark',
+                                                          'dark'
+                                                        )
+                                                        "
+                                                        [checked]="localdata['insightapps-background-mode-dark'] == '50 87 93'">
+                                                </div>
+                                                <div class="form-check switch-select me-3">
+                                                    <input class="form-check-input color-input color-bg-5" type="radio"
+                                                        name="theme-background" id="switcher-background4" (click)="    background(
+                                                            '120, 66, 20',  '134, 80, 34','125, 74, 25', 'rgba(255,255,255,0.1)','rgb(125, 74, 25)', 
+                                                          'dark',
+                                                          'dark'
+                                                        )"
+                                                      [checked]="localdata['insightapps-background-mode-dark'] == '93 50 50'">
+                                                </div>
+                                                <div class="form-check switch-select ps-0 mt-1 tooltip-static-demo color-bg-transparent">
+                                                    <div class="theme-container-background"></div>
+                                                    <div class="pickr-container-background">
+                                                        <div class="pickr">
+                                                            <button type="button"
+                                                            role="button"
+                                                            aria-label="toggle color picker dialog"
+                                                            class="color-bg-transparent pcr-button"
+                                                            style="--pcr-color: rgba(132, 90, 223, 1);"
+                                                            [style.background]="color1"
+                                                            [cpAlphaChannel]="'disabled'"
+                                                            [cpOutputFormat]="'hex'"
+                                                            [(colorPicker)]="color1"
+                                                            (cpSliderDragEnd)="dynamicTranparentBgPrimary($event)"
+                                                        >
+                                                        </button> 
+                                                    </div>
+                                                    </div>
+                                                
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="theme-colors">
+                                            <p class="switcher-style-head">Text Colors:</p>
+                                            <div class="d-flex switcher-style pb-2">
+                                                <div class="form-check switch-select me-3">
+                                                    <input class="form-check-input color-input color-white" data-bs-toggle="tooltip"
+                                                        data-bs-placement="top" title="Light Menu" type="radio" name="menu-colors"
+                                                        id="switcher-text-light"  (click)="setTextColor({color : '#fff'})"
+                                                       >
+                                                </div>
+                                                <div class="form-check switch-select me-3">
+                                                    <input class="form-check-input color-input color-dark" data-bs-toggle="tooltip"
+                                                        data-bs-placement="top" title="Dark Menu" type="radio" name="menu-colors"
+                                                        id="switcher-text-dark" (click)="setTextColor({color:'#333335'})"
+                                                        >
+                                                </div>
+                                                <div class="form-check switch-select ps-0 mt-1 tooltip-static-demo color-bg-transparent">
+                                                    <div class="theme-container-background"></div>
+                                                    <div class="pickr-container-background">
+                                                        <div class="pickr">
+                                                            <button type="button"
+                                                            role="button"
+                                                            aria-label="toggle color picker dialog"
+                                                            class="color-bg-transparent pcr-button"
+                                                            style="--pcr-color: rgba(132, 90, 223, 1);"
+                                                            [style.background]="textcolor1"
+                                                            [cpAlphaChannel]="'disabled'"
+                                                            [cpOutputFormat]="'hex'"
+                                                            [(colorPicker)]="textcolor1"
+                                                            (cpSliderDragEnd)="setTextColor($event)"
+                                                        >
+                                                        </button> 
+                                                    </div>
+                                                    </div>
+                                                
+                                                </div>
+                                            </div>
+                                            <div class="px-4 pb-3 text-muted fs-11">Note:If you want to change color Menu dynamically change from below Theme Primary color picker</div>
+                                        </div>
+                                        <div *ngIf="false" class="menu-image mb-3">
+                                            <p class="switcher-style-head">Menu With Background Image:</p>
+                                            <div class="d-flex flex-wrap align-items-center switcher-style">
+                                                <div class="form-check switch-select m-2">
+                                                    <input class="form-check-input bgimage-input bg-img1" type="radio"
+                                                        name="theme-background" id="switcher-bg-img" (click)="ImageTheme('bgimg1')"
+                                                        [checked]="localdata['insightapps-image'] == 'bgimg1'">
+                                                </div>
+                                                <div class="form-check switch-select m-2">
+                                                    <input class="form-check-input bgimage-input bg-img2" type="radio"
+                                                        name="theme-background" id="switcher-bg-img1" (click)="ImageTheme('bgimg2')"
+                                                        [checked]="localdata['insightapps-image'] == 'bgimg2'">
+                                                </div>
+                                                <div class="form-check switch-select m-2">
+                                                    <input class="form-check-input bgimage-input bg-img3" type="radio" name="theme-background"
+                                                        id="switcher-bg-img2" (click)="ImageTheme('bgimg3')"
+                                                        [checked]="localdata['insightapps-image'] == 'bgimg3'">
+                                                </div>
+                                                <div class="form-check switch-select m-2">
+                                                    <input class="form-check-input bgimage-input bg-img4" type="radio"
+                                                        name="theme-background" id="switcher-bg-img3" (click)="ImageTheme('bgimg4')"
+                                                        [checked]="localdata['insightapps-image'] == 'bgimg4'">
+                                                </div>
+                                                <div class="form-check switch-select m-2">
+                                                    <input class="form-check-input bgimage-input bg-img5" type="radio"
+                                                        name="theme-background" id="switcher-bg-img4"(click)="ImageTheme('bgimg5')"
+                                                        [checked]="localdata['insightapps-image'] == 'bgimg5'">
+                                                </div>
+                                            </div>
+                                          
+                                        </div>
+                                    </div>
+                                </div>
+                                </ng-template>
+                                </button>
+                        </ul>
+        
+            <div class="tab-content" id="nav-tabContent">
+                <div [ngbNavOutlet]="nav" ></div>
+
+              
+                <div class="d-flex justify-content-center canvas-footer flex-wrap"> 
+                    <a class="btn btn-primary m-1" (click)="saveThemes(true)">Default</a>
+                    <a class="btn btn-primary m-1" (click)="saveThemes(false)">Apply</a>
+                    <a href="javascript:void(0);" id="reset-all" class="btn btn-danger m-1" (click)="reset()">Reset</a> 
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Switcher -->

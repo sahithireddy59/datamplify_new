@@ -1,0 +1,28 @@
+
+/* Start::tree-view */
+.tree-leaf .tree-expando {
+  background: $primary-01 !important; 
+  height: 20px !important; 
+  line-height: 12px !important; 
+  width: 20px !important; 
+  font-size: 25px;
+  color: $primary;
+}
+.tree-leaf .tree-leaf-text{
+  margin-inline-start: 10px !important;
+    font-size: 15px;
+    float: $float-left !important;
+}
+.tree-leaf {
+  margin-block-start: 10px;
+}
+.tree-leaf .tree-leaf-text:hover {
+  color: $primary !important;
+}
+.tree-leaf .tree-expando {
+  float: $float-left !important;
+}
+.tree-leaf .tree-child-leaves {
+  margin-inline-start: 15px !important;
+}
+/* End::tree-view */

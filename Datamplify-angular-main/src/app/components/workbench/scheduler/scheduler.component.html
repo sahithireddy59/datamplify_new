@@ -1,0 +1,476 @@
+<app-page-header title="" moduleId="scheduler" title1="Home" activeitem="scheduler"></app-page-header>
+
+<div class="main-container container-fluid TopHeader container-background p-0" >
+    <div class="card mb-0 rounded-0" style="min-height: 100vh;">
+        <div class="card-body d-flex flex-column">
+
+            <div class="d-flex justify-content-between mb-3">
+                <div>
+                    <h5 class="fw-semibold mb-0 text-dark">Scheduler</h5>
+                    <p class="text-muted mb-0">Manage automated task scheduling and execution</p>
+                </div>
+                <div>
+                    <button class="btn mode-btn rounded-5" (click)="clearFormData(); showForm = true; isEditPreview = false;">
+                        <i class="fas fa-plus me-2"></i> Create Schedule
+                    </button>
+                </div>
+            </div>
+            
+            <div *ngIf="!isKpiLoading" class="row g-3 mb-4">
+                <div class="col-4" *ngFor="let card of kpiCards">
+                    <div class="card glass-card mb-0 rounded-4 border-0">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="fw-600 mb-1">{{ card.title }}</div>
+                                    <h4 [ngClass]="card.valueClass" class="fw-bold">{{ card.value }}</h4>
+                                </div>
+                                <div class="d-flex align-items-center bounce-icon">
+                                    <!-- <span class="p-2 rounded-3 d-flex align-items-center justify-content-center"
+                                        [ngClass]="card.iconBg" style="width: 46px; height: 46px;"> -->
+                                        <i [ngClass]="card.icon" style="font-size: 32px;"></i>
+                                    <!-- </span> -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <ng-container *ngIf="isKpiLoading">
+                <div class="row g-3 mb-4">
+                    <!-- KPI Cards Skeleton -->
+                    <div class="col-4" *ngFor="let sk of [1,2,3]">
+                        <div class="card glass-card mb-0 rounded-4 border-0">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <div class="skeleton mb-2" style="width: 100px; height: 14px;"></div>
+                                        <div class="skeleton" style="width: 80px; height: 22px;"></div>
+                                    </div>
+                                    <div class="skeleton rounded-circle" style="width: 40px; height: 40px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </ng-container>
+            
+            <div class="row">
+                <!-- Left Section (Schedulers List) -->
+                <div [class.col-12]="!showForm" [class.col-md-6]="showForm">
+                    <div class="custom-tabs d-flex justify-content-between mb-2">
+                        <div class="nav-item" style="width: 50%;">
+                            <button class="nav-link fw-semibold w-100" [ngClass]="activeTab === 'schedules' ? 'tab-active' : 'tab-inactive'"
+                                (click)="activeTab = 'schedules'; getSchedulerList();">Schedules</button>
+                        </div>
+                    
+                        <div class="nav-item" style="width: 50%;">
+                            <button class="nav-link fw-semibold w-100"
+                                [ngClass]="activeTab === 'upcomingRuns' ? 'tab-active' : 'tab-inactive'"
+                                (click)="activeTab = 'upcomingRuns'; getUpcommingRuns();">Upcoming Runs</button>
+                        </div>
+                    </div>
+                    
+                    <div class="card glass-card mb-0 rounded-4 border-0 mt-2" style="height: 70px;">
+                        <div class="d-flex justify-content-between align-items-center px-2 h-100">
+                            <div class="d-flex align-items-center glass-bar rounded-pill w-100 me-2">
+                                <i class="fa fa-search ms-3 text-dark"></i>
+                                <input type="text" placeholder="Search Scheduler..."
+                                    class="form-control border-0 bg-transparent px-3 py-2 text-dark" [(ngModel)]="search" (keyup.enter)="getSearchData()"/>
+                            </div>
+                            <div *ngIf="activeTab === 'schedules'" class="me-2" ngbDropdown container="body">
+                                <button type="button" class="btn mode-btn rounded-5" ngbDropdownToggle>
+                                    <i class="fa-solid fa-filter me-2"></i> {{ stateFilter ? (stateFilter === 'active' ? 'Active' : (stateFilter === 'pause' ? 'Paused' : 'Inactive')) : 'All States' }}
+                                </button>
+                                <ul ngbDropdownMenu>
+                                    <li><a ngbDropdownItem (click)="stateFilter = ''; getSchedulerList();">All States</a></li>
+                                    <li><a ngbDropdownItem (click)="stateFilter = 'active'; getSchedulerList();">Active</a></li>
+                                    <li><a ngbDropdownItem (click)="stateFilter = 'inactive'; getSchedulerList();">Inactive</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tab Content -->
+                    <div class="tab-content">
+                        <!-- Schedules -->
+                        <div class="tab-pane fade" id="schedules" role="tabpanel"
+                            [ngClass]="{ 'show active': activeTab === 'schedules' }">
+                            <div *ngIf="!isLoading" class="py-4" [ngClass]="{ 'left-height': showForm }">
+                                @for(item of schedules | paginate : { itemsPerPage: pageSize, currentPage: page, totalItems: totalItems };
+                                track item; let i = $index){
+                                <div class="schedule-card glass-card mb-3 p-3 p-md-4" [ngClass]="showForm ? 'mx-2' : null">
+                                    <div class="d-flex">
+                                        <div class="d-flex align-items-center justify-content-center rounded-3 list-icon-badge me-2"
+                                            style="width: 40px;height: 40px;">
+                                            <i class="fe fe-clock" style="font-size: 22px;"></i>
+                                        </div>
+                                        <div class="w-100">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <h5 class="fw-bold mb-0 text-dark" [ngbTooltip]="item.source_name">{{ item.source_name.length > 18 ? (item.source_name | slice: 0: 15) + '...' : item.source_name }}</h5>
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="badge rounded-pill px-3 py-2 me-1" style="width: 90px;"
+                                                        [ngClass]="item.source_type === 'flowboard' ? 'bg-info-subtle text-info' : 'bg-warning-subtle text-warning'">
+                                                        {{ item.source_type === 'flowboard' ? 'Flowboard' : 'Taskplan' }}
+                                                    </span>
+                                                
+                                                    <span class="badge rounded-pill px-3 py-2" [ngClass]="{
+                                                            'active-badge': item.status === 'active',
+                                                            'pause-badge': item.status === 'Paused',
+                                                            'inactive-badge': item.status === 'inactive'
+                                                          }">
+                                                        <i class="fe" [ngClass]="{  
+                                                              'fe-play': item.status === 'Active',
+                                                              'fe-pause': item.status === 'Paused',
+                                                              'fe-alert-circle': item.status === 'Inactive'
+                                                            }"></i>
+                                                        {{item.status === 'active' ? 'Active' : 'In Active'}}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <!-- <p class="text-muted mb-3">{{ item.description }}</p> -->
+                                        </div>
+                                    </div>
+                                
+                                    <div class="row g-4 text-center text-start mt-1">
+                                        <div class="col-md-4 text-start">
+                                            <div class="text-muted small">Schedule</div>
+                                            <div class="fw-medium text-dark">{{ item.schedule_value }}</div>
+                                        </div>
+                                        <div class="col-md-4 text-start">
+                                            <div class="text-muted small">Next Run</div>
+                                            <div class="fw-medium text-dark">{{ item.next_run | date:'yyyy-MM-dd HH:mm:ss' }}</div>
+                                        </div>
+                                        <div class="col-md-4 text-start">
+                                            <div class="text-muted small">Last Run</div>
+                                            <div class="fw-medium text-dark">{{ item?.last_run | date:'yyyy-MM-dd HH:mm:ss' }}</div>
+                                        </div>
+                                        <!-- <div class="col-md-3 text-start">
+                                                                            <div class="text-muted small">Pipeline</div>
+                                                                            <div class="fw-medium text-dark">{{ item.pipeline }}</div>
+                                                                        </div>
+                                                                        <div class="col-md-3 text-start">
+                                                                            <div class="text-muted small">Success Rate</div>
+                                                                            <div class="fw-bold" [class.text-success]="item.successRate > 95">{{ item.successRate }}%</div>
+                                                                        </div>
+                                                                        <div class="col-md-3 text-start">
+                                                                            <div class="text-muted small">Total Runs</div>
+                                                                            <div class="fw-medium text-dark">{{ item.totalRuns }}</div>
+                                                                        </div>
+                                                                        <div class="col-md-3 text-start">
+                                                                            <div class="text-muted small">Avg Duration</div>
+                                                                            <div class="fw-medium text-dark">{{ item.avgDuration }}</div>
+                                                                        </div> -->
+                                    </div>
+                                
+                                    <div class="d-flex flex-wrap gap-2 mt-4">
+                                        <button class="btn btn-primary rounded-5" (click)="changeSchedulerStatus(item.id, item.status === 'active' ? 'inactive' : 'active')">
+                                            <i *ngIf="item.status === 'active'" class="fe fe-pause me-2"></i>
+                                            <i *ngIf="item.status === 'inactive'" class="fe fe-play me-2"></i>
+                                            {{item.status === 'active' ? 'In Active' : 'Active'}}
+                                        </button>
+                                        <button class="btn mode-btn rounded-5" (click)="getSchedulerById(item.id)">
+                                            <i class="fe fe-settings me-2"></i>Edit
+                                        </button>
+                                        <button class="btn btn-danger rounded-5" (click)="deleteScheduler(item.id)">
+                                            <i class="fe fe-trash-2 me-2"></i>Delete
+                                        </button>
+                                    </div>
+                                </div>
+                                }
+                            </div>
+
+                            <ng-container *ngIf="isLoading">
+                                <!-- Schedule List Skeleton -->
+                                <div class="py-4" [ngClass]="{ 'left-height': showForm }">
+                                    <div class="schedule-card glass-card mb-3 p-3" *ngFor="let sk of [1,2,3,4]">
+                                        <div class="d-flex mb-3">
+                                            <div class="skeleton rounded-3 me-3" style="width: 40px; height: 40px;"></div>
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <div class="skeleton" style="width: 140px; height: 14px;"></div>
+                                                    <div class="d-flex justify-content-between">
+                                                        <div class="skeleton rounded-pill me-1" style="width: 80px; height: 20px;"></div>
+                                                        <div class="skeleton rounded-pill" style="width: 80px; height: 20px;"></div>
+                                                    </div>
+                                                </div>
+                                                <!-- <div class="skeleton" style="width: 90%; height: 10px;"></div> -->
+                                            </div>
+                                        </div>
+                            
+                                        <div class="row g-3">
+                                            <div class="col-md-4">
+                                                <div class="skeleton mb-1" style="width: 60px; height: 10px;"></div>
+                                                <div class="skeleton" style="width: 100px; height: 12px;"></div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="skeleton mb-1" style="width: 60px; height: 10px;"></div>
+                                                <div class="skeleton" style="width: 100px; height: 12px;"></div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="skeleton mb-1" style="width: 60px; height: 10px;"></div>
+                                                <div class="skeleton" style="width: 100px; height: 12px;"></div>
+                                            </div>
+                                        </div>
+                            
+                                        <div class="d-flex gap-2 mt-3">
+                                            <div class="skeleton rounded-5" style="height: 28px; width: 100px;"></div>
+                                            <div class="skeleton rounded-5" style="height: 28px; width: 100px;"></div>
+                                            <div class="skeleton rounded-5" style="height: 28px; width: 100px;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </ng-container> 
+                        </div>
+                    
+                        <!-- Upcoming Runs -->
+                        <div class="tab-pane fade" id="upcomingRuns" role="tabpanel" 
+                            [ngClass]="{ 'show active': activeTab === 'upcomingRuns' }">
+                            <div class="upcomming-runs-card py-4 px-4 mt-3"
+                                [ngClass]="{ 'left-height': showForm }">
+                                <h5 class="fw-semibold mb-4 text-dark">Upcoming Scheduled Runs</h5>
+                                <div *ngIf="!isLoading" class="d-flex flex-column gap-3">
+                                    <div *ngFor="let run of upcomingRuns | paginate : { itemsPerPage: pageSize, currentPage: page, totalItems: totalItems }" class="glass-card d-flex align-items-center p-3">
+                                        <div class="d-flex align-items-center justify-content-center rounded-3 list-icon-badge me-3"
+                                            style="width: 30px;height: 30px;">
+                                            <i class="fas fa-calendar-alt fa-lg text"></i>
+                                        </div>
+                                        <div class="me-auto">
+                                            <div class="fw-semibold text-dark" [ngbTooltip]="run.source_name">{{ run.source_name.length > 18 ? (run.source_name | slice: 0: 15) + '...' : run.source_name }}</div>
+                                            <!-- <div class="text-muted small">{{ run.pipeline }}</div> -->
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="fw-semibold text-dark">{{ run.next_run | date:'HH:mm' }}</div>
+                                            <div class="text-muted small">{{ run.next_run | date:'MMM d, y' }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <ng-container *ngIf="isLoading">
+                                    
+                                        <div class="glass-card d-flex align-items-center p-3 mb-3" *ngFor="let sk of [1,2,3,4,5]">
+                                            <!-- Icon Skeleton -->
+                                            <div class="skeleton rounded-3 me-3" style="width: 30px; height: 30px;"></div>
+                                
+                                            <!-- Source Name Skeleton -->
+                                            <div class="flex-grow-1">
+                                                <div class="skeleton mb-2" style="width: 140px; height: 14px;"></div>
+                                                <div class="skeleton" style="width: 100px; height: 12px;"></div>
+                                            </div>
+                                
+                                            <!-- Date & Time Skeleton -->
+                                            <div class="text-end ms-3">
+                                                <div class="skeleton mb-2" style="width: 50px; height: 12px;"></div>
+                                                <div class="skeleton" style="width: 70px; height: 10px;"></div>
+                                            </div>
+                                        </div>
+                                    
+                                </ng-container>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between pt-3 mt-auto">
+                            <div>
+                                <pagination-controls previousLabel="Prev" nextLabel="Next"
+                                    (pageChange)="page = $event;"></pagination-controls>
+                            </div>
+                            <div>
+                                <select [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()" class="form-select form-select-sm cursor"
+                                    [disabled]="!pageSize">
+                                    <option class="select-options" value="5"> 5</option>
+                                    <option class="select-options" [disabled]="!(totalItems > 5)" value="10"> 10</option>
+                                    <option class="select-options" [disabled]="!(totalItems > 10)" value="15"> 15</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Section (Form) -->
+                <div *ngIf="showForm" class="col-md-6">
+                    <div *ngIf="!isCronEditorModalOpen" class="glass-card p-4" style="min-height: 634px; max-height: 634px;">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold text-dark mb-0">Create Scheduler</h5>
+                            <button class="btn bg-danger-subtle rounded-circle d-flex align-items-center justify-content-center p-0 close-btn"
+                                (click)="clearFormData()">
+                                <i class="fe fe-x text-danger"></i>
+                            </button>
+                        </div>
+                        <form (ngSubmit)="submitForm()" #schedulerForm="ngForm">
+
+                            <!-- Source Type -->
+                            <div class="mb-4">
+                                <label class="form-label text-dark mb-3">Source Type <span class="text-danger">*</span></label>
+                                 <select class="form-select bg-transparent border-dark" [ngClass]="{ 'disabled':isEditPreview }" [disabled]="isEditPreview"
+                                    [(ngModel)]="newScheduler.source_type" name="source_type" required (change)="getSourceList(newScheduler.source_type)">
+                                    <option value="" selected disabled>Source Type</option>
+                                    <option class="select-options" value="flowboard">Flowboard</option>
+                                    <option class="select-options" value="taskplan">Taskplan</option>
+                                </select>
+                            </div>
+                
+                            <!-- Source ID -->
+                            <div class="mb-4">
+                                <label class="form-label text-dark mb-3">Source <span class="text-danger">*</span></label>
+                                <select class="form-select bg-transparent border-dark" [ngClass]="{ 'disabled':isEditPreview }" [disabled]="isEditPreview"
+                                    [(ngModel)]="newScheduler.source_id" name="source_id" required>
+                                    <option value="" selected disabled>Source</option>
+                                    <option *ngFor="let source of sourceList" class="select-options" [value]="source.id">{{ newScheduler.source_type === 'flowboard' ? source.Flow_name : source.Task_name }}</option>
+                                </select>
+                            </div>
+                
+                            <!-- Scheduler Type -->
+                            <div class="mb-4">
+                                <label class="form-label text-dark mb-3">Scheduler Type <span class="text-danger">*</span></label>
+                                <select class="form-select bg-transparent border-dark"
+                                    [(ngModel)]="newScheduler.scheduler_type" name="scheduler_type" required (change)="newScheduler.cron_tab = ''; tempCronExpression = ''">
+                                    <option value="" selected disabled>Scheduler Type</option>
+                                    <option class="select-options" value="preset">Preset</option>
+                                    <option class="select-options" value="custom">Custom</option>
+                                </select>
+                            </div>
+                
+                            <!-- Cron Tab -->
+                            <div class="mb-4">
+                                <label class="form-label text-dark mb-3">Cron Expression <span class="text-danger">*</span></label>
+                                <ng-container *ngIf="newScheduler.scheduler_type === 'preset'">
+                                    <div class="d-flex justify-content-between">
+                                        <input type="text" class="form-control bg-transparent text-dark border-dark me-2"
+                                            [(ngModel)]="newScheduler.cron_tab" disabled placeholder="eg: */5 * * * *" name="cron_tab" required>
+
+                                        <select class="form-select bg-transparent border-dark" [(ngModel)]="tempCronExpression" name="cron_preset" required
+                                            (change)="newScheduler.cron_tab = tempCronExpression">
+                                            <option value="" selected disabled>Select Preset</option>
+                                            <option value="None" class="select-options">None</option>
+                                            <option value="@once" class="select-options">Once</option>
+                                            <option value="@hourly" class="select-options">Hourly</option>
+                                            <option value="@daily" class="select-options">Daily (midnight)</option>
+                                            <option value="@weekly" class="select-options">Weekly (Sun 00:00)</option>
+                                            <option value="@monthly" class="select-options">Monthly (1st day 00:00)</option>
+                                            <option value="@yearly" class="select-options">Yearly (Jan 1st 00:00)</option>
+                                        </select>
+                                    </div>
+                                </ng-container>
+                                <ng-container *ngIf="newScheduler.scheduler_type === 'custom'">
+                                    <div class="input-group"> 
+                                        <input type="text" class="form-control bg-transparent text-dark border-dark" [(ngModel)]="newScheduler.cron_tab"
+                                            disabled placeholder="eg: */5 * * * *" name="cron_tab" required>
+                                    
+                                        <button type="button" class="btn btn-outline-primary" (click)="openCronEditorModal()">
+                                            <i class="bi bi-calendar-event"></i> Schedule
+                                        </button>
+                                    </div>
+                                </ng-container>
+                            </div>
+
+                             <!-- Timezone -->
+                            <div class="mb-5">
+                                <label class="form-label text-dark mb-3">Timezone <span class="text-danger">*</span></label>
+                                <ng-select [items]="timezones" name="timezone" bindLabel="label" bindValue="value" [(ngModel)]="newScheduler.timezone"
+                                    placeholder="Select Timezone" [searchable]="true" [clearable]="true" [disabled]="isEditPreview" [ngClass]="{ 'disabled':isEditPreview }">
+                                </ng-select>
+                            </div>
+                
+                            <div class="d-flex justify-content-end gap-2 pt-5">
+                                <button type="button" class="btn btn-danger rounded-5" (click)="clearFormData()">Cancel</button>
+                                <button type="submit" class="btn mode-btn" [disabled]="!newScheduler.source_type || !newScheduler.source_id || !newScheduler.scheduler_type || !newScheduler.cron_tab || !newScheduler.timezone"> {{isEditPreview ? 'Update' : 'Save'}} </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <ng-container *ngIf="isCronEditorModalOpen">
+                        <div class="p-3 glass-card rounded-4 bg-transparent cron-editor-view">
+                            <div class="cron-body flex-grow-1 overflow-auto">
+                                <h6 class="text-dark fw-semibold mb-3">Custom Schedule</h6>
+                    
+                                <!-- Repeat Type -->
+                                <div class="mb-3">
+                                    <label class="form-label text-dark">Repeat</label>
+                                    <select class="form-select bg-transparent border-dark" [(ngModel)]="custom.repeat" name="repeat"
+                                        required (ngModelChange)="updateGenerateBtnState()">
+                                        <option class="select-options" value="" disabled selected>Select repeat type</option>
+                                        <option class="select-options" value="once">Once</option>
+                                        <option class="select-options" value="daily">Daily</option>
+                                        <option class="select-options" value="weekly">Weekly</option>
+                                        <option class="select-options" value="monthly">Monthly</option>
+                                        <option class="select-options" value="yearly">Yearly</option>
+                                    </select>
+                                </div>
+                    
+                                <!-- Once -->
+                                <div *ngIf="custom.repeat === 'once'" class="mb-3">
+                                    <label class="form-label text-dark">Date & Time</label>
+                                    <input type="datetime-local" class="form-control bg-transparent border-dark"
+                                        [(ngModel)]="custom.dateTime" name="dateTime" (ngModelChange)="updateGenerateBtnState()">
+                                </div>
+                    
+                                <!-- Daily -->
+                                <div *ngIf="custom.repeat === 'daily'" class="mb-3">
+                                    <label class="form-label text-dark">Time</label>
+                                    <input type="time" class="form-control bg-transparent border-dark" [(ngModel)]="custom.time"
+                                        name="dailyTime" (ngModelChange)="updateGenerateBtnState()">
+                                </div>
+                    
+                                <!-- Weekly -->
+                                <div *ngIf="custom.repeat === 'weekly'" class="mb-3">
+                                    <label class="form-label text-dark">Days of Week</label>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <div *ngFor="let day of weekDays" class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" [(ngModel)]="day.selected" name="{{day.value}}" (ngModelChange)="updateGenerateBtnState()">
+                                            <label class="form-check-label">{{ day.label }}</label>
+                                        </div>
+                                    </div>
+                                    <label class="form-label text-dark mt-2">Time</label>
+                                    <input type="time" class="form-control bg-transparent border-dark" [(ngModel)]="custom.time"
+                                        name="weeklyTime" (ngModelChange)="updateGenerateBtnState()">
+                                </div>
+                    
+                                <!-- Monthly -->
+                                <div *ngIf="custom.repeat === 'monthly'" class="mb-3">
+                                    <label class="form-label text-dark">Day of Month</label>
+                                    <input type="number" min="1" max="31" class="form-control bg-transparent border-dark"
+                                        [(ngModel)]="custom.dayOfMonth" name="dayOfMonth" (ngModelChange)="updateGenerateBtnState()">
+                                    <label class="form-label text-dark mt-2">Time</label>
+                                    <input type="time" class="form-control bg-transparent border-dark" [(ngModel)]="custom.time"
+                                        name="monthlyTime" (ngModelChange)="updateGenerateBtnState()">
+                                </div>
+                    
+                                <!-- Yearly -->
+                                <div *ngIf="custom.repeat === 'yearly'" class="mb-3">
+                                    <label class="form-label text-dark">Month</label>
+                                    <select class="form-select bg-transparent border-dark" [(ngModel)]="custom.month" name="month" (ngModelChange)="updateGenerateBtnState()">
+                                        <option *ngFor="let m of months" [value]="m.value" class="select-options">{{ m.label }}</option>
+                                    </select>
+                                    <label class="form-label text-dark mt-2">Day</label>
+                                    <input type="number" min="1" max="31" class="form-control bg-transparent border-dark"
+                                        [(ngModel)]="custom.dayOfMonth" name="yearlyDay" (ngModelChange)="updateGenerateBtnState()">
+                                    <label class="form-label text-dark mt-2">Time</label>
+                                    <input type="time" class="form-control bg-transparent border-dark" [(ngModel)]="custom.time"
+                                        name="yearlyTime" (ngModelChange)="updateGenerateBtnState()">
+                                </div>
+                    
+                                <!-- Generated Cron -->
+                                <div *ngIf="tempCronExpression" class="mt-2">
+                                    <label class="form-label text-dark">Generated Cron</label>
+                                    <input type="text" class="form-control bg-transparent border-dark" [(ngModel)]="tempCronExpression"
+                                        name="cron_tab" readonly>
+                                    <div class="text-muted small mt-1">{{ cronPreview }}</div>
+                                </div>
+                            </div>
+                    
+                            <!-- Footer -->
+                            <div class="cron-footer d-flex justify-content-end gap-2">
+                                <button type="button" class="btn btn-danger rounded-5" (click)="closeCronEditorModal()">Cancel</button>
+                                <button type="button" class="btn btn-primary rounded-5" [disabled]="isGenerateBtnDisabled"
+                                    (click)="generateCron()">Generate Cron</button>
+                                <button type="button" class="btn mode-btn" [disabled]="isGenerateBtnDisabled"
+                                    (click)="generateCron(); applyCronExpression()">Generate & Apply</button>
+                            </div>
+                        </div>
+                    </ng-container>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,179 @@
+/* Start:: sweet alerts */
+.swal2-container {
+  .swal2-title {
+    font-size: 1.15rem;
+    padding: 2rem 2rem 0.5rem;
+  }
+
+  .swal2-footer {
+    padding: 1.5rem 1.5rem 0;
+  }
+
+  .swal2-popup {
+    background: $custom-white;
+    color: $default-color;
+    padding: 0 0 2rem;
+  }
+
+  .swal2-center > .swal2-popup {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  .swal2-actions {
+    margin: 1rem auto 0;
+  }
+
+  .swal2-styled.swal2-confirm {
+    margin: 0;
+    padding: 0.375em 0.75rem;
+    box-shadow: none;
+    font-size: 0.8125rem;
+    border-radius: 0.3rem;
+  }
+
+  .swal2-styled.swal2-confirm:focus,
+  .swal2-styled.swal2-cancel:focus,
+  .swal2-styled.swal2-deny:focus {
+    box-shadow: none;
+  }
+
+  .swal2-styled.swal2-confirm {
+    background-color: $primary !important;
+    color: $white;
+  }
+
+  .swal2-footer {
+    border-top: 1px solid $border;
+  }
+
+  .swal2-icon {
+    width: 4rem;
+    height: 4rem;
+    margin: 2rem auto 0rem;
+  }
+
+  .swal2-icon.swal2-question {
+    border-color: $success;
+    color: $success;
+  }
+
+  .swal2-icon.swal2-error {
+    border-color: $danger;
+    color: $danger;
+  }
+
+  .swal2-icon.swal2-info {
+    border-color: $info;
+    color: $info;
+  }
+
+  .swal2-icon.swal2-warning {
+    border-color: $warning;
+    color: $warning;
+  }
+
+  .swal2-icon .swal2-icon-content {
+    font-size: 3rem;
+  }
+
+  .swal2-image {
+    border-radius: $default-radius;
+  }
+
+  .swal2-html-container {
+    margin: 0rem 1.6rem 0.3rem;
+    font-size: 0.8rem;
+    color: $muted;
+  }
+
+  .swal2-icon.swal2-error [class^="swal2-x-mark-line"][class$="left"] {
+    inset-inline-start: 1em;
+  }
+
+  .swal2-icon.swal2-error [class^="swal2-x-mark-line"] {
+    top: 1.9em;
+    width: 2em;
+    height: 0.3em;
+    background-color: $danger;
+  }
+
+  .swal2-icon.swal2-error [class^="swal2-x-mark-line"][class$="right"] {
+    inset-inline-end: 1em;
+    inset-block-start: 1.875rem;
+  }
+
+  .swal2-close:focus {
+    box-shadow: none;
+  }
+
+  .swal2-deny,
+  .swal2-cancel {
+    margin-inline-start: 0.625rem;
+  }
+
+  .swal2-close {
+    font-size: 2rem;
+    color: $muted;
+    opacity: 0.5;
+  }
+
+  .swal2-close:hover {
+    color: $primary;
+  }
+
+  .swal2-styled.swal2-deny {
+    background-color: $danger;
+    padding: 0.375em 0.75rem;
+    box-shadow: none;
+    font-size: 0.8125rem;
+    border-radius: 0.3rem;
+  }
+
+  .swal2-styled.swal2-cancel {
+    background-color: $light !important;
+    color: $default-color;
+    padding: 0.375em 0.75rem;
+    box-shadow: none;
+    font-size: 0.8125rem;
+    border-radius: 0.3rem;
+  }
+
+  .swal2-icon.swal2-success [class^="swal2-success-line"][class$="long"] {
+    top: 2.05em;
+    inset-inline-end: 0.45em;
+    width: 2em;
+  }
+
+  .swal2-icon.swal2-success [class^="swal2-success-line"][class$="tip"] {
+    top: 2.375em;
+    inset-inline-start: 0.9125em;
+    width: 1.2625em;
+  }
+
+  .swal2-file:focus,
+  .swal2-input:focus,
+  .swal2-textarea:focus {
+    border: 1px solid $border;
+    box-shadow: none;
+  }
+}
+
+[dir="rtl"] {
+  .swal2-container
+    .swal2-icon.swal2-success
+    [class^="swal2-success-line"][class$="tip"] {
+    inset-inline-start: 1.9125em;
+  }
+}
+.swal2-container .swal2-styled.swal2-confirm {
+  background-color: $primary !important;
+  color: $white;
+}
+div:where(.swal2-container) img:where(.swal2-image) {
+  max-width: 100%;
+  margin: 2rem;
+  width: 79% !important;
+}
+/* End:: sweet alerts */

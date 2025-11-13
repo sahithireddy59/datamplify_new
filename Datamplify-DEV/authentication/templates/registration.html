@@ -1,0 +1,215 @@
+<!-- <!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Verify Your Email - Datamplify</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f2f4f8; /* Light gray-blue background */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff; /* White content box */
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+        }
+        .header {
+            background-color: #0D1A26;
+            padding: 20px;
+            text-align: center;
+        }
+        .header img {
+            max-height: 40px;
+        }
+        .content {
+            padding: 30px;
+            color: #333333;
+            line-height: 1.6;
+        }
+        .content h2 {
+            color: #0D1A26;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .otp-box {
+            background-color: #f1f1f1;
+            font-size: 32px;
+            font-weight: bold;
+            color: #0D1A26;
+            padding: 15px;
+            margin: 20px 0;
+            letter-spacing: 4px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        .button {
+            display: inline-block;
+            background-color: #00D1A0;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .footer {
+            background-color: #0D1A26;
+            color: #aaaaaa;
+            font-size: 12px;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <img src="cid:datamplify_logo" alt="Datamplify Logo">
+        </div>
+        <div class="content">
+            <h2>Verify Your Email</h2>
+            <p>Hi <strong>{{ username }}</strong>,</p>
+            <p>Thank you for registering with <strong>Datamplify</strong>.</p>
+            <p>Your One-Time Password (OTP) is:</p>
+            <div class="otp-box">{{ Gotp }}</div>
+            <p>Or click the button below to verify your account:</p>
+            <a href="{{ current_site }}{{ api }}{{ unique_id }}" class="button">Verify OTP</a>
+            <p style="margin-top: 30px;">If you did not request this, you can safely ignore this email.</p>
+        </div>
+        <div class="footer">
+            &copy; {{ current_year }} Datamplify. All rights reserved.
+        </div>
+    </div>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Datamplify Email Verification</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    body {
+      margin: 0;
+      background-color: #0F172A;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #F8FAFC;
+    }
+
+    .wrapper {
+      max-width: 600px;
+      margin: 60px auto;
+      background-color: #1E293B;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    }
+
+    .header {
+      background: linear-gradient(90deg, #3B82F6, #22C55E);
+      padding: 40px 24px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: bold;
+      margin: 0;
+      color: #fff;
+    }
+
+    .content {
+      padding: 40px 32px;
+    }
+
+    .content h2 {
+      font-size: 22px;
+      margin-bottom: 20px;
+      color: #F8FAFC;
+    }
+
+    .content p {
+      font-size: 15px;
+      color: #cbd5e1;
+      line-height: 1.7;
+      margin: 10px 0;
+    }
+
+    .otp {
+      background-color: #1F2937;
+      padding: 20px 0;
+      margin: 30px 0;
+      text-align: center;
+      font-size: 34px;
+      font-weight: bold;
+      color: #22C55E;
+      letter-spacing: 6px;
+      border: 2px dashed #3B82F6;
+      border-radius: 10px;
+    }
+
+    .button {
+      display: inline-block;
+      margin-top: 20px;
+      background-color: #22C55E;
+      color: #1E293B;
+      text-decoration: none;
+      font-weight: bold;
+      padding: 14px 28px;
+      border-radius: 8px;
+      transition: background 0.3s ease;
+    }
+
+    .button:hover {
+      background-color: #16a34a;
+    }
+
+    .footer {
+      padding: 24px;
+      text-align: center;
+      font-size: 12px;
+      color: #64748B;
+      background-color: #0F172A;
+    }
+
+    @media only screen and (max-width: 620px) {
+      .content {
+        padding: 24px;
+      }
+
+      .otp {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <h1>Datamplify</h1>
+    </div>
+    <div class="content">
+      <h2>Verify Your Email</h2>
+      <p>Hey <strong>{{ username }}</strong>,</p>
+      <p>Welcome to <strong>Datamplify</strong></p>
+      <p>Here’s your one-time password (OTP):</p>
+
+      <div class="otp">{{ Gotp }}</div>
+
+      <p>Or verify your email instantly with this button:</p>
+      <a href="{{ current_site }}{{ api }}{{ unique_id }}" class="button">Verify Now</a>
+
+      <p style="margin-top: 32px;">If you didn’t request this, just ignore the message.</p>
+    </div>
+    <div class="footer">
+      &copy; {{ current_year }} Datamplify • Powering Data Automation
+    </div>
+  </div>
+</body>
+</html>

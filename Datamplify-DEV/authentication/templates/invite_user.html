@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Datamplify Invitation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    body {
+      margin: 0;
+      background-color: #0F172A;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #F8FAFC;
+    }
+
+    .wrapper {
+      max-width: 600px;
+      margin: 60px auto;
+      background-color: #1E293B;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    }
+
+    .header {
+      background: linear-gradient(90deg, #3B82F6, #22C55E);
+      padding: 40px 24px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: bold;
+      margin: 0;
+      color: #fff;
+    }
+
+    .content {
+      padding: 40px 32px;
+    }
+
+    .content h2 {
+      font-size: 22px;
+      margin-bottom: 20px;
+      color: #F8FAFC;
+    }
+
+    .content p {
+      font-size: 15px;
+      color: #cbd5e1;
+      line-height: 1.7;
+      margin: 10px 0;
+    }
+
+    .invite-box {
+      background-color: #1F2937;
+      padding: 20px;
+      margin: 25px 0;
+      border-radius: 10px;
+      border: 1px dashed #3B82F6;
+      color: #94A3B8;
+    }
+
+    .invite-box strong {
+      color: #22C55E;
+    }
+
+    .button {
+      display: inline-block;
+      margin-top: 20px;
+      background-color: #3B82F6;
+      color: #F8FAFC;
+      text-decoration: none;
+      font-weight: bold;
+      padding: 14px 28px;
+      border-radius: 8px;
+      transition: background 0.3s ease;
+    }
+
+    .button:hover {
+      background-color: #2563EB;
+    }
+
+    .footer {
+      padding: 24px;
+      text-align: center;
+      font-size: 12px;
+      color: #64748B;
+      background-color: #0F172A;
+    }
+
+    @media only screen and (max-width: 620px) {
+      .content {
+        padding: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <h1>Datamplify</h1>
+    </div>
+    <div class="content">
+      <h2>You’ve Been Invited!</h2>
+      <p>Hey there 👋,</p>
+      <p><strong>{{ invited_by }}</strong> has invited you to join <strong>Datamplify</strong> as a <strong>{{ role }}</strong>.</p>
+
+      {% if message %}
+      <div class="invite-box">
+        <p><em>"{{ message }}"</em></p>
+      </div>
+      {% endif %}
+
+      <p>Click below to accept your invitation and get started:</p>
+
+      <a href="{{ invite_link }}" class="button">Accept Invitation</a>
+
+      <p style="margin-top: 32px;">If you didn’t expect this invite, you can safely ignore this email.</p>
+    </div>
+    <div class="footer">
+      &copy; {{ current_year|default:"2025" }} Datamplify • Powering Data Automation
+    </div>
+  </div>
+</body>
+</html>

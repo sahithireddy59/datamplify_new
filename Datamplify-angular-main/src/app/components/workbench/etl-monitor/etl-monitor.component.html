@@ -1,0 +1,553 @@
+
+
+
+<app-page-header
+  title="Monitor"
+  moduleId="monitorList"
+  title1="Home"
+  activeitem="Monitor">
+</app-page-header>
+
+<div class="main-container container-fluid p-0">
+  <!-- <div class="row">
+    <h4>{{ dagName }}</h4>
+  </div> -->
+
+  <div class="row p-0">
+    <div id="resize-container" #resizeContainer class="d-flex flex-row p-0">
+
+      <!-- ========== SIDEBAR ========== -->
+      <div id="sidebar" #sidebar class="overflow-auto glass-card p-0">
+        <div class="container-fluid">
+          <div class="col-md-12 p-3">
+
+            <!-- Sidebar: Task Status History -->
+            <div>
+              <label class="fw-bold">Task Status History (Last X Runs):</label><br>
+              <select
+                class="form-select"
+                [(ngModel)]="lastXRuns"
+                (change)="updateSidebarChartAndTasks()">
+                <option value="5">5 Runs</option>
+                <option value="10" selected>10 Runs</option>
+                <option value="25">25 Runs</option>
+                <option value="50">50 Runs</option>
+                <option value="100">100 Runs</option>
+              </select>
+            </div>
+
+            <!-- Sidebar Chart -->
+            <div class="my-3">
+              <h6 class="text-center fw-normal">{{ sidebarChartTitle }}</h6>
+              <div echarts [options]="sidebarChartOptions" class="echart1"></div>
+            </div>
+
+            <!-- Sidebar Task Quick Status -->
+            <h6 class="mt-4 mb-2">
+              Task Quick Status
+              <small class="text-muted">(Last {{ lastXRuns }} Runs)</small>
+            </h6>
+            <ul class="list-group overflow-auto" style="max-height: 300px;">
+              @for(task of tasksRunStatuses; let i = $index; track i) {
+              <li
+                *ngIf="!unWantedTasks.includes(task.name)"
+                class="list-group-item d-flex justify-content-between align-items-center py-2 px-2 border-0">
+                
+                <!-- Task Name -->
+                <span class="me-2 text-truncate" style="min-width: 2ch;">
+                  <a class="text-decoration-none" [title]="task.name">
+                    {{ task.name }}
+                  </a>
+                </span>
+
+                <!-- Status Indicators -->
+                <div class="d-flex gap-1 flex-shrink-0">
+                  <div
+                    *ngFor="let statusInfo of task.statuses; let i = index"
+                    class="rounded-3"
+                    style="width: 18px; height: 18px;"
+                    [ngClass]="{
+                      'bg-success': statusInfo.status === 'success',
+                      'bg-danger': statusInfo.status === 'failed',
+                      'bg-info': statusInfo.status === 'running',
+                      'bg-warning': statusInfo.status === 'upstream_failed'
+                    }"
+                    [style.background-color]="statusInfo.status === 'removed' ? '#6c757d' : ''"
+                    ngbTooltip="Run: {{statusInfo.runAfter | date:'yyyy-MM-dd HH:mm:ss' }}, Status: {{statusInfo.status}}"
+                    container="body">
+                    
+                    <!-- Icons -->
+                    <i *ngIf="statusInfo.status === 'success'"
+                      class="fa fa-check text-light d-flex align-items-center justify-content-center mt-1"
+                      style="font-size: 0.7rem;"></i>
+                    <i *ngIf="statusInfo.status === 'failed'"
+                      class="fa fa-remove text-light d-flex align-items-center justify-content-center mt-1"
+                      style="font-size: 0.7rem;"></i>
+                    <i *ngIf="statusInfo.status === 'running'"
+                      class="bi bi-hourglass-split text-light d-flex align-items-center justify-content-center mt-1"
+                      style="font-size: 0.7rem;"></i>
+                  </div>
+                </div>
+              </li>
+              }
+            </ul>
+          </div>
+        </div>
+      </div>
+      <!-- ========== END SIDEBAR ========== -->
+
+      <!-- Divider -->
+      <div id="divider" #divider></div>
+
+      <!-- ========== MAIN CONTENT ========== -->
+      <div id="main" #main class="p-1">
+        <!-- <div class="container-fluid"> -->
+
+          <!-- MAIN: Overview -->
+          <div class="row" *ngIf="!selectedRunForDetails && !selectedTaskInstanceForDetails">
+            <div class="col-md-12">
+
+              <!-- DAG Name -->
+              <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mt-3 mb-0">{{ dagName }}</h4>
+              </div>
+
+              <!-- DAG Schedule Card -->
+              <!-- <div class="card glass-card my-3">
+                <div class="card-header d-flex justify-content-between">
+                  <div>
+                    <h6 class="text-muted">Schedule</h6>
+                    <p class="fs-9 mb-0">{{ schedule || 'None' }}</p>
+                  </div>
+                  <div>
+                    <h6 class="text-muted">Latest Run</h6>
+                    <p class="fs-9 mb-0">
+                      <a class="text-decoration-none" *ngIf="latestRunTimestamp">
+                        {{ latestRunTimestamp | date:'yyyy-MM-dd HH:mm:ss' }}
+                      </a>
+                      <span *ngIf="!latestRunTimestamp">N/A</span>
+                    </p>
+                  </div>
+                  <div>
+                    <h6 class="text-muted">Next Run</h6>
+                    <p class="fs-9 mb-0">
+                      {{ (schedule && schedule !== 'None' ? nextRunTimestamp : 'N/A') || 'N/A' }}
+                    </p>
+                  </div>
+                </div>
+              </div> -->
+
+            <div class="row g-3">
+                <!-- Schedule -->
+                <div class="col-md-4">
+                    <div class="glass-card card p-3">
+                        <h6 class="text-muted mb-1">Schedule</h6>
+                        <p class="fw-bold mb-0">{{ schedule || 'None' }}</p>
+                    </div>
+                </div>
+            
+                <!-- Latest Run -->
+                <div class="col-md-4">
+                    <div class="glass-card card p-3">
+                        <h6 class="text-muted mb-1">Latest Run</h6>
+                        <p class="fw-bold mb-0">
+                            <a class="text-decoration-none" *ngIf="latestRunTimestamp">
+                                {{ latestRunTimestamp | date:'yyyy-MM-dd HH:mm:ss' }}
+                            </a>
+                            <span *ngIf="!latestRunTimestamp">N/A</span>
+                        </p>
+                    </div>
+                </div>
+            
+                <!-- Next Run -->
+                <div class="col-md-4">
+                    <div class="glass-card card p-3">
+                        <h6 class="text-muted mb-1">Next Run</h6>
+                        <p class="fw-bold mb-0">
+                            {{ (schedule && schedule !== 'None' ? nextRunTimestamp : 'N/A') || 'N/A' }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+              <!-- Tabs (Overview, Runs, Tasks) -->
+              <div class="container glass-card py-4 px-0">
+                <ul ngbNav #nav="ngbNav" class="nav nav-tabs"
+                    [activeId]="activeTabId"
+                    (activeIdChange)="activeTabId = $event">
+                  
+                  <!-- Tab 1: Overview -->
+                  <li [ngbNavItem]="1" (click)="getRunsList(dagId, 14, '', '', '-run_after');">
+                    <a ngbNavLink>Overview</a>
+                    <ng-template ngbNavContent>
+                      <div class="card">
+                        <div class="card-body">
+                          <h5 class="card-title">{{ mainChartTitle }}</h5>
+                          <div echarts [options]="chartOptions" class="echart"></div>
+                        </div>
+                      </div>
+                    </ng-template>
+                  </li>
+
+                <li [ngbNavItem]="2" (click)="getRunsList(dagId, 100, '', '', '-run_after');">
+                    <a ngbNavLink>Runs</a>
+                    <ng-template ngbNavContent>
+                        <div class="d-flex flex-column flex-md-row justify-content-start align-items-center my-3">
+                            <div ngbDropdown class="mb-2 mb-md-0 me-md-2">
+                                <button ngbDropdownToggle class="btn btn-outline-primary" type="button">
+                                    <i class="bi bi-funnel me-1"></i> {{ selectedStateFilter }}
+                                </button>
+                                <div ngbDropdownMenu class="py-1">
+                                    <button ngbDropdownItem type="button"
+                                        (click)="getRunsList(dagId, 100, '', '', orderBy); selectedStateFilter = 'All States'">All
+                                        States</button>
+                                    <button ngbDropdownItem type="button" class="d-flex align-items-center"
+                                        (click)="getRunsList(dagId, 100, 'queued', '', orderBy); selectedStateFilter = 'Queued'">
+                                        <span class="badge bg-secondary me-2">Queued</span>
+                                    </button>
+                                    <button ngbDropdownItem type="button" class="d-flex align-items-center"
+                                        (click)="getRunsList(dagId, 100, 'running', '', orderBy); selectedStateFilter = 'Running'">
+                                        <span class="badge bg-info me-2">Running</span>
+                                    </button>
+                                    <button ngbDropdownItem type="button" class="d-flex align-items-center"
+                                        (click)="getRunsList(dagId, 100, 'failed', '', orderBy); selectedStateFilter = 'Failed'">
+                                        <span class="badge bg-danger me-2">Failed</span>
+                                    </button>
+                                    <button ngbDropdownItem type="button" class="d-flex align-items-center"
+                                        (click)="getRunsList(dagId, 100, 'success', '', orderBy); selectedStateFilter = 'Success'">
+                                        <span class="badge bg-success me-2">Success</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div ngbDropdown class="mb-2 mb-md-0 me-md-2">
+                                <button ngbDropdownToggle class="btn btn-outline-primary" type="button">
+                                    <i class="bi bi-tags me-1"></i> {{ selectedRunTypeFilter }}
+                                </button>
+                                <div ngbDropdownMenu class="py-1">
+                                    <button ngbDropdownItem type="button"
+                                        (click)="getRunsList(dagId, 100, '', '', orderBy); selectedRunTypeFilter = 'All Run Types'">All
+                                        Run Types</button>
+                                    <button ngbDropdownItem type="button" class="d-flex align-items-center"
+                                        (click)="getRunsList(dagId, 100, '', 'manual', orderBy); selectedRunTypeFilter = 'manual'">
+                                        Manual
+                                    </button>
+                                    <button ngbDropdownItem type="button" class="d-flex align-items-center"
+                                        (click)="getRunsList(dagId, 100, '', 'scheduled', orderBy); selectedRunTypeFilter = 'scheduled'">
+                                        Scheduled
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- <div class="ms-md-auto d-flex">
+                                                                    <input type="number" class="form-control" placeholder="limit">
+                                                                    <button class="btn btn-primary" style="height: 100%; border-radius: 0px;">
+                                                                        <i class="mdi mdi-arrow-right-thick text-light"></i>
+                                                                    </button>
+                                                                </div> -->
+                        </div>
+                
+                        <div class="row fw-bold text-primary gx-2 mb-2 d-none d-md-flex">
+                            <div class="col-md-2 clickable" (click)="sort('run_after', 'run')">
+                                Run After
+                                <span *ngIf="sortColumnRun === 'run_after'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                            </div>
+                            <div class="col-md-2 clickable" (click)="sort('state', 'run')">
+                                State
+                                <span *ngIf="sortColumnRun === 'state'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                            </div>
+                            <div class="col-md-2 clickable">
+                                Run Type
+                                <!-- <span *ngIf="sortColumnRun === 'run_type'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span> -->
+                            </div>
+                            <div class="col-md-2 clickable" (click)="sort('start_date', 'run')">
+                                Start Date
+                                <span *ngIf="sortColumnRun === 'start_date'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                            </div>
+                            <div class="col-md-2 clickable">
+                                Duration
+                                <!-- <span *ngIf="sortColumnRun === 'duration'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span> -->
+                            </div>
+                            <div class="col-md-2 clickable" (click)="sort('end_date', 'run')">
+                                End Date
+                                <span *ngIf="sortColumnRun === 'end_date'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                            </div>
+                        </div>
+                
+                        <div class="list-group">
+                            <!-- TODO: Add loading spinner or 'No runs found' message -->
+                            <div *ngFor="let run of filteredRuns" class="list-group-item list-group-item-action p-3 border-bottom"
+                                [class.bg-danger-light]="run.state === 'Failed'">
+                                <div class="row align-items-center gx-2">
+                                    <div class="col-md-2 col-6">
+                                        <strong class="d-md-none">Run After: </strong>
+                                        <a (click)="showRunDetailsPane(run)" class="link-primary fw-medium" style="cursor: pointer;">{{
+                                            run.run_after | date:'yyyy-MM-dd HH:mm:ss' }}</a>
+                                    </div>
+                                    <div class="col-md-2 col-6">
+                                        <strong class="d-md-none">State: </strong>
+                                        <span class="badge" [ngClass]="{
+                                                                                'bg-success': run.state === 'success',
+                                                                                'bg-danger': run.state === 'failed',
+                                                                                'bg-info': run.state === 'running',
+                                                                            }">{{ run.state }}</span>
+                                    </div>
+                                    <div class="col-md-2 col-6 mt-1 mt-md-0">
+                                        <strong class="d-md-none">Run Type: </strong>
+                                        {{ run.run_type }}
+                                    </div>
+                                    <div class="col-md-2 col-6 mt-1 mt-md-0 text-truncate">
+                                        <strong class="d-md-none">Start: </strong>{{ run.start_date | date:'yyyy-MM-dd HH:mm:ss' }}
+                                    </div>
+                                    <div class="col-md-2 col-6 mt-1 mt-md-0">
+                                        <strong class="d-md-none">Duration: </strong>{{ run.duration }}
+                                    </div>
+                                    <div class="col-md-2 col-6 mt-1 mt-md-0 text-truncate">
+                                        <strong class="d-md-none">End: </strong> {{ run.end_date ? (run.end_date | date:'yyyy-MM-dd
+                                        HH:mm:ss') : 'N/A' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-template>
+                </li>
+                <li [ngbNavItem]="3" (click)="getTaskListData()">
+                    <a ngbNavLink>Tasks</a>
+                    <ng-template ngbNavContent>
+                        <div class="d-flex justify-content-between align-items-center my-3">
+                            <h5>{{ filteredTasks.length }} Tasks</h5>
+                        </div>
+                        <div class="overflow-auto" style="max-height:70vh;">
+                            <!-- TODO: Add loading spinner or 'No tasks found' message -->
+                            @for(task of filteredTasks; let i = $index; track i){
+                            <div *ngIf="!unWantedTasks.includes(task.task_id)" class="card mb-3">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <a class="h5 text-primary text-decoration-none mb-0">
+                                            {{ task.task_id }}
+                                        </a>
+                                    </div>
+                
+                                    <div class="row mt-2 align-items-center gx-3">
+                                        <div class="col-12">
+                                            <div class="d-flex align-items-center mt-2 col-12">
+                                                <div class="me-3 col-4">
+                                                    <div class="fw-semibold text-muted small">Last Instance:</div>
+                                                    <a class="text-primary text-decoration-none small" *ngIf="task.run_after">
+                                                        {{ task.run_after | date:'yyyy-MM-dd HH:mm' }}
+                                                    </a>
+                                                    <span *ngIf="!task.run_after" class="small">N/A</span>
+                                                </div>
+                                                <div class="me-3 col-4">
+                                                    <span class="d-inline-block rounded-circle"
+                                                        [class.bg-success]="task.state === 'success'"
+                                                        [class.bg-danger]="task.state === 'failed'"
+                                                        [class.bg-info]="task.state === 'running'"
+                                                        [class.bg-warning]="task.state === 'upstream_failed'"
+                                                        [style.background-color]="task.state === 'removed' ?  '#6c757d' : ''"
+                                                        style="width:12px; height:12px;" ngbTooltip="Status: {{task.state}}"
+                                                        container="body"></span>
+                                                    <span class="ms-1 small text-capitalize">{{task.state}}</span>
+                                                </div>
+                                                <div class="d-flex justify-content-end col-4" container="body">
+                                                    <div class="d-flex align-items-end justify-content-end" style="height:30px;">
+                                                        <div *ngFor="let bar of task.miniChartData" class="me-1" [style.width.px]="5"
+                                                            [style.height.%]="bar.heightPercentage" [style.max-height.%]="300"
+                                                            [ngClass]="{
+                                                                                                                                                        'bg-success': bar.status === 'success',
+                                                                                                                                                        'bg-danger': bar.status === 'failed',
+                                                                                                                                                        'bg-info': bar.status === 'running',
+                                                                                                                                                        'bg-warning': bar.status === 'upstream_failed',
+                                                                                                                                                        'bg-secondary': bar.status === 'skipped'
+                                                                                                                                                     }"
+                                                            style="flex-basis: 6px;"
+                                                            ngbTooltip="Status: {{bar.status}}, Duration: {{bar.duration}}sec"
+                                                            container="body"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            }
+                        </div>
+                    </ng-template>
+                </li>
+
+                </ul>
+                <div [ngbNavOutlet]="nav" class="mt-3"></div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- MAIN: Run Details -->
+          <div class="row mt-3 glass-card" *ngIf="selectedRunForDetails">
+            <div id="run-details-pane">
+                <!-- Toolbar for the Details Pane -->
+                <div class="d-flex justify-content-start align-items-center pb-3">
+                    <button class="bg-primary border-0 rounded-1 me-2" (click)="closeRunDetailsPane()"><i
+                            class="fa fa-arrow-left text-light"></i></button>
+                    <h5 class="mb-0 text-truncate me-2" title="{{ selectedRunForDetails.run_after }}">
+                        Run: {{ selectedRunForDetails.run_after }}
+                    </h5>
+                    <span class="badge me-2" [ngClass]="{
+                                                                                                        'bg-success': selectedRunForDetails.state === 'Success' || selectedRunForDetails.state === 'Completed',
+                                                                                                        'bg-danger': selectedRunForDetails.state === 'Failed',
+                                                                                                        'bg-info': selectedRunForDetails.state === 'Running' || selectedRunForDetails.state === 'InProgress',
+                                                                                                        'bg-secondary': selectedRunForDetails.state === 'Queued'
+                                                                                                    }">{{
+                        selectedRunForDetails.state }}</span>
+                </div>
+            
+                <!-- Run Info Summary -->
+                <div class="d-flex align-items-center p-1 pb-3 col-12">
+                    <div class="col-3">
+                        <strong>Run Type:</strong> {{ selectedRunForDetails.run_type }}
+                    </div>
+                    <div class="col-3">
+                        <strong>Start:</strong> {{ selectedRunForDetails.start_date | date:'yyyy-MM-dd, HH:mm:ss' }}
+                    </div>
+                    <div class="col-3">
+                        <strong>End:</strong> {{ selectedRunForDetails.end_date ? (selectedRunForDetails.end_date |
+                        date:'yyyy-MM-dd, HH:mm:ss') : 'N/A' }}
+                    </div>
+                    <div class="col-3">
+                        <strong>Duration:</strong> {{ selectedRunForDetails.duration }}
+                    </div>
+                </div>
+            
+                <!-- Tabs within the Details Pane -->
+                <ul ngbNav #detailsNav="ngbNav" class="nav-tabs nav mb-3" [(activeId)]="activeDetailsTabId">
+                    <li [ngbNavItem]="'task_instances'">
+                        <a ngbNavLink>Task Instances</a>
+                        <ng-template ngbNavContent>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <input type="text" class="form-control w-auto" placeholder="Search Tasks..."
+                                    (input)="filterRunTaskInstances($any($event.target).value)">
+                                <select class="form-select w-auto"
+                                    (change)="filterRunTaskInstancesByState($any($event.target).value)">
+                                    <option value="">All States</option>
+                                    <option value="success">Success</option>
+                                    <option value="failed">Failed</option>
+                                    <option value="running">Running</option>
+                                    <option value="skipped">Skipped</option>
+                                    <option value="upstream_failed">Upstream Failed</option>
+                                    <option value="queued">Queued</option>
+                                </select>
+                            </div>
+                            <div class="list-group list-group-flush">
+                                <div class="list-group-item d-none d-md-flex fw-bold text-muted py-1 px-2">
+                                    <div class="col-md-3">Task ID</div>
+                                    <div class="col-md-2 text-center">State</div>
+                                    <div class="col-md-2">Start Date</div>
+                                    <div class="col-md-2">End Date</div>
+                                    <div class="col-md-1 text-center">Duration</div>
+                                </div>
+                                @for(instance of filteredRunTaskInstances; let i = $index; track i){
+                                <div *ngIf="!unWantedTasks.includes(instance.task_id)"
+                                    class="list-group-item list-group-item-action">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-3">
+                                            <a (click)="showTaskInstanceDetails(instance)" class="link-primary text-break">{{
+                                                instance.task_id }}</a>
+                                        </div>
+                                        <div class="col-md-2 col-4 text-md-center">
+                                            <span class="badge" [ngClass]="getTaskInstanceStatusClass(instance.state)">{{
+                                                instance.state }}</span>
+                                        </div>
+                                        <div class="col-md-2 col-4 text-truncate">{{ instance.start_date | date:'yyyy-MM-dd,
+                                            HH:mm:ss' }}
+                                        </div>
+                                        <div class="col-md-2 col-4 text-truncate">{{ instance.end_date ? (instance.end_date |
+                                            date:'yyyy-MM-dd, HH:mm:ss') : 'N/A' }}</div>
+                                        <div class="col-md-1 col-4 text-md-center">{{ instance.duration }}</div>
+                                    </div>
+                                </div>
+                                }
+                                <div *ngIf="filteredRunTaskInstances.length === 0"
+                                    class="list-group-item text-center text-muted py-3">
+                                    No task instances found.
+                                </div>
+                            </div>
+                        </ng-template>
+                    </li>
+                </ul>
+                <div [ngbNavOutlet]="detailsNav" class="mt-3 overflow-auto"></div>
+            </div>
+          </div>
+
+          <!-- MAIN: Task Instance Details -->
+        <div class="row mt-3 glass-card" *ngIf="selectedTaskInstanceForDetails">
+            <div id="details-pane-container">
+                <!-- Task Instance Details Header -->
+                <div class="d-flex justify-content-start align-items-center pb-2 mb-2 border-bottom">
+                    <button class="btn btn-sm btn-primary border me-2" (click)="backToRunDetails()" title="Back to Run Details">
+                        <i class="bi bi-arrow-left text-light"></i>
+                    </button>
+                    <div>
+                        <h5 class="mb-0 text-truncate" title="{{ selectedTaskInstanceForDetails?.taskId }}">
+                            <i class="bi bi-file-earmark-text me-1"></i>
+                            {{ selectedTaskInstanceForDetails?.task_id }}
+                        </h5>
+                        <div class="small text-muted">
+                            Run: {{ selectedRunForDetails?.run_after | date:'yyyy-MM-dd, HH:mm:ss'}}
+                            <span class="badge ms-2"
+                                [ngClass]="getTaskInstanceStatusClass(selectedTaskInstanceForDetails!.state)">
+                                {{ selectedTaskInstanceForDetails?.state }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+        
+                <!-- Task Instance Info Summary -->
+                <div class="row mb-3 pb-2 col-12">
+                    <div class="col-4"><strong>Start:</strong>
+                        {{ selectedTaskInstanceForDetails?.start_date | date:'yyyy-MM-dd, HH:mm:ss' }}
+                    </div>
+                    <div class="col-4"><strong>End:</strong>
+                        {{ selectedTaskInstanceForDetails?.end_date ? (selectedTaskInstanceForDetails?.end_date |
+                        date:'yyyy-MM-dd, HH:mm:ss') : 'N/A' }}
+                    </div>
+                    <div class="col-4"><strong>Duration:</strong>
+                        {{ selectedTaskInstanceForDetails?.duration || 'N/A' }}
+                    </div>
+                </div>
+        
+                <!-- Tabs for Task Instance Details (Logs, Rendered Templates, etc.) -->
+                <ul ngbNav #taskInstanceDetailsNav="ngbNav" class="nav-tabs nav-sm mb-2"
+                    [(activeId)]="activeTaskInstanceDetailsTabId">
+                    <li [ngbNavItem]="'logs'">
+                        <a ngbNavLink>Logs</a>
+                        <ng-template ngbNavContent>
+                            <div class="log-container border p-2 bg-dark text-light"
+                                style="height: 100%; overflow: auto; font-family: 'Courier New', Courier, monospace;">
+                                <div *ngIf="filteredTaskInstanceLogs.length === 0 && taskInstanceLogs.length > 0"
+                                    class="text-center p-3">No logs match filters.</div>
+                                <div *ngIf="taskInstanceLogs.length === 0" class="text-center p-3">No logs available for this
+                                    task instance.</div>
+        
+        
+                                <app-etl-logger-view [logs]="filteredTaskInstanceLogs"></app-etl-logger-view>
+                                <!-- <div *ngFor="let log of filteredTaskInstanceLogs; let i = index"
+                                                        [ngClass]="{'text-info-emphasis': log.level === 'INFO', 'text-warning-emphasis': log.level === 'WARNING', 'text-danger-emphasis': log.level === 'ERROR'}">
+                                                        <span class="log-line-number text-muted me-2">{{ log.lineNumber }}</span>
+                                                        <span class="log-timestamp text-muted me-2">[{{ log.timestamp }}]</span>
+                                                        <span class="log-level me-1 fw-bold">{{ log.level }}</span> -
+                                                        <span class="log-message ms-1" [innerHTML]="log.message"></span>
+                                                        <span *ngIf="log.source" class="log-source text-muted ms-2">source="{{ log.source }}"</span>
+                                                    </div> -->
+                            </div>
+                        </ng-template>
+                    </li>
+                </ul>
+                <div [ngbNavOutlet]="taskInstanceDetailsNav" id="taskLogs" class="mt-3" style="height: 420px;"></div>
+            </div>
+          </div>
+
+        <!-- </div> -->
+      </div>
+      <!-- ========== END MAIN CONTENT ========== -->
+
+    </div>
+  </div>
+</div>

@@ -1,0 +1,403 @@
+/*----- List-group start -----*/
+
+.list-group-item.active {
+    z-index: 2;
+    background-color: $primary;
+    color: $white;
+    border-color: $border;
+    .custom-radio .custom-control-input:checked~.custom-control-label::before {
+        border-color: $white-5;
+    }
+}
+
+.list-group-item-action {
+    &:hover,
+    &:focus {
+        color: $default-color;
+        text-decoration: none;
+        background-color: $primary-01;
+    }
+
+    &:active {
+        color: $default-color;
+        background-color: $primary-01;
+    }
+}
+
+.list-group-item {
+    position: relative;
+    display: block;
+    padding: 0.75rem 1.25rem;
+    background-color: $custom-white;
+    border: 1px solid $border;
+    color: $default-color;
+}
+
+.listorder {
+    position: relative;
+    padding: 0.75rem 1.25rem;
+    margin-block-end: -1px;
+    background-color: $custom-white;
+    border: 1px solid $border;
+    list-style-type: decimal;
+    list-style-position: inside;
+}
+
+.listorder1 {
+    position: relative;
+    padding: 0.75rem 1.25rem;
+    margin-block-end: -1px;
+    background-color: $white;
+    border: 1px solid $border;
+    list-style-type: upper-alpha;
+    list-style-position: inside;
+}
+
+.listunorder {
+    position: relative;
+    padding: 0.75rem 1.25rem;
+    margin-block-end: -1px;
+    background-color: $custom-white;
+    border: 1px solid $border;
+    list-style-type: circle;
+    list-style-position: inside;
+}
+
+.listunorder1 {
+    position: relative;
+    padding: 0.75rem 1.25rem;
+    margin-block-end: -1px;
+    background-color: $white;
+    border: 1px solid $border;
+    list-style-type: square;
+    list-style-position: inside;
+}
+
+.list-group-item {
+    &:first-child {
+        border-start-start-radius: 3px;
+        border-start-end-radius: 3px;
+    }
+
+    &:last-child {
+        margin-block-end: 0;
+        border-end-end-radius: 3px;
+        border-end-start-radius: 3px;
+    }
+
+    &:hover,
+    &:focus {
+        z-index: 1;
+        text-decoration: none;
+    }
+
+    &.disabled,
+    &:disabled {
+        color: $muted;
+        background-color: $background;
+    }
+}
+
+.list-group-item-primary {
+    color: $primary;
+    background-color: $primary-02;
+
+    &.list-group-item-action {
+
+        &:hover,
+        &:focus {
+            color: $white;
+            background-color: $primary;
+        }
+
+        &.active {
+            color: $white;
+            background-color: $primary;
+        }
+    }
+}
+
+.list-group-item-secondary {
+    color: $secondary;
+    background-color: rgba(var(--secondary-rgb), 0.2);
+
+    &.list-group-item-action {
+
+        &:hover,
+        &:focus {
+            color: $white;
+            background-color: $secondary;
+        }
+
+        &.active {
+            color: $white;
+            background-color: $secondary;
+        }
+    }
+}
+
+.list-group-item-success {
+    color: $success;
+    background-color: rgba(var(--success-rgb), 0.2);
+
+    &.list-group-item-action {
+
+        &:hover,
+        &:focus {
+            color: $white;
+            background-color: $success;
+        }
+
+        &.active {
+            color: $white;
+            background-color: $success;
+            border-color: $success;
+        }
+    }
+}
+
+.list-group-item-info {
+    color: $info;
+    background-color: rgba(var(--info-rgb), 0.2);
+
+    &.list-group-item-action {
+
+        &:hover,
+        &:focus {
+            color: $white;
+            background-color: $info;
+        }
+
+        &.active {
+            color: $white;
+            background-color: $info;
+            border-color: $info;
+        }
+    }
+}
+
+.list-group-item-warning {
+    color: $warning;
+    background-color: rgba(var(--warning-rgb), 0.2);
+
+    &.list-group-item-action {
+
+        &:hover,
+        &:focus {
+            color: $white;
+            background-color: $warning;
+        }
+
+        &.active {
+            color: $white;
+            background-color: $warning;
+            border-color: $warning;
+        }
+    }
+}
+
+.list-group-item-danger {
+    color: $danger;
+    background-color: rgba(var(--danger-rgb), 0.2);
+
+    &.list-group-item-action {
+
+        &:hover,
+        &:focus {
+            color: $white;
+            background-color: $danger;
+        }
+
+        &.active {
+            color: $white;
+            background-color: $danger;
+            border-color: $danger;
+        }
+    }
+}
+
+.list-group-item-light {
+    background-color: $background;
+
+    &.list-group-item-action {
+
+        &:hover,
+        &:focus {
+            color: #818182;
+            background-color: $primary-02;
+        }
+
+        &.active {
+            color: $white;
+            background-color: $primary-02;
+            border-color: $primary-02;
+        }
+    }
+}
+
+.list-group-item-dark {
+    color: #1b1e21;
+    background-color: #c6c8ca;
+
+    &.list-group-item-action {
+
+        &:hover,
+        &:focus {
+            color: $default-color;
+            background-color: $background;
+        }
+
+        &.active {
+            color: $white;
+            background-color: $background;
+            border-color: $border;
+        }
+    }
+}
+
+.list-group-item {
+    &.active .icon {
+        color: inherit !important;
+    }
+
+    .icon {
+        color: #74829c !important;
+    }
+}
+
+.list-group-transparent .list-group-item {
+    background: none;
+    border: 0;
+    padding: .5rem 1rem;
+    border-radius: 3px;
+
+    &.active {
+        background: $primary-01;
+        font-weight: 500;
+        color: $black;
+    }
+}
+
+.list-group-transparent.file-manager .list-group-item {
+    border-block-start: 0;
+}
+
+.list-group.lg-alt .list-group-item {
+    border: 0;
+}
+
+.list.d-flex img {
+    width: 60px;
+}
+
+.order-list li {
+    line-height: 30px;
+}
+
+.list-style-1 {
+    list-style: inherit;
+    padding-inline-start: inherit;
+}
+
+.list-style-1 li {
+    line-height: 30px;
+}
+
+.list-style-1 li {
+    line-height: 30px;
+}
+
+.list-style-1 ul {
+    list-style: inherit;
+    padding-inline-start: 30px;
+}
+
+.list-style2 {
+    list-style: decimal;
+    padding-inline-start: inherit;
+}
+
+.list-style2 li {
+    line-height: 30px;
+}
+
+.list-style2 ul {
+    list-style: decimal;
+    padding-inline-start: 30px;
+}
+
+.list-style3 {
+    list-style: circle !important;
+    padding-inline-start: inherit;
+}
+
+.list-style3 li {
+    line-height: 30px;
+}
+
+.list-style3 ul {
+    list-style: decimal;
+    padding-inline-start: 30px;
+}
+
+.list-style4 {
+    list-style: lower-alpha;
+    padding-inline-start: inherit;
+}
+
+.list-style4 li {
+    line-height: 30px;
+}
+
+.list-style4 ul {
+    list-style: decimal;
+    padding-inline-start: 30px;
+}
+
+.list-style4 li {
+    line-height: 30px;
+}
+
+.list-style5 {
+    list-style: square;
+    padding-inline-start: inherit;
+}
+
+.list-style5 li {
+    line-height: 30px;
+}
+
+.list-style5 ul {
+    list-style: decimal;
+    padding-inline-start: 30px;
+}
+
+.list-style6 {
+    list-style: lower-roman;
+    padding-inline-start: inherit;
+}
+
+.list-style6 li {
+    line-height: 30px;
+}
+
+list-style6 ul {
+    list-style: decimal;
+    padding-inline-start: 30px;
+}
+
+.list-style6 ul {
+    list-style: decimal;
+    padding-inline-start: 30px;
+}
+
+.list-group-item a {
+    color: $default-color;
+}
+
+.list-scroll {
+    height: 20rem;
+    overflow: auto;
+}
+
+/*----- List-group End -----*/

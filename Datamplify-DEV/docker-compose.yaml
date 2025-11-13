@@ -1,0 +1,148 @@
+version: '3'
+x-airflow-common:
+  &airflow-common
+  build:
+    context: .
+    dockerfile: Dockerfile
+  environment:
+    &airflow-env
+    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    CUSTOM_CONNECTION: postgresql+psycopg2://postgres:postgres@host.docker.internal:5432/Datamplify3?options=-csearch_path%3Danimal_biome_production
+    AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+    AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
+    AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session"
+    AIRFLOW__WEBSERVER__WEB_SERVER_PORT: 8082
+    DB_HOST: host.docker.internal
+    DB_NAME: Datamplify3
+    DB_USER: postgres
+    DB_PASSWORD: postgres
+    DB_PORT: "5432"
+    PYTHONPATH: /opt/airflow/project
+    DJANGO_SETTINGS_MODULE: Datamplify.settings
+
+  volumes:
+    - ./Airflow/Dags:/opt/airflow/dags
+    - ./logs:/opt/airflow/logs
+    - ./plugins:/opt/airflow/plugins
+    - ./shared:/opt/airflow/shared  # Shared volume to read etl_jobs.json
+    - ./etl_tool:/opt/airflow/etl_tool  # Mount etl_tool for Airflow Python imports
+    - ./requirements.txt:/requirements.txt
+    - .:/opt/airflow/project  # Mount entire project root
+    - ./Configs:/opt/airflow/project/Configs
+    - ./Configs/FlowBoard:/opt/airflow/project/Configs/FlowBoard
+    - ./Configs/Taskplan:/opt/airflow/project/Configs/Taskplan
+  depends_on:
+    - postgres
+    - redis
+
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    
+  
+      
+  # if you run workers, mount the same volumes there too
+
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
+  airflow-webserver:
+    <<: *airflow-common
+    command: ["bash", "-lc", "airflow webserver"]
+    ports:
+      - "8082:8082"
+    depends_on:
+      - airflow-scheduler
+    volumes:
+      - ./Airflow/Dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./shared:/opt/airflow/shared
+      - ./etl_tool:/opt/airflow/etl_tool
+      - ./requirements.txt:/requirements.txt
+      - .:/opt/airflow/project
+      - ./Configs:/opt/airflow/project/Configs
+      - ./Configs/FlowBoard:/opt/airflow/project/Configs/FlowBoard
+      - ./Configs/Taskplan:/opt/airflow/project/Configs/Taskplan
+  
+  airflow-scheduler:
+    <<: *airflow-common
+    command: ["bash", "-lc", "airflow scheduler"]
+    volumes:
+      - ./Airflow/Dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./shared:/opt/airflow/shared
+      - ./etl_tool:/opt/airflow/etl_tool
+      - ./requirements.txt:/requirements.txt
+      - .:/opt/airflow/project
+      - ./Configs:/opt/airflow/project/Configs
+      - ./Configs/FlowBoard:/opt/airflow/project/Configs/FlowBoard
+      - ./Configs/Taskplan:/opt/airflow/project/Configs/Taskplan
+  
+  airflow-worker:
+    <<: *airflow-common
+    command: ["bash", "-lc", "airflow celery worker"]
+    volumes:
+      - ./Airflow/Dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./shared:/opt/airflow/shared
+      - ./etl_tool:/opt/airflow/etl_tool
+      - ./requirements.txt:/requirements.txt
+      - .:/opt/airflow/project
+      - ./Configs:/opt/airflow/project/Configs
+      - ./Configs/FlowBoard:/opt/airflow/project/Configs/FlowBoard
+      - ./Configs/Taskplan:/opt/airflow/project/Configs/Taskplan
+    
+  airflow-triggerer:
+    <<: *airflow-common
+    command: ["bash", "-lc", "airflow triggerer"]
+    volumes:
+      - ./Airflow/Dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./shared:/opt/airflow/shared
+      - ./etl_tool:/opt/airflow/etl_tool
+      - ./requirements.txt:/requirements.txt
+      - .:/opt/airflow/project
+      - ./Configs:/opt/airflow/project/Configs
+      - ./Configs/FlowBoard:/opt/airflow/project/Configs/FlowBoard
+      - ./Configs/Taskplan:/opt/airflow/project/Configs/Taskplan
+  
+
+  airflow-init:
+    <<: *airflow-common
+    command: bash -c "airflow db migrate && airflow users create --username airflow --password airflow --firstname admin --lastname user --role Admin --email admin@example.com"
+    restart: on-failure
+    volumes:
+      - ./Airflow/Dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+      - ./shared:/opt/airflow/shared
+      - ./etl_tool:/opt/airflow/etl_tool
+      - ./requirements.txt:/requirements.txt
+      - .:/opt/airflow/project
+      - ./Configs:/opt/airflow/project/Configs
+      - ./Configs/FlowBoard:/opt/airflow/project/Configs/FlowBoard
+      - ./Configs/Taskplan:/opt/airflow/project/Configs/Taskplan
+
+  
+
+volumes:
+  postgres-db-volume:

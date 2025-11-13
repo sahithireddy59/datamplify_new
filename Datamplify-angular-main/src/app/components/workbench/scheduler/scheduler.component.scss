@@ -1,0 +1,254 @@
+.container-background {
+  background: var(--custom-white);
+  min-height: 100vh;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  color: #fff;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.upcomming-runs-card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  min-height: 461px;
+  max-height: 461px;
+}
+
+.glass-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes bounce {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+.bounce-icon {
+    display: inline-block;
+    line-height: 1;
+    animation: bounce 1.8s infinite ease-in-out;
+}
+
+.glass-bar {
+  background: var(--glass-bar-bg-color);
+  border: 1px solid var(--glass-bar-border-color);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+}
+
+.glass-bar:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.toggle-btn {
+  // background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.custom-tabs {
+    // background: rgba(255, 255, 255, 0.08);
+    background: var(--glass-bar-bg-color);
+    border-radius: 2rem;
+    padding: 4px;
+    width: 100%;
+}
+
+/* Default inactive tabs */
+.tab-inactive {
+    background: transparent;
+    color: var(--default-text-color);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+/* Active tab look */
+.tab-active {
+    background: var(--primary-color);
+    border-radius: 2rem;
+    color: #fff;
+}
+
+.mode-btn {
+    border-radius: 1rem;
+    background: linear-gradient(90deg, #3b82f6 0%, #9b25f2 70%);
+    color: #fff;
+    transition: transform .18s ease, box-shadow .18s ease;
+
+    &:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08),
+            0 6px 12px rgba(14, 165, 233, 0.15);
+        border: 1px solid #7c5cff !important;
+    }
+}
+
+.dropdown-menu{
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.dropdown-item:hover{
+    background-color: var(--primary-color);
+    color: var(--default-text-color);
+    border-radius: 7px;
+}
+
+.active-badge{
+    background-color: #02e00d37;
+    color: #1fa904;
+}
+
+.pause-badge{
+    background-color: #feba0032;
+    color: #ffbc05;
+}
+
+.inactive-badge{
+    background-color: #bfbfbd28;
+    color: #b9afaf;
+}
+
+.list-icon-badge{
+    background-color: #0c5bfa32;
+    color: #5586e8;
+}
+
+// form .form-control {
+//   background: rgba(255,255,255,0.05);
+//   border: 1px solid rgba(255,255,255,0.2);
+// }
+
+// form .form-control:focus {
+//   box-shadow: none;
+//   border-color: var(--primary-color);
+// }
+
+.left-height {
+  min-height: 461px;
+  max-height: 461px;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+}
+
+::ng-deep .ng-select .ng-select-container{
+    border-color: var(--default-text-color) !important;
+}
+
+::ng-deep .ng-dropdown-panel .ng-dropdown-panel-items {
+    background-color: #fff !important;
+}
+
+::ng-deep .ng-dropdown-panel .ng-dropdown-panel-items .ng-option {
+    color: #000 !important;
+}
+
+select.form-select {
+  background-color: transparent !important;
+  color: var(--default-text-color) !important;
+}
+
+.select-options {
+  color: #000 !important;
+}
+
+::ng-deep .modal-footer {
+  border: none;
+  background: transparent;
+}
+
+// .cron-editor-view{
+//   min-height: 497px;
+//   max-height: 497px;
+//   overflow: auto;
+//   scrollbar-width: thin;
+//   scrollbar-color: rgba(0,0,0,0.3) transparent;
+// }
+
+.cron-editor-view {
+  min-height: 566px;
+  max-height: 566px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.cron-body {
+  flex-grow: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+}
+
+.cron-footer {
+  position: sticky;
+  bottom: 0;
+  backdrop-filter: blur(5px);
+  padding-top: 10px;
+}
+
+.disabled {
+  background-color: #e9ecef4f !important;
+  color: #6c757d !important;
+  border-color: #dee2e6 !important;
+  opacity: 0.5;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #d5d4d4 37%, #f0f0f0 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: 4px; 
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+.close-btn {
+  width: 20px;
+  height: 20px;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background-color: #f8d7da !important; /* light red */
+}
+
+.close-btn:hover i {
+  color: #ff0015 !important; /* darker red */
+}

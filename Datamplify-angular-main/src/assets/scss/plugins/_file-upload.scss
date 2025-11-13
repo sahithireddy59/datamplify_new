@@ -1,0 +1,52 @@
+/* Start::filepond */
+.filepond--drop-label {
+  color: $default-color !important;
+  border-radius: 0.3rem !important;
+}
+
+.filepond--credits {
+  display: none;
+}
+
+.filepond--panel-root {
+  background-color: $custom-white !important;
+  border: 0.125rem dashed $border !important;
+}
+
+.filepond--drop-label.filepond--drop-label label {
+  padding: 1.5em !important;
+  font-size: 14px;
+}
+
+.filepond--root {
+  margin-block-end: 0 !important;
+}
+
+.filepond--file {
+  background-color: $primary !important;
+}
+
+.single-fileupload {
+  width: 8rem !important;
+  height: 8rem !important;
+  margin: 0 auto !important;
+}
+
+/* End::filepond */
+
+/* Start::dropzone */
+.dropzone {
+  border: 0.125rem dashed $border !important;
+  background-color: transparent !important;
+
+  .dz-message .dz-button {
+    font-size: 1.25rem !important;
+    color: $default-color !important;
+  }
+}
+
+.dropzone .dz-preview {
+  border-radius: 1.25rem;
+}
+
+/* End::dropzone */

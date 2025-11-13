@@ -1,0 +1,238 @@
+/*------------------------------------------------------------------
+[Master Stylesheet]
+
+Project                         :   insightapps – Angular  Admin & Dashboard Template
+Copyright                       :   Spruko Technologies Private Limited 
+Created Date                    :   15/03/2024
+Author & Copyright Ownership    :   Spruko Technologies Private Limited 
+Author URL                      :   https://themeforest.net/user/spruko
+Support	                        :   support@spruko.com
+License                         :   Licensed under ThemeForest License
+
+-------------------------------------------------------------------*/
+/*
+--- bootstrap-styles
+--- accordion
+--- alert
+--- avatars
+--- badges
+--- blackquote
+--- breadcrumb
+--- button
+--- buttons
+--- cards
+--- carousel
+--- dropdown
+--- forms
+--- grid
+--- input-group
+--- modal
+--- navigation
+--- pagination
+--- panel
+--- popover
+--- progress
+--- tables
+--- tags
+--- thumbnail
+--- tooltip
+--- components-col
+--- custom-forms
+--- custom-styles
+--- file-manager
+--- font
+--- gallery
+--- highlight
+--- labels
+--- landing
+--- list-group
+--- media
+--- navbar
+--- pricing
+--- tabs-menu
+--- timeline
+--- swiper
+--- footer
+--- header
+--- horizontal-menu
+--- icons-list
+--- loaders
+--- rtl
+--- datepicker
+--- jvector
+--- select2
+--- select-group
+--- default-menu
+--- sidemenu-icontext
+--- closed-menu
+--- hover-submenu
+--- hover-submenu-style1
+--- calender
+--- chart
+--- chat
+--- error-pages
+--- range
+--- ribbon
+--- form-wizard
+--- widgets
+--- alignments
+--- background
+--- border
+--- display
+--- float-elements
+--- height
+--- margin
+--- padding
+--- position
+--- typography
+--- width
+--- choices
+--- data-tables
+--- file-upload
+--- flatpickr
+--- full-calander
+--- grid-tables
+--- maps
+--- notify
+--- select-2
+--- sweet-alert
+--- tree-view
+--- quill
+*/
+
+/* ######## FONT ######## */
+
+// @import url('https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+
+
+/* ######## BOOTSTRAP ######## */
+
+@import "variables";
+@import "switcher";
+@import "bootstrap";
+@import "bootstrap/bootstrap-styles";
+@import "bootstrap/accordion";
+@import "bootstrap/alert";
+@import "bootstrap/avatars";
+@import "bootstrap/badges";
+@import "bootstrap/blackquote";
+@import "bootstrap/breadcrumb";
+@import "bootstrap/button";
+@import "bootstrap/buttons";
+@import "bootstrap/cards";
+@import "bootstrap/carousel";
+@import "bootstrap/dropdown";
+@import "bootstrap/forms";
+@import "bootstrap/grid";
+@import "bootstrap/input-group";
+@import "bootstrap/modal";
+@import "bootstrap/navigation";
+@import "bootstrap/pagination";
+@import "bootstrap/panel";
+@import "bootstrap/popovers";
+@import "bootstrap/progress";
+@import "bootstrap/tables";
+@import "bootstrap/tags";
+@import "bootstrap/thumbnail";
+@import "bootstrap/tooltips";
+
+/*  ######## CUSTOM-STYLES ######## */
+
+@import "custom/bootstrap-input-spinner";
+@import "custom/components-col";
+@import "custom/custom-forms";
+@import "custom/custom-styles";
+@import "custom/file-manager";
+@import "custom/font";
+@import "custom/gallery";
+@import "custom/highlight";
+@import "custom/labels";
+@import "custom/landing";
+@import "custom/list-group";
+@import "custom/media";
+@import "custom/navbar";
+@import "custom/pricing";
+@import "custom/ribbons";
+@import "custom/tabs-menu";
+@import "custom/switcher.scss"; 
+@import "custom/timeline";
+@import "custom/swiper";
+
+/* ######## GLOBAL-STYLES ######## */
+@import "global/global";
+/* ######## GLOBAL-STYLES ######## */
+/* ######## LAYOUT-STYLES ######## */
+
+@import "layouts/footer";
+@import "layouts/header";
+@import "layouts/icons-list";
+@import "layouts/layout-color";
+@import "layouts/loaders";
+@import "layouts/rtl";
+
+/* ######## LIBRARY-STYLES ######## */
+
+@import "lib/datepicker";
+@import "lib/jvector";
+@import "lib/select2";
+@import "lib/select-group";
+
+/* ######## SIDEMENU-STYLES ######## */
+
+@import "menu-styles/closed_menu";
+@import "menu-styles/detached_menu";
+@import "menu-styles/double_menu";
+@import "menu-styles/horizontal";
+@import "menu-styles/icon_click";
+@import "menu-styles/icon_hover";
+@import "menu-styles/icon_overlay";
+@import "menu-styles/icontext";
+@import "menu-styles/menu_click";
+@import "menu-styles/menu_hover";
+@import "menu-styles/vertical";
+
+/* ######## TEMPLATE-STYLES ######## */
+
+@import "template/calender";
+@import "template/chart";
+@import "template/chat";
+@import "template/error-pages";
+@import "template/range";
+@import "template/ribbon";
+@import "template/form-wizard";
+@import "template/widgets";
+
+/* ######## UTILITIES-STYLES ######## */
+
+@import "utilities/alignments";
+@import "utilities/background";
+@import "utilities/border";
+@import "utilities/display";
+@import "utilities/float-elements";
+@import "utilities/height";
+@import "utilities/margin";
+@import "utilities/opacity";
+@import "utilities/padding";
+@import "utilities/position";
+@import "utilities/typography";
+@import "utilities/width";
+
+
+/* ######## PLUGINS-STYLES ######## */
+@import "plugins/choices";
+@import "plugins/data-tables";
+@import "plugins/file-upload";
+@import "plugins/flatpickr";
+@import "plugins/full-calander";
+@import "plugins/grid-tables";
+@import "plugins/maps";
+@import "plugins/notify";
+@import "plugins/select-2";
+@import "plugins/sweet-alert";
+@import "plugins/range-slider";
+@import "plugins/tree-view";
+@import "plugins/quill";
+
+//ckeditor css
+@import 'ckeditor5/ckeditor5.css';

@@ -1,0 +1,71 @@
+/*-----Badges start-----*/
+
+.btn .badge {
+    position: relative;
+    inset-block-start: -1px;
+}
+
+.badge {
+    border-radius: 0.1875rem;
+    font-weight: 500;
+    margin-block-end: 0.125rem;
+}
+
+.rounded-pill {
+    border-radius: 50px;
+}
+
+.badgetext {
+    float: $float-right;
+}
+
+.btn-custom {
+    background: $background;
+    color: $default-color;
+}
+
+// .badge.badge-sm {
+//     padding: 3px 8px 5px;
+// }
+
+.badge-icon {
+    width: 1.8rem;
+    height: 1.8rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.badge-hover {
+    // font-size: 1rem;
+    position: relative;
+    &:hover {
+        .badge {
+            display: flex;
+        }
+    }
+    .badge {
+        position: absolute;
+        inset-block-start: -10%;
+        inset-inline-end: 0;
+        width: 1rem;
+        height: 1rem;
+        font-size: 0.6rem;
+        border: 1px solid $white;
+        border-radius: 50%;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        transition: all 320ms ease;
+    }
+}
+
+.blog-badge {
+    position: absolute;
+    inset-inline-start: 20px;
+    inset-block-end: -10px;
+    padding: 7px 11px !important;
+    font-size: 12px !important;
+}
+
+/*------ Badges Ends -------*/

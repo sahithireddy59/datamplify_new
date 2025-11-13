@@ -1,0 +1,233 @@
+
+/* Start:noUi Slider */
+.noUi-horizontal .noUi-handle {
+  width: 1rem !important;
+  height: 1rem !important;
+  inset-inline-end: -0.063rem !important;
+  top: -0.375rem !important;
+}
+
+.noUi-handle:after,
+.noUi-handle:before {
+  height: 0.35rem !important;
+  width: 1px !important;
+  inset-inline-start: 0.3rem !important;
+  top: 0.25rem !important;
+}
+
+.noUi-handle:after {
+  inset-inline-start: 0.45rem !important;
+}
+
+.noUi-horizontal {
+  height: 0.35rem !important;
+}
+
+.noUi-vertical {
+  width: 0.35rem !important;
+}
+
+.noUi-vertical .noUi-handle {
+  width: 1rem !important;
+  height: 1rem !important;
+}
+
+.noUi-target {
+  background: $default-background !important;
+  border: 1px solid $border !important;
+  box-shadow: $box-shadow !important;
+}
+
+.noUi-handle {
+  border: 1px solid $border !important;
+  background: $custom-white !important;
+  box-shadow: $box-shadow !important;
+}
+
+#result {
+  border: 1px solid $border !important;
+}
+
+.noUi-handle:after,
+.noUi-handle:before {
+  background: $black-3 !important;
+}
+
+.noUi-marker {
+  position: absolute;
+  background: $border !important;
+}
+
+.noUi-tooltip {
+  border: 1px solid $border !important;
+  border-radius: $default-radius !important;
+  background: $custom-white !important;
+  color: $default-color !important;
+  padding: 0.25rem 0.75rem !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
+}
+
+#slider-fit {
+  padding: 0 1rem;
+}
+
+.noUi-connect {
+  background: $primary !important;
+}
+
+.noUi-vertical .noUi-handle {
+  bottom: -0.275rem !important;
+  inset-inline-end: -0.375rem;
+}
+
+#secondary-colored-slider {
+  .noUi-connect {
+    background-color: $secondary !important;
+  }
+}
+
+#warning-colored-slider {
+  .noUi-connect {
+    background-color: $warning !important;
+  }
+}
+
+#info-colored-slider {
+  .noUi-connect {
+    background-color: $info !important;
+  }
+}
+
+#success-colored-slider {
+  .noUi-connect {
+    background-color: $success !important;
+  }
+}
+
+#danger-colored-slider {
+  .noUi-connect {
+    background-color: $danger !important;
+  }
+}
+
+#slider-round {
+  height: 0.625rem !important;
+
+  .noUi-handle {
+    height: 1.125rem !important;
+    width: 1.125rem !important;
+    inset-block-start: -0.313rem !important;
+    inset-inline-end: -0.563rem;
+    /* half the width */
+    border-radius: 50px !important;
+    background-color: $primary !important;
+    border: 1px solid $custom-white !important;
+
+    &:before,
+    &:after {
+      display: none !important;
+    }
+  }
+}
+
+#slider-square {
+  border-radius: 0 !important;
+
+  .noUi-handle {
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    background: $primary !important;
+    height: 1.125rem !important;
+    width: 1.125rem !important;
+    inset-block-start: -0.45rem !important;
+    inset-inline-end: -0.563rem !important;
+
+    &:before,
+    &:after {
+      display: none !important;
+    }
+  }
+}
+
+#color1,
+#color2,
+#color3 {
+  margin: 0.625rem !important;
+  display: inline-block !important;
+  height: 3.5rem !important;
+}
+
+#colorpicker {
+  height: 15rem !important;
+  width: 19.375rem !important;
+  margin: 0 auto !important;
+  padding: 0.625rem !important;
+  border: 1px solid $border !important;
+}
+
+#result {
+  margin: 4.25rem 0 4.25rem 4rem;
+  height: 6.25rem;
+  width: 6.25rem;
+  display: inline-block;
+  vertical-align: top;
+  color: $light;
+  background: $light;
+  border: 1px solid $white;
+  box-shadow: 0 0 0.625rem;
+}
+
+#color1 .noUi-connect {
+  background: $danger !important;
+}
+
+#color2 .noUi-connect {
+  background: $secondary !important;
+}
+
+#color3 .noUi-connect {
+  background: $primary !important;
+}
+
+#slider-hide .noUi-tooltip {
+  display: none;
+}
+
+#slider-hide .noUi-active .noUi-tooltip {
+  display: block;
+}
+
+.c-1-color {
+  background: $secondary !important;
+}
+
+.c-2-color {
+  background: $warning !important;
+}
+
+.c-3-color {
+  background: $info !important;
+}
+
+.c-4-color {
+  background: $danger !important;
+}
+
+.c-5-color {
+  background: $indigo !important;
+}
+
+#slider-toggle {
+  height: 3.125rem;
+}
+
+#slider-toggle.off .noUi-handle {
+  border-color: $success !important;
+}
+input[type=range]::-webkit-slider-runnable-track {
+    background-color: $light;
+}
+
+/* End:noUi Slider */

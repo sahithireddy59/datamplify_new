@@ -1,0 +1,740 @@
+/*------ Progress start -------*/
+
+progress {
+	vertical-align: baseline;
+}
+
+.progress {
+	display: -ms-flexbox;
+	display: flex;
+	height: 1rem;
+	overflow: hidden;
+	font-size: 0.703125rem;
+	background-color: $light;
+	border-radius: 7px;
+	position: relative;
+}
+
+.progress-bar {
+	display: -ms-flexbox;
+	display: flex;
+	-ms-flex-direction: column;
+	flex-direction: column;
+	-ms-flex-pack: center;
+	justify-content: center;
+	color: $white;
+	text-align: center;
+	white-space: nowrap;
+	transition: width 0.6s ease;
+	background-color: $primary;
+}
+
+.current-progressbar {
+	margin-block-start: 14.5px;
+}
+
+.progress-content {
+	margin-block-end: 16.5px;
+
+	&:last-child {
+		margin-block-end: 0;
+	}
+}
+
+@media screen and (prefers-reduced-motion: reduce) {
+	.progress-bar {
+		transition: none;
+	}
+}
+
+.progress-bar-striped {
+	background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent) !important;
+	background-size: 1rem 1rem;
+}
+
+.progress-bar-animated {
+	-webkit-animation: progress-bar-stripes 1s linear infinite;
+	animation: progress-bar-stripes 1s linear infinite;
+}
+
+/*------ progress sizes ------*/
+
+.progress-xs {
+	height: .25rem;
+
+	.progress-bar {
+		height: .25rem;
+	}
+}
+
+.progress-sm {
+	height: .5rem;
+
+	.progress-bar {
+		height: .5rem;
+	}
+}
+
+.progress-lg {
+	height: 1.25rem;
+
+	.progress-bar {
+		height: 1.25rem;
+	}
+}
+
+.progress-bar-indeterminate {
+	&:after {
+		content: '';
+		position: absolute;
+		background-color: inherit;
+		inset-inline-start: 0;
+		will-change: left, right;
+		inset-block-start: 0;
+		inset-block-end: 0;
+	}
+
+	&:before {
+		content: '';
+		position: absolute;
+		background-color: inherit;
+		inset-inline-start: 0;
+		will-change: left, right;
+		inset-block-start: 0;
+		inset-block-end: 0;
+		-webkit-animation: indeterminate 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+		animation: indeterminate 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+	}
+
+	&:after {
+		-webkit-animation: indeterminate-short 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
+		animation: indeterminate-short 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
+		-webkit-animation-delay: 1.15s;
+		animation-delay: 1.15s;
+	}
+}
+
+// Custom Progress
+.progress-custom,
+.progress-custom1,
+.progress-custom .progress-bar {
+	position: relative;
+	overflow: visible;
+	border-radius: 7px;
+}
+
+.progress-custom1 {	
+
+	&.progress-xs .progress-bar{
+		&::after {
+			width: 1rem;
+			height: 1rem;
+		}
+	}
+	.progress-bar {
+		position: relative;
+		overflow: visible;
+		border-radius: 7px;
+
+		&::after {
+			content: "";
+			width: 1.15rem;
+			height: 1.15rem;
+			border-radius: 50%;
+			box-shadow: 0 0.313rem 0.313rem $primary-02;
+			background: $white;
+			position: absolute;
+			inset-inline-end: -0.375rem;
+			inset-block-start: -0.375rem;
+			border: 0.25rem solid $primary;
+		}
+
+		&.bg-pink {
+			&::after {
+				border: 0.25rem solid $pink;
+			}
+		}
+
+		&.bg-success {
+			&::after {
+				border: 0.25rem solid $success;
+			}
+		}
+
+		&.bg-danger {
+			&::after {
+				border: 0.25rem solid $danger;
+			}
+		}
+
+		&.bg-secondary {
+			&::after {
+				border: 0.25rem solid $secondary;
+			}
+		}
+
+		&.bg-warning {
+			&::after {
+				border: 0.25rem solid $warning;
+			}
+		}
+
+		&.bg-info {
+			&::after {
+				border: 0.25rem solid $info;
+			}
+		}
+	}
+}
+
+.progress-custom .progress-bar-value {
+	width: 1.875rem;
+	height: 1.25rem;
+	line-height: 1.25rem;
+	border-radius: 0.188rem;
+	background: $primary;
+	font-size: 0.625rem;
+	font-weight: 600;
+	color: $white;
+	text-align: center;
+	position: absolute;
+	inset-block-end: 1rem;
+	inset-inline-end: -0.688rem;
+
+	&.progress-rounded {
+		width: 2rem;
+		height: 1.5rem;
+		line-height: 1.25rem;
+		border-radius: 50%;
+		background: var(--primary-bg-color);
+		font-size: 0.6rem;
+		font-weight: 600;
+		color: #fff;
+		text-align: center;
+		position: absolute;
+		inset-block-end: 1rem;
+		inset-inline-end: -0.688rem;
+
+		&::after {
+			inset-block-end: -0.3rem;
+		}
+	}
+
+	&.bg-success {
+		&::after {
+			border-block-start: 0.438rem solid $success;
+		}
+	}
+
+	&.bg-info {
+		&::after {
+			border-block-start: 0.438rem solid $info;
+		}
+	}
+
+	&.bg-secondary {
+		&::after {
+			border-block-start: 0.438rem solid $secondary;
+		}
+	}
+
+	&.bg-danger {
+		&::after {
+			border-block-start: 0.438rem solid $danger;
+		}
+	}
+
+	&.bg-warning {
+		&::after {
+			border-block-start: 0.438rem solid $warning;
+		}
+	}
+}
+
+.progress-custom .progress-bar-value:after {
+	content: "";
+	border-block-start: 0.438rem solid $primary;
+	border-inline-start: 0.438rem solid transparent;
+	border-inline-end: 0.438rem solid transparent;
+	position: absolute;
+	inset-block-end: -0.375rem;
+	inset-inline-start: 28%;
+}
+
+// vars
+$sliderCount: 5;
+$time-for-slide: 5s;
+$direction: default; // vertical || default
+
+.progress-slider {
+	width: 100%;
+	position: relative;
+	overflow: hidden;
+
+	// progress bar
+	&::after {
+		content: '';
+		position: absolute;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		width: 1px;
+		height: 2px;
+		background-color: $primary;
+		animation: progress $time-for-slide infinite;
+	}
+
+	&:hover::after {
+		animation-play-state: paused;
+	}
+}
+
+.progress-slider__mask {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+	position: relative;
+
+	@if ($direction !=vertical) {
+		display: flex;
+	}
+
+	animation: slide-animation ($time-for-slide * $sliderCount) ease-in infinite;
+
+	&:hover {
+		animation-play-state: paused;
+	}
+}
+
+.progress-slider__item {
+	overflow: hidden;
+
+	@if ($direction !=vertical) {
+		flex: 1 0 100%;
+	}
+
+	.progress-item {
+		overflow: hidden;
+		max-width: 100%;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+		box-sizing: border-box;
+		padding: 1rem;
+		display: block;
+		width: 100%;
+		text-decoration: none;
+		position: relative;
+		transition: background-color 200ms;
+		color: $default-color;
+	}
+}
+
+@if ($direction==vertical) {
+	@keyframes slide-animation {
+		0% {
+			opacity: 0;
+			top: 0;
+		}
+
+		3% {
+			opacity: 1;
+		}
+
+		@if $sliderCount==2 {
+			40% {
+				// transform: translateY(0);
+				top: 0;
+			}
+
+			49% {
+				// transform: translateY(-50%);
+				top: -100%;
+			}
+
+			50% {
+				// transform: translateY(-50%);
+				top: -100%;
+			}
+
+			90% {
+				opacity: 1;
+			}
+
+			99% {
+				// transform: translateY(-50%);
+				top: -100%;
+				opacity: 0;
+			}
+
+			100% {
+				// transform: translateY(0);
+				top: 0;
+				opacity: 0;
+			}
+		}
+
+		@if $sliderCount==3 {
+			30% {
+				// transform: translateY(0);
+				top: 0;
+			}
+
+			33.33% {
+				// transform: translateY(-100%/3);
+				top: -100%;
+			}
+
+			63.33% {
+				opacity: 1;
+				// transform: translateY(-100%/3);
+				top: -100%;
+			}
+
+			66.66% {
+				// transform: translateY(-66.66%);
+				top: -200%;
+			}
+
+			95% {
+				opacity: 1;
+			}
+
+			96.66% {
+				// transform: translateY(-66.66%);
+				top: -200%;
+				opacity: 0;
+			}
+
+			100% {
+				// transform: translateX(0);
+				top: 0;
+				opacity: 0;
+			}
+		}
+
+		@if $sliderCount==4 {
+			22% {
+				// transform: translateY(0);
+				top: 0;
+			}
+
+			25% {
+				// transform: translateY(-25%);
+				top: -100%;
+			}
+
+			47% {
+				opacity: 1;
+				// transform: translateY(-25%);
+				top: -100%;
+			}
+
+			50% {
+				// transform: translateY(-50%);
+				top: -200%;
+			}
+
+			72% {
+				opacity: 1;
+				// transform: translateY(-50%);
+				top: -200%;
+			}
+
+			75% {
+				// transform: translateY(-75%);
+				top: -300%;
+			}
+
+			95% {
+				opacity: 1;
+			}
+
+			97% {
+				opacity: 0;
+				// transform: translateY(-75%);
+				top: -300%;
+			}
+
+			100% {
+				// transform: translateY(0);
+				top: 0;
+				opacity: 0;
+			}
+		}
+
+		@if $sliderCount==5 {
+			18% {
+				// transform: translateY(0);
+				top: 0;
+			}
+
+			20% {
+				// transform: translateY(-20%);
+				top: -100%;
+			}
+
+			38% {
+				opacity: 1;
+				// transform: translateY(-20%);
+				top: -100%;
+			}
+
+			40% {
+				// transform: translateY(-40%);
+				top: -200%;
+			}
+
+			58% {
+				opacity: 1;
+				// transform: translateY(-40%);
+				top: -200%;
+			}
+
+			60% {
+				// transform: translateY(-60%);
+				top: -300%;
+			}
+
+			78% {
+				opacity: 1;
+				// transform: translateY(-60%);
+				top: -300%;
+			}
+
+			80% {
+				// transform: translateY(-80%);
+				top: -400%;
+			}
+
+			97% {
+				opacity: 1;
+			}
+
+			98% {
+				opacity: 0;
+				// transform: translateY(-80%);
+				top: -400%;
+			}
+
+			100% {
+				// transform: translateY(0);
+				top: 0;
+				opacity: 0;
+			}
+		}
+	}
+}
+
+@else {
+	@keyframes slide-animation {
+		0% {
+			opacity: 0;
+			// transform: translateX(0);
+			left: 0;
+		}
+
+		3% {
+			opacity: 1;
+		}
+
+		@if $sliderCount==2 {
+			40% {
+				// transform: translateX(0);
+				left: 0;
+			}
+
+			49% {
+				// transform: translateX(-100%);
+				left: -100%;
+			}
+
+			50% {
+				// transform: translateX(-100%);
+				left: -100%;
+			}
+
+			90% {
+				opacity: 1;
+			}
+
+			99% {
+				// transform: translateX(-100%);
+				left: -100%;
+				opacity: 0;
+			}
+
+			100% {
+				// transform: translateX(0);
+				left: 0;
+				opacity: 0;
+			}
+		}
+
+		@if $sliderCount==3 {
+			30% {
+				// transform: translateX(0);
+				left: 0;
+			}
+
+			33.33% {
+				// transform: translateX(-100%);
+				left: -100%;
+			}
+
+			63.33% {
+				opacity: 1;
+				// transform: translateX(-100%);
+				left: -100%;
+			}
+
+			66.66% {
+				// transform: translateX(-200%);
+				left: -200%;
+			}
+
+			95% {
+				opacity: 1;
+			}
+
+			96.66% {
+				// transform: translateX(-200%);
+				left: -200%;
+				opacity: 0;
+			}
+
+			100% {
+				// transform: translateX(0);
+				left: 0;
+				opacity: 0;
+			}
+		}
+
+		@if $sliderCount==4 {
+			22% {
+				// transform: translateX(0);
+				left: 0;
+			}
+
+			25% {
+				// transform: translateX(-100%);
+				left: -100%;
+			}
+
+			47% {
+				opacity: 1;
+				// transform: translateX(-100%);
+				left: -100%;
+			}
+
+			50% {
+				// transform: translateX(-200%);
+				left: -200%;
+			}
+
+			72% {
+				opacity: 1;
+				// transform: translateX(-200%);
+				left: -200%;
+			}
+
+			75% {
+				// transform: translateX(-300%);
+				left: -300%;
+			}
+
+			95% {
+				opacity: 1;
+			}
+
+			97% {
+				opacity: 0;
+				// transform: translateX(-300%);
+				left: -300%;
+			}
+
+			100% {
+				// transform: translateX(0);
+				left: 0;
+				opacity: 0;
+			}
+		}
+
+		@if $sliderCount==5 {
+			18% {
+				// transform: translateX(0);
+				left: 0;
+			}
+
+			20% {
+				// transform: translateX(-100%);
+				left: -100%;
+			}
+
+			38% {
+				opacity: 1;
+				// transform: translateX(-100%);
+				left: -100%;
+			}
+
+			40% {
+				// transform: translateX(-200%);
+				left: -200%;
+			}
+
+			58% {
+				opacity: 1;
+				// transform: translateX(-200%);
+				left: -200%;
+			}
+
+			60% {
+				// transform: translateX(-300%);
+				left: -300%;
+			}
+
+			78% {
+				opacity: 1;
+				// transform: translateX(-300%);
+				left: -300%;
+			}
+
+			80% {
+				// transform: translateX(-400%);
+				left: -400%;
+			}
+
+			97% {
+				opacity: 1;
+			}
+
+			98% {
+				opacity: 0;
+				// transform: translateX(-400%);
+				left: -400%;
+			}
+
+			100% {
+				// transform: translateX(0);
+				left: 0;
+				opacity: 0;
+			}
+		}
+	}
+}
+
+@keyframes progress {
+	0% {
+		width: 1px;
+	}
+
+	90% {
+		opacity: 1;
+	}
+
+	100% {
+		opacity: 0;
+		width: 100%;
+	}
+}
+
+/*------ Progress end -------*/

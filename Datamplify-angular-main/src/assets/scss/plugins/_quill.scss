@@ -1,0 +1,146 @@
+/* Start:: quill editor */
+.ql-bubble .ql-editor blockquote {
+  border-inline-start: 4px solid $default-background !important;
+}
+
+.ql-toolbar.ql-snow,
+.ql-container.ql-snow {
+  border: 1px solid $border !important;
+}
+
+.ql-snow .ql-picker {
+  color: $default-color !important;
+}
+
+.ql-snow .ql-stroke,
+.ql-snow .ql-stroke.ql-fill {
+  stroke: $default-color !important;
+}
+
+.ql-snow .ql-fill {
+  fill: $default-color !important;
+}
+
+.ql-toolbar.ql-snow + .ql-container.ql-snow {
+  border-top: 0px !important;
+}
+
+.ql-snow .ql-picker-options .ql-picker-item {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.ql-editor {
+  min-height: 15.62rem !important;
+}
+
+.ql-snow .ql-formats {
+  border: 1px solid $border;
+  border-radius: $default-radius;
+}
+
+.ql-toolbar.ql-snow .ql-picker.ql-expanded .ql-picker-label,
+.ql-toolbar.ql-snow .ql-picker.ql-expanded .ql-picker-options {
+  border-color: $border !important;
+  border-radius: $default-radius !important;
+}
+
+.ql-snow .ql-picker-options {
+  background-color: $custom-white !important;
+}
+
+.ql-snow .ql-tooltip {
+  background-color: $custom-white !important;
+  border: 1px solid $border !important;
+  box-shadow: $box-shadow !important;
+  color: $default-color !important;
+}
+
+.ql-snow .ql-tooltip input[type="text"] {
+  border: 1px solid $border !important;
+  background-color: $default-background !important;
+  color: $default-color !important;
+  outline: 0;
+}
+
+.ql-snow .ql-tooltip {
+  transform: translatex(12.5rem) !important;
+  z-index: 100 !important;
+}
+
+.ql-toolbar.ql-snow {
+  border-radius: 0.3rem 0.3rem 0 0 !important;
+}
+
+.ql-snow .ql-picker-label {
+  padding-inline-start: 0.25rem !important;
+  padding-inline-end: 0.25rem !important;
+  padding-block: 0 !important;
+}
+
+.ql-snow .ql-formats .ql-picker:not(.ql-color-picker):not(.ql-icon-picker) svg {
+  inset-inline-end: 0 !important;
+  inset-inline-start: auto !important;
+}
+
+.ql-container {
+  border-radius: 0 0 0.3rem 0.3rem !important;
+}
+
+.ql-snow .ql-picker.ql-expanded .ql-picker-label {
+  color: $default-color !important;
+}
+
+.ql-editor {
+  text-align: start !important;
+}
+
+.ql-snow .ql-editor {
+  padding: 1.25rem;
+}
+
+.ql-bubble {
+  border: 1px solid $border !important;
+  border-radius: $default-radius !important;
+}
+
+.ql-editor li:not(.ql-direction-rtl)::before {
+  margin-inline-start: -1.5em !important;
+  margin-inline-end: 0.3em !important;
+  text-align: start !important;
+}
+
+.ql-editor ol li:not(.ql-direction-rtl),
+.ql-editor ul li:not(.ql-direction-rtl) {
+  padding-inline-start: 1.5em !important;
+}
+
+.ql-toolbar.ql-snow .ql-formats {
+  margin: 0.25rem;
+}
+
+[dir="rtl"] {
+  .ql-tooltip.ql-editing {
+    left: 0 !important;
+    top: 0 !important;
+  }
+
+  .ql-bubble .ql-toolbar .ql-formats:first-child {
+    margin-right: 12px;
+  }
+
+  .ql-bubble .ql-toolbar .ql-formats {
+    margin: 8px 0px 8px 12px;
+  }
+}
+#product-features.ql-container {
+  height: 300px;
+}
+
+.ql-editor {
+  text-align: start !important;
+  .ql-align-right {
+    text-align: end !important;
+  }
+}
+/* end:: quill editor */

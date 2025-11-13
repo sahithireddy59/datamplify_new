@@ -1,0 +1,75 @@
+<!--   
+                <div class="">
+                    <div class="text-center">
+                        <a><img style="height: 40px;" src="./assets/images/brand/datamplify_white.png" class="header-brand-img m-0" alt=""></a>
+                    </div>
+                </div>
+                <div class="container-lg">
+                    <div class="row justify-content-center mt-4 mx-0">
+                        <div class="col-xl-4 col-lg-6 col-md-6 col-sm-6">
+                            <div class="card shadow-none" style="border: 1px solid rgba(0, 0, 0, .125) !important;">
+                                <div class="card-body p-sm-6">
+                                    <div class="text-center mb-4">
+                                        <h4 class="mb-1">Email Reactivation</h4>
+                                        <p>Enter E-mail to activate yout account.</p>
+                                    </div>
+                                        <div class="row">
+                                            <form  [formGroup]="reactivationForm" (ngSubmit)="onSubmit()">
+                                            <div class="col-sm-12">
+                                                <div class="mb-3">
+                                                    <label class="mb-2 fw-500">Email<span class="text-danger ms-1">*</span></label>
+                                                    <input class="form-control ms-0" type="email" formControlName="email" placeholder="Enter your Email">
+                                                </div>
+                                            </div>
+                                            <div class="d-grid mb-3">
+                                                <button type="submit" [disabled]="!reactivationForm.valid" class="btn btn-primary"> Submit</button>
+                                            </div>
+                                            </form>
+                                       
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> -->
+
+
+            
+<div class="login-container">
+
+  <div class="login-card">
+    <div class="card-body">
+      <!-- Logo -->
+      <div class="d-flex flex-column justify-content-center align-items-center mb-3">
+        <img style="height: 50px;" src="./assets/images/brand/datamplify_white.png" alt="DataAmplify">
+      </div>
+
+      <!-- Title & Info -->
+      <div class="text-center mb-4">
+        <h4 class="mb-1">Email Reactivation</h4>
+        <p>Enter your email to reactivate your account.</p>
+      </div>
+
+      <!-- Reactivation Form -->
+      <form [formGroup]="reactivationForm" (ngSubmit)="onSubmit()">
+        <div class="form-group mb-4">
+          <label class="mb-2 fw-500">Email <span class="text-danger">*</span></label>
+          <input 
+            type="email" 
+            class="form-control" 
+            formControlName="email" 
+            placeholder="Enter your Email">
+          <div *ngIf="reactivationForm.get('email')?.touched && reactivationForm.get('email')?.hasError('required')" class="text-danger mt-1">
+            Email is required.
+          </div>
+          <div *ngIf="reactivationForm.get('email')?.hasError('email')" class="text-danger mt-1">
+            Enter a valid email.
+          </div>
+        </div>
+
+        <div class="d-grid mb-3">
+          <button type="submit" [disabled]="!reactivationForm.valid" class="btn btn-login">Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

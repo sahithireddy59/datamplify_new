@@ -1,0 +1,134 @@
+// .default-background-color{
+//     background-color: var(--primary-color);
+//     color: #ffffff;
+// }
+// .default-background-color:focus,
+// .default-background-color:active{
+//     background-color: var(--primary-color);
+// }
+// .default-color{
+//     color: var(--primary-color);
+// }
+
+.login-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  // height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+// The main glassmorphic card
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 2rem;
+  color: #f0f0f0;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px); // For Safari
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.logo-text {
+  text-align: center;
+  font-weight: 600;
+  font-size: 2.5rem;
+  letter-spacing: 1px;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+// Custom styles for form inputs
+.form-control {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #f0f0f0;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  transition: all 0.3s ease;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  &:focus {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    box-shadow: 0 0 15px rgba(0, 191, 255, 0.5);
+    border-color: rgba(0, 191, 255, 0.7);
+  }
+}
+
+// Custom styled checkbox
+.form-check-input {
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%; // Make it a circle
+  transition: all 0.3s ease;
+  cursor: pointer;
+
+  &:checked {
+    background-color: #8e44ad;
+    border-color: #8e44ad;
+    box-shadow: 0 0 10px rgba(138, 43, 226, 0.5);
+  }
+
+  &:focus {
+    box-shadow: 0 0 10px rgba(0, 191, 255, 0.5);
+  }
+}
+
+.form-check-label, .forgot-password-link {
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.forgot-password-link {
+  color: #a7c5ff;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    color: #fff;
+    text-decoration: underline;
+  }
+}
+
+// The gradient login button
+.btn-login {
+  background: linear-gradient(90deg, #1e5799 0%, #2989d8 50%, #7db9e8 100%);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  padding: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(41, 137, 216, 0.4);
+  }
+}
+
+.signup-prompt {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8); // A slightly dimmer white for the text part
+
+  .signup-link {
+    color: #a7c5ff; // Use a consistent link color
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+
+    &:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+  }
+}

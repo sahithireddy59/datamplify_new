@@ -1,0 +1,170 @@
+
+/* Start:: grid js tables */
+.gridjs-table {
+  width: 100%;
+}
+
+table.gridjs-table {
+  text-align: start !important;
+  font-size: 0.813rem !important;
+  font-weight: 500 !important;
+}
+
+.gridjs-wrapper {
+  box-shadow: none !important;
+  border-radius: 0 !important;
+
+  &:nth-last-of-type(2) {
+    border-radius: 0 !important;
+  }
+}
+
+.gridjs-container {
+  color: $default-color !important;
+}
+
+th.gridjs-th {
+  background-color: $custom-white !important;
+  border: 1px solid $border !important;
+  color: $default-color !important;
+  padding: 0.75rem !important;
+}
+
+td.gridjs-td {
+  border: 1px solid $border !important;
+  padding: 0.75rem !important;
+}
+
+.gridjs-tbody,
+td.gridjs-td {
+  background-color: $custom-white !important;
+}
+.gridjs-table {
+  width: 100%;
+}
+.gridjs-footer {
+  background-color: $custom-white !important;
+  border-bottom-width: 0 !important;
+  border-color: transparent !important;
+  border-radius: 0 !important;
+  border-top: 0 !important;
+  box-shadow: none !important;
+  padding: 0.75rem 0 0 0 !important;
+}
+
+.gridjs-pagination {
+  color: $default-color !important;
+}
+
+.gridjs-pagination .gridjs-pages button:first-child {
+  border-bottom-left-radius: $default-radius !important;
+  border-top-left-radius: $default-radius !important;
+  border-bottom-right-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+}
+
+.gridjs-pagination .gridjs-pages button:last-child {
+  border-bottom-left-radius: 0 !important;
+  border-top-left-radius: 0 !important;
+  border-bottom-right-radius: $default-radius !important;
+  border-top-right-radius: $default-radius !important;
+}
+
+@media (max-width:575.98px) {
+  .gridjs-search-input {
+    width: 12.5rem !important;
+  }
+}
+
+[dir="rtl"] {
+  .gridjs-pagination .gridjs-pages button:first-child {
+    border-bottom-left-radius: 0 !important;
+    border-top-left-radius: 0 !important;
+    border-bottom-right-radius: $default-radius !important;
+    border-top-right-radius: $default-radius !important;
+  }
+
+  .gridjs-pagination .gridjs-pages button:last-child {
+    border-bottom-left-radius: $default-radius !important;
+    border-top-left-radius: $default-radius !important;
+    border-bottom-right-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+  }
+}
+
+.gridjs-pagination .gridjs-pages button:disabled,
+.gridjs-pagination .gridjs-pages button:hover:disabled,
+.gridjs-pagination .gridjs-pages button[disabled] {
+  background-color: $custom-white !important;
+  color: $default-color !important;
+}
+
+.gridjs-pagination .gridjs-pages button {
+  background-color: $custom-white !important;
+  border: 1px solid $border !important;
+  padding: 0.375 0.75rem !important;
+  color: $default-color !important;
+
+  &:focus {
+    box-shadow: none !important;
+    margin-inline-end: 0 !important;
+  }
+}
+
+.gridjs-pagination .gridjs-pages button.gridjs-currentPage {
+  font-weight: 600 !important;
+  background-color: $primary !important;
+  color: $white !important;
+}
+
+.gridjs-pagination .gridjs-pages {
+  float: end !important;
+}
+
+input.gridjs-input {
+  background-color: $custom-white !important;
+  border: 1px solid $border !important;
+  border-radius: $default-radius !important;
+  font-size: 14px !important;
+  padding: 0.375rem 0.75rem !important;
+  line-height: 1.6 !important;
+  color: $default-color !important;
+
+  &:focus {
+    box-shadow: none !important;
+    border: 1px solid $primary !important;
+  }
+}
+
+button.gridjs-sort {
+  float: end !important;
+  height: 1.25rem !important;
+  width: 0.625rem !important;
+}
+
+button.gridjs-sort-desc {
+  background-position-y: 54% !important;
+  background-size: 0.5rem !important;
+}
+
+button.gridjs-sort-asc {
+  background-position-y: 44% !important;
+  background-size: 0.5rem !important;
+}
+
+th.gridjs-th-fixed {
+  background-color: $light !important;
+}
+
+#grid-header-fixed {
+  .gridjs-wrapper {
+    border-block-start: 1px solid $border !important;
+    border-block-end: 1px solid $border !important;
+  }
+
+  .gridjs-container .gridjs-wrapper .gridjs-thead .gridjs-tr th {
+    top: -1px !important;
+  }
+}
+
+/* End:: grid js tables */

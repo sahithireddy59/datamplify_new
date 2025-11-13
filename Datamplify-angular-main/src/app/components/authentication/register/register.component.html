@@ -1,0 +1,114 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="card-body">
+      <!-- Brand -->
+      <div class="d-flex flex-column justify-content-center align-items-center mb-3">
+        <img style="height: 50px;" src="./assets/images/brand/datamplify_white.png" alt="">
+      </div>
+
+      <!-- Header -->
+      <div class="text-center mb-4">
+        <h4 class="mb-1">Sign Up</h4>
+        <p>Sign up to your account to continue.</p>
+      </div>
+
+      <!-- Sign Up Form -->
+      <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+        <!-- Username -->
+        <div class="form-group mb-3">
+          <input type="text" class="form-control" placeholder="Enter User Name" formControlName="username">
+          @if(signupForm.get('username')?.hasError('required') && signupForm.get('username')?.touched){
+          <div class="text-danger mt-1">username required</div>
+          }
+          @if(signupForm.get('username')?.hasError('maxlength') && signupForm.get('username')?.touched){
+          <div class="text-danger mt-1">Username cannot exceed 64 characters.</div>
+          }
+        </div>
+
+        <!-- Email -->
+        <div class="form-group mb-3">
+          <input type="email" class="form-control" placeholder="Enter your Email" formControlName="email" autocomplete="off">
+          @if(signupForm.get('email')?.hasError('required') && signupForm.get('email')?.touched){
+          <div class="text-danger mt-1">Email required</div>
+          }
+          @if(signupForm.get('email')?.hasError('pattern')){
+          <div class="text-danger mt-1">Please enter a valid email address</div>
+          }
+        </div>
+
+        <!-- Create Password -->
+        <div class="form-group mb-3">
+          <div class="input-group has-validation">
+            <input #inputRef [type]="showPassword ? 'text' : 'password'" class="form-control" placeholder="Create a Password" formControlName="password" autocomplete="new-password">
+            <button class="btn btn-info" type="button" (click)="toggleVisibility()">
+              <i [ngClass]="showPassword ? 'ri-eye-off-line' : 'ri-eye-line'"></i>
+            </button>
+          </div>
+          @if(requiredValid){
+          <div id="validation-rules" class="mt-2">
+              <!-- minlength -->
+              <div class="pwd_character" [ngClass]="{ 'text-success': minLengthValid, 'text-danger': !minLengthValid }">
+                  <i [attr.class]="minLengthValid ? 'bi-check-square-fill' : 'bi-x-square'"></i>
+                  Must be at least 8 characters long
+              </div>
+          
+              <!-- requires digit -->
+              <div class="pwd_character" [ngClass]="{ 'text-success': requiresDigitValid, 'text-danger': !requiresDigitValid }">
+                  <i [attr.class]="requiresDigitValid ? 'bi-check-square-fill' : 'bi-x-square'"></i>
+                  Must contain at least 1 digit
+              </div>
+          
+              <!-- requires uppercase -->
+              <div class="pwd_character"
+                  [ngClass]="{ 'text-success': requiresUppercaseValid, 'text-danger': !requiresUppercaseValid }">
+                  <i [attr.class]="requiresUppercaseValid ? 'bi-check-square-fill' : 'bi-x-square'"></i>
+                  Must contain at least 1 uppercase character
+              </div>
+          
+              <!-- requires lowercase -->
+              <div class="pwd_character"
+                  [ngClass]="{ 'text-success': requiresLowercaseValid, 'text-danger': !requiresLowercaseValid }">
+                  <i [attr.class]="requiresLowercaseValid ? 'bi-check-square-fill' : 'bi-x-square'"></i>
+                  Must contain at least 1 lowercase character
+              </div>
+          
+              <!-- requires special characters -->
+              <div class="pwd_character"
+                  [ngClass]="{ 'text-success': requiresSpecialCharsValid, 'text-danger': !requiresSpecialCharsValid }">
+                  <i [attr.class]="requiresSpecialCharsValid ? 'bi-check-square-fill' : 'bi-x-square'"></i>
+                  Must contain at least 1 special character
+              </div>
+          </div>
+          }
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-group mb-3">
+          <div class="input-group has-validation">
+            <input [type]="showPassword1 ? 'text' : 'password'" class="form-control" placeholder="Confirm Password" formControlName="confirm_password" autocomplete="new-password">
+            <button #inputRef class="btn btn-info" type="button" (click)="toggleVisibility1()">
+              <i [ngClass]="showPassword1 ? 'ri-eye-off-line' : 'ri-eye-line'"></i>
+            </button>
+          </div>
+          @if(confirmPasswordError){
+          <div class="text-danger">Password didn't match</div>
+          }
+        </div>
+
+        <!-- Submit -->
+        <div class="d-grid mb-3">
+          <button type="submit" class="btn btn-login w-100" [disabled]="!signupForm.valid">
+            Create an Account
+          </button>
+        </div>
+
+        <!-- Login Link -->
+        <div class="text-center">
+          <p>Already have an account? 
+            <a routerLink="/authentication/login" class="signup-link">Login</a>
+          </p>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

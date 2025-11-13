@@ -1,0 +1,415 @@
+
+<app-page-header title="Users List" moduleId="previlages" title1="Home" activeitem="Users List"></app-page-header>
+
+<div *ngIf="!addUserDivForm" class="main-container container-fluid TopHeader">
+
+    <div class="row" class="card card-padding-top" >
+    <div class="col-sm-12 col-lg-12 col-xl-12 p-0">
+      <div class="d-flex justify-content-between px-5">
+        <div class="connect-txt">
+          <h4 class="card-title mt-2">Users</h4>
+        </div>
+        <div class="new-data-btn d-flex text-align-center">
+          <button *ngIf="gridView" type="button" class="btn btn-icon btn-outline-primary me-1"><i class="fa fa-th-large"></i></button>
+          <button *ngIf="gridView" type="button"  (click)="gridView=false" class="btn btn-icon btn-primary-light me-3" ><i class="fa fa-th-list"></i></button>
+
+          <button *ngIf="!gridView" type="button" (click)="gridView=true" class="btn btn-icon btn-primary-light me-1"><i class="fa fa-th-large"></i></button>
+          <button *ngIf="!gridView" type="button" class="btn btn-icon btn-outline-primary me-3" ><i class="fa fa-th-list"></i></button>
+
+
+          <div class="input-group">
+            <input type="text" class="form-control border-end-0 " placeholder="Search" [(ngModel)]="userName" (keyup.enter)="searchUserList()" aria-describedby="button-addon2" >
+            <button class="btn btn-primary border me-2 search-icon-border-radius" (click)="searchUserList()" type="button" id="button-addon2"><i class="fe fe-search "></i></button>
+            <app-insights-button [classesList]="'btn btn-primary rounded-1'" [buttonName]="' Add User'" [previledgeId]="62" [isBtn]="true"
+              (btnClickEvent)="addUserRoute();" [faIconList]="'fa fa-plus'" [isIcon]="true">
+            </app-insights-button>
+          </div>
+        </div>
+    </div>
+    <!-- <div *ngIf="savedUsersList.length === 0">
+      No User, Please Create One!
+    </div> -->
+        <div class="card-body">
+          @if(!gridView){
+            <div class="table-responsive table-responsive-height">
+                <table class="table border text-nowrap text-md-nowrap mb-0">
+                    <thead class="table-primary bg-primary table-primary-position">
+                        <tr>
+                            <th>Name</th>
+                            <th>User Name</th>
+                            <th>Email Id</th>
+                            <th>Active Status</th>
+                            <th>Role</th>
+                            <th>Created</th>
+                            <th>Created On</th>
+                            <th>Last Modified</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody *ngFor="let users of savedUsersList | paginate : {
+                        itemsPerPage: itemsPerPage,
+                        currentPage: page,
+                        totalItems: totalItems
+                      }">
+                        <tr>
+                            <!-- <td>
+                              <div class="d-flex">
+                           
+                              <div class="content">
+                                <span>User: </span>
+                                <a  ngbTooltip="{{sheets.sheet_name}}" (click)="viewSheet(sheets.server_id,sheets.queryset_id,sheets.sheet_id,sheets.sheet_name)" > {{sheets.sheet_name | slice:0:15}}</a>
+                                <p class="mb-0">Created by : {{sheets.created_by}}</p>
+                              </div>
+                          </div>                                  
+                            </td> -->
+                               <td>{{users.name}}</td>
+                            <td>{{users.username}}</td>
+                            <td>{{users.email}}</td>
+                            <td *ngIf="users.is_active === true">Active</td>
+                            <td *ngIf="users.is_active === false">In-Active</td>
+                            <td>{{users.role}}</td>
+                            <td>{{users.created_by}}</td>
+                            <td>{{users.created_at | date}}</td>
+                            <td>{{users.updated_at | date}}</td>
+                            <td>
+                              <div class="hstack gap-2 fs-1">
+                                <app-insights-button [classesList]="'btn btn-icon btn-sm btn-info-light btn-wave waves-effect waves-light'"
+                                  [previledgeId]="61" [isBtn]="false" [toolTip]="'Edit'" (btnClickEvent)="editUserRoute(users.user_id);"
+                                  [faIconList]="'ri-edit-line'" [isIcon]="true"></app-insights-button>
+                                <app-insights-button [classesList]="'btn btn-icon btn-sm btn-danger-light btn-wave waves-effect waves-light'"
+                                  [previledgeId]="63" [isBtn]="false" [toolTip]="' Delete'" (btnClickEvent)="deleteUser(users.user_id)"
+                                  [faIconList]="'ri-delete-bin-7-line'" [isIcon]="true"></app-insights-button>
+                        </div>
+                              </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+          }
+          @if(gridView){
+            <div class="row">
+                <div *ngFor="let users of savedUsersList  | paginate : {
+                  itemsPerPage: itemsPerPage,
+                  currentPage: page,
+                  totalItems: totalItems
+                }" class="col-md-12 col-xl-3">
+                <div class="card card-box-shadow ">
+                  <div class="card-header tiled-header-bg bg-primary tiled-card-header-padding">
+                    <div class="d-sm-flex align-items-center">
+                      <!-- <span class="avatar avatar-xl rounded-circle">
+                          <img src="./assets/images/charts/table-tiled-icon.jpg" alt="" class="rounded-circle"></span> -->
+                        <div class="ms-2 mt-sm-0 mt-2 d-flex">
+                          <!-- <span class="text-muted  pe-2 fs-12 float-start">Server</span> -->
+                            <h6 class="mb-1">
+                                <a ngbTooltip="{{users.username}}" (click)="editUserRoute(users.user_id)" class="float-start" style="line-height: 1;"> {{users.username | slice:0:15}}</a>
+                            </h6>
+                            
+                        </div>
+                    </div>
+
+                    <div class="col-auto">
+                      <div class="d-flex justify-content-end p-1" ngbDropdown>
+                        <a  data-bs-toggle="dropdown" role="button" ngbDropdownToggle
+                            aria-haspopup="true" aria-expanded="false" class=""><i
+                                class="fe fe-more-vertical fs-18 text-body-secondary"></i>
+                        </a>
+                        <div class="dropdown-menu" ngbDropdownMenu>
+                          <app-insights-button [classesList]="'dropdown-item'" [previledgeId]="61" [isBtn]="false"
+                          [buttonName]="' Edit'" [tabIndex]="0"
+                          (btnClickEvent)="editUserRoute(users.user_id)"
+                          [faIconList]="'fe fe-edit me-2 d-inline-flex'" [isIcon]="true"></app-insights-button>
+                      <app-insights-button [classesList]="'dropdown-item  btn btn-secondary-light'" [previledgeId]="63" [isBtn]="false"
+                          [buttonName]="' Delete'" [tabIndex]="0"
+                          (btnClickEvent)="deleteUser(users.user_id)"
+                          [faIconList]="'fe fe-trash me-2 d-inline-flex'" [isIcon]="true"></app-insights-button>
+                        </div>
+                    </div>
+                    </div>
+                  </div>
+                  <div class="card-body tiled-card-body-padding">
+                      <div class="row">
+                        
+                          <div  class="col-md-12">
+                             <div class="row">
+                                  <div class="col-md-6">
+                                      <span class="fw-semibold fs-14">Created by:  </span>
+                                  </div>
+                                  <div class="col-md-6">
+                                      <span class="fs-14">{{users.created_by}}</span>
+                                  </div>
+                              </div>
+                              <div class="row">
+                                  <div class="col-md-6">
+                                      <span class="fw-semibold fs-14">Created on:</span>
+                                  </div>
+                                  <div class="col-md-6">
+                                      <span class="fs-14">{{users.created_at}}</span>
+                                  </div>
+                              </div>
+                              <div class="row">
+                                <div class="col-md-6">
+                                    <span class="fw-semibold fs-14">Last Modified: </span>
+                                </div>
+                                <div class="col-md-6">
+                                    <span class="fs-14">{{users.updated_at}}</span>
+                                </div>
+                            </div>
+                          
+                          </div>
+                         
+                      </div>
+                  </div>
+                  </div>
+                    </div>
+          </div>
+        }
+            <pagination-controls previousLabel="Prev" nextLabel="Next" (pageChange)="pageChangegetUserList((page = $event))"></pagination-controls>
+            <div class="pagination-count" >
+              <select  [(ngModel)]="itemsPerPage" (ngModelChange)="getUserList()" class="form-control cursor-pointer">
+                    <option  value="10"> 10</option>
+                    <option [disabled]="!(totalItems > 10)" value="20"> 20</option>
+                    <option [disabled]="!(totalItems > 20)" value="30"> 30</option>
+                 
+              </select>
+           </div>
+        </div>
+    </div>
+    </div>
+  </div>
+
+<div *ngIf="addUserDivForm" class="main-container container-fluid TopHeader">
+
+  <div class="row" class="card p-4">
+    <div class="col-sm-12 col-lg-12 col-xl-12 p-0">
+        <form [formGroup]="addUserForm">
+            <div class="modal-header justify-conent-between align-items-center rounded-0 p-2">
+              <h6 *ngIf="!userEditHidePassword" class="modal-title  d-flex justify-conent-between ms-1" id="inputModalLabel">Add User</h6>
+              <h6 *ngIf="userEditHidePassword" class="modal-title d-flex justify-conent-between ms-1" id="inputModalLabel">Edit User</h6>        
+              <button  type="button" class="btn btn-primary border rounded-1" (click)="viewUsers()"> View Users</button>    
+            </div>
+            
+            <div class="modal-body p-0">
+                <div class="row  ps-3 pe-3">
+                    <div class="col-md-2 border p-2">
+                        <label for="input-label" class="form-label">First Name</label>
+                    </div>
+                    <div class="col-md-10 border p-2">
+                        <input type="text" id="input-text1"  formControlName="firstname" placeholder="First Name" class="form-control">
+                        @if(addUserForm.get('firstname')?.errors && addUserForm.get('firstname')?.touched){
+                            <div class="text-danger">firstname required</div>
+                          }
+                        @else{<label for="input-label" class="form-label">Write the user first name or names</label>}
+
+                    </div>
+
+                    <div class="col-md-2 border p-2">
+                        <label for="input-label" class="form-label">Last Name</label>
+                    </div>
+                    <div class="col-md-10 border p-2">
+                        <input type="text" id="input-text2" formControlName="lastname" placeholder="Last Name" class="form-control">
+                        @if(addUserForm.get('lastname')?.errors && addUserForm.get('lastname')?.touched){
+                            <div class="text-danger">lastname required</div>
+                          }
+                        @else{<label for="input-label" class="form-label">Write the user last name </label>}
+                    </div>
+
+                    <div class="col-md-2 border p-2">
+                        <label for="input-label" class="form-label">User Name</label>
+                    </div>
+                    <div class="col-md-10 border p-2">
+                        <input type="text" id="input-text3" formControlName="username" placeholder="User Name" autocomplete="off" class="form-control">
+                        @if(addUserForm.get('username')?.errors && addUserForm.get('username')?.touched){
+                            <div class="text-danger">username required</div>
+                          }
+                          @else if(addUserForm.get('username')?.hasError('maxlength')){
+                            <div class="text-danger">Username cannot exceed 64 characters.</div>
+                          }
+                          <!-- @if(signupForm.get('username')?.hasError('maxlength') && signupForm.get('username')?.touched){
+                            <div class="text-danger">Username cannot exceed 64 characters.</div>
+                          } -->
+                        <!-- @else{<label for="input-label" class="form-label">User name valid for authentication on DB or LDAP,
+                            unused for OID auth </label>} -->
+                    </div>
+
+                    <div class="col-md-2 border p-2">
+                        <label for="input-label" class="form-label">Is Active?</label>
+                    </div>
+                    <div class="col-md-10 border p-2">
+                        <input type="checkbox" id="exampleCheck1" formControlName="is_active" class="form-check-input" [checked]="true">
+                        <label for="input-label" class="form-label">It's not a good policy to remove a user, just make
+                            it inactive </label>
+                    </div>
+
+                    <div class="col-md-2 border p-2">
+                        <label for="input-label" class="form-label">Email</label>
+                    </div>
+                    <div class="col-md-10 border p-2">
+                        <input type="text" id="input-text4" placeholder="Email" formControlName="email" class="form-control">
+                        @if(addUserForm.get('email')?.errors && addUserForm.get('email')?.touched){
+                            <div class="text-danger">Email required</div>
+                          }
+                        @else{<label for="input-label" class="form-label">The user's email, this will also be used for OID
+                            auth </label>}
+                    </div>
+
+                    <div class="col-md-2 border p-2">
+                        <label for="input-label" class="form-label">Select Role</label>
+                    </div>
+                    <!-- <div *ngIf="userAddedRolesList.length" class="col-md-10 border p-2">
+                       
+                      <div class="col-md-2 border p-2">
+                        <label for="input-label" class="form-label">Select Role</label>
+                      </div>
+                      <input type="checkbox" id="selectAll" (change)="toggleSelectAll()" />
+                      <label for="selectAll" class="form-label">Select all roles</label>
+                      <div  class="col-md-10 border p-2">
+                        <div formArrayName="role">
+                          <div *ngFor="let role of userAddedRolesList; let i = index">
+                            <label>
+                              <input type="checkbox" [formControlName]="i" (change)="onCheckboxChange()" />
+                              {{ role }}
+                            </label>
+                          </div>
+                        </div>
+                        <label for="input-label" class="form-label">
+                          The user role on the application, this will associate with a list of Permission
+                        </label>
+                      </div>
+                    </div> -->
+                    <div *ngIf="userAddedRolesList.length" class="col-md-10 border p-2">
+                      <div ngbAccordion [closeOthers]="true" class="accordion mt-2" id="accordionExample">
+                        <div  ngbAccordionItem  class="accordion-item mb-2 " style="border: none;">
+                            <h6 ngbAccordionHeader class="accordion-header" id="heading">
+                              <button
+                                ngbAccordionButton
+                                class="accordion-button p-3 fw-500 border"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#collapse"
+                                aria-expanded="true"
+                                aria-controls="collapse"
+                                >
+                                Select Role
+                              </button>
+                              
+                            </h6>
+                            <div
+                              ngbAccordionCollapse
+                              id="collapse"
+                              class="accordion-collapse collapse select-roles-height" 
+                              aria-labelledby="heading"
+                              data-bs-parent="#accordionExample" 
+                               >
+                              <div class="accordion-body p-0  database-dropdown" ngbAccordionBody style=" height: auto; max-height: 350px;">
+                                <ng-template>
+                                  <div class="p-2">
+                                      </div>
+                                      <div formArrayName="role">
+                                         <label >
+                                          <input type="checkbox" ng-reflect-name="0" id="selectAll" [checked]="allSelected" (change)="toggleSelectAll()" class="ng-untouched ng-pristine ng-valid"> Select all roles </label>
+                                        <div *ngFor="let role of userAddedRolesList; let i = index">
+                                          <label>
+                                            <input type="checkbox" [formControlName]="i" (change)="onCheckboxChange()" />
+                                            {{ role }}
+                                          </label>
+                                        </div>
+                                      </div> 
+                                </ng-template>
+                              </div>
+                            </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div *ngIf="!userAddedRolesList.length">
+                      No roles are available to assign. Please <a style="cursor: pointer;color: #05aff8;" (click)="gotoAddRole()"> Add One</a>
+                    </div>
+
+                    <div class="col-sm-12 col-lg-12 col-xl-12">
+                      <div *ngIf="!userEditHidePassword" class="row">
+                        <div class="col-md-2 border p-2">
+                          <label for="input-label" class="form-label">Password</label>
+                        </div>
+                        <div class="col-md-10 border p-2">
+                          <input type="password" id="input-text5" formControlName="password" placeholder="Password" class="form-control"
+                            [type]="showPassword ? 'text' : 'password'" autocomplete="off">
+                          <button class="btn btn-light" (click)="toggleVisibility()" type="button" id="button-addon2">
+                            <i class="ri-eye-{{toggleClass}} align-middle"></i></button>
+                          @if(requiredValid){
+                          <div class="invalid-feedback" style="display: block !important;">
+                            <div id="validation-rules" class="mt-3">
+                              <!-- minlength -->
+                              <div class="pwd_character" [ngClass]="{ 'text-success': minLengthValid, 'text-danger': !minLengthValid }">
+                                <i [attr.class]="minLengthValid ? 'bi-check-square-fill' : 'bi-x-square'"></i>
+                                Must be at least 8 characters long
+                              </div>
+                    
+                              <!-- requires digit -->
+                              <div class="pwd_character"
+                                [ngClass]="{ 'text-success': requiresDigitValid, 'text-danger': !requiresDigitValid }">
+                                <i [attr.class]="requiresDigitValid ? 'bi-check-square-fill' : 'bi-x-square'"></i>
+                                Must contain at least 1 digit
+                              </div>
+                    
+                              <!-- requires uppercase -->
+                              <div class="pwd_character"
+                                [ngClass]="{ 'text-success': requiresUppercaseValid, 'text-danger': !requiresUppercaseValid }">
+                                <i [attr.class]="requiresUppercaseValid ? 'bi-check-square-fill' : 'bi-x-square'"></i>
+                                Must contain at least 1 uppercase character
+                              </div>
+                    
+                              <!-- requires lowercase -->
+                              <div class="pwd_character"
+                                [ngClass]="{ 'text-success': requiresLowercaseValid, 'text-danger': !requiresLowercaseValid }">
+                                <i [attr.class]="requiresLowercaseValid ? 'bi-check-square-fill' : 'bi-x-square'"></i>
+                                Must contain at least 1 lowercase character
+                              </div>
+                    
+                              <!-- requires special characters -->
+                              <div class="pwd_character"
+                                [ngClass]="{ 'text-success': requiresSpecialCharsValid, 'text-danger': !requiresSpecialCharsValid }">
+                                <i [attr.class]="requiresSpecialCharsValid ? 'bi-check-square-fill' : 'bi-x-square'"></i>
+                                Must contain at least 1 special character
+                              </div>
+                            </div>
+                          </div>
+                          }
+                          @else{
+                          <label for="input-label" class="form-label">The user's password for authentication </label>
+                          }
+                        </div>
+                        <div class="col-md-2 border p-2">
+                          <label for="input-label" class="form-label">Confirm Password</label>
+                        </div>
+                        <div class="col-md-10 border p-2">
+                          <input type="password" id="input-text" placeholder="Confirm Password" formControlName="conformpassword"
+                            class="form-control" [type]="showPassword1 ? 'text' : 'password'" autocomplete="off">
+                          <button class="btn btn-light" (click)="toggleVisibility1()" type="button" id="button-addon21"><i
+                              class="ri-eye-{{toggleClass1}} align-middle"></i></button>
+                          @if(confirmPasswordError){
+                          <div class="text-danger">Password Didn't match</div>
+                          }@else{
+                          <label for="input-label" class="form-label">Please rewrite the user's password to Confirm
+                          </label>}
+                        </div>
+                      </div>
+                    </div>
+
+                </div>
+                <div class="justify-conent-between mt-1">
+                    <div class="add-role-save-btn" style="float: right;">
+                      <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal" (click)="closeAddUserForm()">Close</button>
+                        <button *ngIf="!userEditHidePassword" type="button" class="btn btn-primary" style="border-radius: 4px 4px 4px 4px;" (click)="addUser()" [disabled]="!isFormValidWithoutIsActive">
+                            Save <i class="fa fa-file-text-o"></i>
+                        </button>
+                        <button *ngIf="userEditHidePassword" type="button" class="btn btn-primary" style="border-radius: 4px 4px 4px 4px;" (click)="editUser()" >
+                          Update <i class="fa fa-file-text-o"></i>
+                      </button>
+                        <!-- <a><i class="fa fa-arrow-left p-3 bg-light rounded-2 ms-1"></i></a> -->
+                    </div>
+                </div>
+            </div>
+        </form>
+
+    </div>
+  </div>
+</div>

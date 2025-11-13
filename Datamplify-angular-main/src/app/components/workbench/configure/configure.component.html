@@ -1,0 +1,206 @@
+<app-page-header title="Configure" title1="Home" activeitem="Configure"></app-page-header>
+
+<div class="main-container container-fluid TopHeader container-background py-5 px-5">
+  <div class="d-flex flex-column">
+
+    <header class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4">
+      <div>
+        <h1 class="h3 fw-bold text-dark mb-1">Settings & Administration</h1>
+        <p class="text-muted mb-0">Manage users, permissions, and system settings for datAmplify</p>
+      </div>
+      <!-- <button class="btn btn-sm mt-2 mt-sm-0 rounded-5 admin-account-btn">
+        <i class="bi bi-person-badge me-2"></i>Admin Account
+      </button> -->
+      <span class="badge rounded-pill px-3 py-2 admin-account-btn">
+        <i class="bi bi-person-badge me-2"></i>Admin Account
+      </span>
+    </header>
+
+    <div class="custom-tabs d-flex justify-content-between mb-2">
+      <div class="nav-item" style="width: 50%;">
+        <button class="nav-link fw-semibold w-100"
+          [ngClass]="activeTab === 'userManagement' ? 'tab-active' : 'tab-inactive'"
+          (click)="setActiveTab('userManagement')"><i class="bi bi-people-fill me-2"></i>User Management</button>
+      </div>
+
+      <div class="nav-item" style="width: 50%;">
+        <button class="nav-link fw-semibold w-100"
+          [ngClass]="activeTab === 'permissions' ? 'tab-active' : 'tab-inactive'"
+          (click)="setActiveTab('permissions')"><i class="bi bi-shield-check me-2"></i>Permissions</button>
+      </div>
+    </div>
+
+    <div *ngIf="activeTab === 'userManagement'">
+      <div class="d-flex justify-content-between align-items-center gap-3 mb-4 pt-2">
+        <div class="d-flex justify-content-between align-items-center gap-3">
+          <div class="d-flex align-items-center glass-bar rounded-pill w-100">
+            <i class="fa fa-search ms-3 text-dark"></i>
+            <input type="text" style="width: 300px;" placeholder="Search users..."
+              class="form-control border-0 bg-transparent px-3 py-2 text-dark" />
+          </div>
+          <div ngbDropdown container="body">
+            <button type="button" class="btn mode-btn rounded-5" ngbDropdownToggle>
+              <i class="fa-solid fa-filter me-2"></i> {{rolesFilter}}
+            </button>
+            <ul ngbDropdownMenu>
+              <li *ngFor="let role of rolesList">
+                <a ngbDropdownItem (click)="rolesFilter = role" [class.active]="rolesFilter === role">
+                  {{ role }}
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div>
+          <button class="btn mode-btn" (click)="openPopup()">
+            <i class="fe fe-plus me-2"></i>Invite User
+          </button>
+        </div>
+      </div>
+
+      <div *ngFor="let user of users" class="card glass-card mb-3">
+        <div class="card-body p-4">
+          <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center">
+            <div class="d-flex align-items-center mb-3 mb-xl-0">
+              <div class="avatar rounded-circle text-bg-secondary me-3">{{ user.initial }}</div>
+              <div>
+                <h6 class="mb-0 fw-bold text-dark">
+                  {{ user.name }}
+                  <span *ngIf="user.name.includes('(You)')"
+                    class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle ms-2">You</span>
+                </h6>
+                <small class=" text-muted">{{ user.email }}</small>
+                <div class="d-flex align-items-center gap-2 mt-2">
+                  <span class="text-muted small">Last active: {{ user.lastActive }}</span>
+                  <span class="badge" [ngClass]="getRoleBadgeClass(user.role)">{{ user.role }}</span>
+                  <span class="badge" [ngClass]="getStatusBadgeClass(user.status)">{{ user.status }}</span>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="user.role !== 'Administrator'" class="d-flex align-items-center justify-content-end gap-2">
+              <!-- <select class="form-select border rounded-5">
+                <option class="select-options" [selected]="user.role === 'Team Member'">Team Member</option>
+                <option class="select-options" [selected]="user.role === 'Administrator'">Administrator</option>
+                <option class="select-options" [selected]="user.role === 'Viewer'">Viewer</option>
+              </select> -->
+
+              <div ngbDropdown container="body">
+                <button type="button" class="btn mode-btn rounded-5 border" ngbDropdownToggle>
+                  <i class="fa-solid fa-user me-2"></i>
+                  {{ user.role || 'Select Role' }}
+                </button>
+              
+                <ul ngbDropdownMenu>
+                  <li>
+                    <a ngbDropdownItem [class.active]="user.role === 'Administrator'" (click)="user.role = 'Administrator'">
+                      Administrator
+                    </a>
+                  </li>
+                  <li>
+                    <a ngbDropdownItem [class.active]="user.role === 'Team Member'" (click)="user.role = 'Team Member'">
+                      Team Member
+                    </a>
+                  </li>
+                  <li>
+                    <a ngbDropdownItem [class.active]="user.role === 'Viewer'" (click)="user.role = 'Viewer'">
+                      Viewer
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <button class="btn btn-sm btn-outline-danger rounded-circle"><i class="fe fe-trash-2"></i></button>
+            </div>
+          </div>
+          <hr class="border-dark border-opacity-25 my-3">
+          <div>
+            <small class="text-dark fw-semibold">Permissions:</small>
+            <div class="d-flex flex-wrap gap-2 mt-2">
+              <span *ngFor="let p of user.permissions" class="badge badge-permission" [ngClass]="{ 'bg-primary text-light': user.role === 'Administrator', 'text-dark': user.role !== 'Administrator' }">
+                <i [class]="p.icon + ' me-1'"></i>{{ p.name }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="activeTab === 'permissions'">
+      <h5 class="fw-bold mb-3 text-primary"><i class="bi bi-shield-check me-2"></i>Role-Based Permissions</h5>
+      <div *ngFor="let role of roles" class="card glass-card mb-3">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-start gap-4">
+            <i [class]="role.icon + ' fs-2 text-primary'"></i>
+            <div>
+              <h6 class="fw-bold">{{ role.name }}</h6>
+              <p class="text-muted mb-3">{{ role.description }}</p>
+              <div class="d-flex flex-wrap gap-2">
+                <span *ngIf="role.accessType" class="badge text-bg-primary rounded-pill px-3 py-2">
+                  <i class="bi-shield-check me-2"></i>{{ role.accessType }}
+                </span>
+                <span *ngFor="let p of role.permissions" class="badge badge-permission text-dark">
+                  <i [class]="p.icon + ' me-1'"></i>{{ p.name }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="isInviteUser" class="backdrop" (click)="closePopup()"></div>
+
+<div *ngIf="isInviteUser" class="invite-popup glass-card shadow-lg">
+  <div class="popup-header d-flex justify-content-between align-items-center">
+    <h3><i class="bi bi-person-plus"></i> Invite New User</h3>
+    <button class="close-btn" (click)="closePopup()">✕</button>
+  </div>
+
+  <p class="sub-text">Send an invitation to join your datAmplify workspace.</p>
+
+  <form>
+    <div class="form-group">
+      <label>Email Address *</label>
+      <input type="email" class="form-control" placeholder="user@company.com">
+    </div>
+
+    <div class="form-group">
+      <label>Role *</label>
+      <select class="form-control">
+        <option>Viewer</option>
+        <option>Editor</option>
+        <option>Admin</option>
+      </select>
+    </div>
+
+    <h5 class="mt-3 mb-2">Permissions</h5>
+    <div class="permission-card" *ngFor="let p of permissions">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+          <i [class]="p.icon"></i>
+          <div>
+            <p class="perm-title">{{ p.name }}</p>
+            <p class="perm-desc">{{ p.desc }}</p>
+          </div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="p.enabled" name="{{p.name}}">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="form-group mt-3">
+      <label>Personal Message (Optional)</label>
+      <textarea class="form-control" placeholder="Welcome to our datAmplify workspace..."></textarea>
+    </div>
+
+    <div class="btn-row mt-4">
+      <button type="button" class="btn btn-secondary" (click)="generateLink()">Generate Link</button>
+      <div class="flex-spacer"></div>
+      <button type="button" class="btn btn-outline-light" (click)="closePopup()">Cancel</button>
+      <button type="submit" class="btn btn-primary">Send Invite</button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,132 @@
+.log-container {
+    background-color: #382758;
+    color: #d4d4d4;
+    padding: 1rem;
+    font-family: monospace;
+    height: 100vh;
+    overflow-y: auto;
+    border-radius: 8px;
+    white-space: pre-wrap;
+  }
+
+  .log-line {
+  padding: 4px 0;
+  border-bottom: 1px solid #353945;
+  word-break: break-all;
+  margin-left: 10px;
+}
+
+.log-group-start, .log-group-end {
+  padding: 4px 0;
+  background-color: #382758;
+  border-radius: 3px;
+  margin-bottom: 4px;
+  margin-left: 0;
+}
+
+.group-header {
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+}
+
+.group-icon {
+  margin-right: 5px;
+  font-size: 0.8em;
+}
+
+.log-source {
+  padding-left: 20px;
+  font-style: italic;
+  color: #a7adba;
+  font-size: 0.9em;
+}
+
+.source-prefix {
+  margin-right: 4px;
+}
+
+.timestamp {
+  color: #61afef;
+  margin-right: 5px;
+}
+
+.level {
+  font-weight: bold;
+  padding: 2px 4px;
+  border-radius: 3px;
+  margin-right: 8px;
+  font-size: 0.8em;
+}
+
+.level-error {
+  background-color: #c94c4c;
+  color: white;
+}
+
+.level-warning {
+  background-color: #e0a200;
+  color: black;
+}
+
+.level-debug {
+  background-color: #56b6c2;
+  color: black;
+}
+
+.logger-name {
+  color: #98c379;
+  margin-right: 5px;
+}
+
+.log-error {
+  color: #c94c4c;
+}
+
+.log-warning {
+  color: #e0a200;
+}
+
+.log-debug {
+  color: #56b6c2;
+}
+
+.log-meta {
+  margin-left: 20px;
+  margin-top: 5px;
+  font-size: 0.9em;
+  color: #a7adba;
+}
+
+.meta-label {
+  font-weight: bold;
+  margin-right: 4px;
+}
+
+.error-detail {
+  padding-left: 10px;
+  margin-bottom: 2px;
+}
+
+.task-info-details {
+  margin-top: 5px;
+  border: 1px solid #4a5160;
+  border-radius: 3px;
+}
+
+.task-info-summary {
+  background-color: #4a5160;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 3px;
+  color: #f0f0f0;
+}
+
+.task-info-pre {
+  padding: 8px;
+  white-space: pre-wrap;
+  background-color: #382758;
+  overflow-x: auto;
+  color: #fff;
+}
+  

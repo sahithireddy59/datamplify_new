@@ -1,0 +1,49 @@
+<div class="log-container rounded-3">
+  <ng-container *ngFor="let entry of processedLogs; let i = index">
+
+    <!-- Group Start -->
+    <div *ngIf="isGroupStart(entry)" class="log-group-start">
+      <div class="group-header">
+        <span class="group-icon">▶</span>
+        <span class="group-text">{{ entry.event?.replace('::group::', '')?.trim() }}</span>
+      </div>
+      <div *ngFor="let src of entry.sources" class="log-source">
+        <span class="source-prefix">↳ Source:</span> {{ src }}
+      </div>
+    </div>
+
+    <!-- Group End -->
+    <div *ngIf="isGroupEnd(entry)" class="log-group-end">
+      <div class="group-end-text">
+        <span class="group-icon">◀</span> [END GROUP]
+      </div>
+    </div>
+
+    <!-- Standard Logs -->
+    <div *ngIf="isStandardLog(entry)" class="log-line" [ngClass]="{ 'log-error': entry.level === 'ERROR', 'log-warning': entry.level === 'WARNING', 'log-debug': entry.level === 'DEBUG' }">
+      <span class="timestamp">{{ formatTimestamp(entry.timestamp) }}</span>
+      <span class="level" [ngClass]="{ 'level-error': entry.level === 'ERROR', 'level-warning': entry.level === 'WARNING', 'level-debug': entry.level === 'DEBUG' }">{{ formatLevel(entry.level) }}</span>
+      <span *ngIf="entry.logger" class="logger-name">{{ entry.logger }} -</span>
+      <span [innerHTML]="entry.message"></span>
+
+      <!-- Show additional metadata -->
+      <div class="log-meta" *ngIf="entry.ti || entry.chan || entry.error_detail">
+        <div *ngIf="entry.chan">
+          <span class="meta-label">Channel:</span> {{ entry.chan }}
+        </div>
+        <div *ngIf="entry.error_detail">
+          <div *ngFor="let err of entry.error_detail" class="error-detail">
+            <span class="meta-label">Error Type:</span> {{ err.exc_type }} <br>
+            <span class="meta-label">Error Value:</span> {{ err.exc_value }}
+          </div>
+        </div>
+        <div *ngIf="entry.ti">
+          <details class="task-info-details">
+            <summary class="task-info-summary">Task Instance Info</summary>
+            <pre class="task-info-pre">{{ stringify(entry.ti) }}</pre>
+          </details>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

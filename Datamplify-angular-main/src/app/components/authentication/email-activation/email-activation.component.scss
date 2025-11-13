@@ -1,0 +1,81 @@
+.login-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  // height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 2rem;
+  color: #f0f0f0;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+h4 {
+  color: #fff;
+  font-weight: 600;
+}
+
+p {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.form-group label {
+  color: #fff;
+}
+
+.btn-login {
+  background: linear-gradient(90deg, #1e5799 0%, #2989d8 50%, #7db9e8 100%);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  padding: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.btn-login:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(41, 137, 216, 0.4);
+}
+
+.signup-link {
+  color: #a7c5ff;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.signup-link:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.ng-otp-input input {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #f0f0f0;
+  border-radius: 10px;
+  width: 2.5rem;
+  height: 2.5rem;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+.ng-otp-input input:focus {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  box-shadow: 0 0 15px rgba(0, 191, 255, 0.5);
+  border-color: rgba(0, 191, 255, 0.7);
+}

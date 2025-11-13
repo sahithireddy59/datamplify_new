@@ -1,0 +1,170 @@
+/* Start:Choices JS */
+.choices__inner {
+  padding: 0.5rem 0.85rem !important;
+  background-color: $form-control-bg !important;
+  border-radius: 0.35rem !important;
+  border: 1px solid $input-border !important;
+  min-height: auto !important;
+  line-height: 1.7;
+}
+
+.choices__input {
+  padding: 0 !important;
+}
+
+.choices__list--single {
+  padding-block: 0 !important;
+  padding-inline-start: 0;
+  padding-inline-end: 1rem !important;
+}
+
+.choices[data-type*=select-one]::after {
+  inset-inline-end: .7188rem !important;
+}
+
+.choices[data-type*="select-one"]::after {
+  color: $muted !important;
+}
+
+.choices[data-type*="select-one"] .choices__input {
+  padding: 0.625rem !important;
+}
+.choices__list--dropdown { 
+  display: none;
+}
+.choices__list--dropdown.is-active { 
+  display: block;
+}
+.choices__list--dropdown,
+.choices__list[aria-expanded] {
+  background-color: $custom-white !important;
+  border: 1px solid $border !important;
+  z-index: 1 !important;
+  border-radius: 0 0 $default-radius $default-radius !important;
+}
+
+.choices[data-type*="select-one"] .choices__input {
+  border-block-end: 1px solid $border !important;
+  background-color: $custom-white !important;
+  color: $default-color;
+}
+
+.choices__list--dropdown .choices__item--selectable.is-highlighted,
+.choices__list[aria-expanded] .choices__item--selectable.is-highlighted {
+  background-color: $custom-white !important;
+}
+
+.choices__list--dropdown .choices__list {
+  max-height: 250px !important;
+}
+
+.choices[data-type*="select-one"]::after {
+  border-color: $muted transparent transparent !important;
+}
+
+.choices__input {
+  background-color: transparent !important;
+  color: $custom-black;
+}
+
+.choices__list--multiple .choices__item {
+  background-color: $primary !important;
+  border: 1px solid $primary !important;
+}
+
+.choices[data-type*="select-multiple"] .choices__button,
+.choices[data-type*="text"] .choices__button {
+  border-inline-start: 1px solid rgba(255, 255, 255, 0.5) !important;
+}
+
+.choices__list--multiple .choices__item {
+  margin-block-end: 0 !important;
+}
+
+.choices__list--single .choices__item {
+  color: $default-color !important;
+}
+
+.choices__input {
+  margin-block-end: 0 !important;
+}
+
+.choices__list--multiple .choices__item {
+  border-radius: 0.25rem !important;
+  padding: 0.025rem 0.625rem !important;
+}
+
+.form-control-select-sm .choices__inner {
+  padding: 0.275rem !important;
+}
+
+.choices[data-type*="select-one"].is-open::after {
+  margin-top: -0.156rem !important;
+}
+
+.input-group {
+  .choices__inner {
+    border-radius: 0 $default-radius $default-radius 0 !important;
+  }
+}
+
+.choices__heading {
+  border-bottom: 1px solid $border !important;
+  color: $muted !important;
+}
+
+[dir="rtl"] {
+
+  .choices[data-type*=select-one]::after {
+    left: .7188rem;
+    right: inherit;
+  }
+
+  .choices[data-type*=select-one] .choices__button {
+    left: 0;
+    right: inherit;
+    margin-left: 1.5625rem;
+    margin-right: inherit;
+  }
+
+  &[data-theme-mode="dark"] {
+    .choices[data-type*=select-one] .choices__button {
+      filter: invert(1);
+    }
+  }
+
+  .choices[data-type*=select-multiple] .choices__button,
+  .choices[data-type*=text] .choices__button {
+    margin: 0 8px 0 -4px;
+    padding-right: 1rem;
+    padding-left: inherit;
+    border-right: 0px solid #008fa1;
+    border-left: 0;
+  }
+}
+
+.choices__list--dropdown,
+.choices__list[aria-expanded] {
+  box-shadow: rgba(149, 157, 165, 0.2) 0 0.5rem 1.5rem !important;
+}
+[data-theme-mode = "dark"] {
+  .choices[data-type*=select-one] .choices__button {
+    filter: invert(1);
+  }
+}
+.choices__list--dropdown, .choices__list[aria-expanded]{
+  z-index: 9 !important;
+}
+
+.sort-select .choices__list--dropdown .choices__item--selectable::after,
+.sort-select .choices__list[aria-expanded] .choices__item--selectable::after {
+  display: none !important;
+}
+
+.sort-select .choices__list--dropdown .choices__item--selectable,
+.sort-select .choices__list[aria-expanded] .choices__item--selectable {
+  -webkit-padding-end: 0 !important;
+    padding-inline-end: 0 !important;
+}
+
+/* End:Choices JS */

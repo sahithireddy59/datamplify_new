@@ -1,0 +1,270 @@
+.error-label{ color: #fc0303 !important;}
+.error-input{ border-color: #fc0303 !important; }
+.container-background {
+  background: var(--custom-white);
+  min-height: 100vh;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-card:hover {
+ transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(var(--bs-primary-rgb, 13, 110, 253), 0.25); /* slightly stronger on hover */
+}
+.form-card {
+  border: 1px solid rgba(var(--primary-rgb, 13, 110, 253), 0.4); /* lighter primary */
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb, 13, 110, 253), 0.15); /* soft primary shadow */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  // min-height: 475px;
+  // max-height: 475px;
+  overflow: hidden;
+}
+
+.form-card:hover {
+//  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(var(--primary-rgb, 13, 110, 253), 0.25); /* slightly stronger on hover */
+}
+
+.form-height{
+  // min-height: 415px;
+  // max-height: 415px;
+  min-height: 571px;
+  max-height: 571px;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.3) transparent;
+}
+/* Chrome, Edge, Safari */
+.form-height::-webkit-scrollbar {
+  width: 6px;            /* thin scrollbar */
+}
+
+.form-height::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.form-height::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.2);  /* light thumb */
+  border-radius: 4px;
+}
+
+.form-height::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.4);
+}
+/* Input with glass effect */
+.glass-light {
+  background: 0 4px 12px rgba(var(--primary-rgb, 13, 110, 253), 0.15)!important;
+  border: 1px solid rgba(var(--primary-rgb, 13, 110, 253), 0.4) !important;
+  // border-radius: 0.5rem !important;
+}
+
+.glass-light:focus {
+  border-color: rgba(0, 123, 255, 0.8);
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+/* styles for cards & hover */
+.hoverable {
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+.hoverable:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Light outline buttons */
+.btn-outline-primary-light {
+  border: 1px solid rgba(var(--primary-rgb, 13, 110, 253), 0.4);
+  color: var(--bs-primary);
+  background: rgba(var(--primary-rgb, 13, 110, 253), 0.05);
+}
+.btn-outline-primary-light:hover {
+  background: rgba(var(--primary-rgb, 13, 110, 253), 0.15);
+}
+
+.btn-outline-danger-light {
+  border: 1px solid rgba(var(--bs-danger-rgb, 220, 53, 69), 0.4);
+  color: var(--bs-danger);
+  background: rgba(var(--bs-danger-rgb, 220, 53, 69), 0.05);
+}
+.btn-outline-danger-light:hover {
+  background: rgba(var(--bs-danger-rgb, 220, 53, 69), 0.15);
+}
+
+.icon-bounce {
+  display: inline-block;
+  animation: bounce 5s infinite;
+}
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-6px);
+  }
+  60% {
+    transform: translateY(-3px);
+  }
+}
+
+.card-icon {
+  transition: transform 0.4s ease;
+}
+.hoverable:hover .card-icon {
+  transform: scale(1.2) rotate(5deg);
+}
+
+/* Right arrow animation */
+.arrow-icon {
+  display: inline-block;  
+  transition: transform 0.3s ease;
+}
+.hoverable:hover .arrow-icon {
+  transform: scale(1.5) translateX(5px); /* slides slightly to the right */
+}
+.form-control.forms-light {
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  padding: 10px 14px;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+  background: #f9fafb;
+  transition: all 0.2s ease-in-out;
+}
+
+.form-control.forms-light:focus {
+//   border-color: #3b82f6;
+//   background: #fff;
+//   box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+ border-color: #0d6efd;
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+}
+
+.form-label {
+  font-size: 14px;
+  color: var(--default-text-color);
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #d5d4d4 37%, #f0f0f0 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: 4px; 
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+.mode-btn {
+  background: linear-gradient(90deg, #3b82f6 0%, #9b25f2 70%);
+  color: #fff;
+  border: none !important;
+  transition: transform .18s ease, box-shadow .18s ease;
+
+  &:hover { 
+   transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08), 
+    0 6px 12px rgba(14,165,233,0.15);
+    border: 1px solid #7c5cff !important;
+    }
+}
+
+.list-type-btn {
+  border: 1px solid #7c5cff;
+  color: #7c5cff;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.list-type-btn-active {
+  background: linear-gradient(90deg,#3b82f6 0%, #7c5cff 100%);
+  border: 1px solid #7c5cff;
+  color: #fff;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.split-view .list-group-item,
+.split-view .glass-card {
+  font-size: 90%;
+}
+
+.split-view h6,
+.split-view h5, .split-view p {
+  max-width: 140px !important;
+  font-size: 90% !important;
+}
+
+select.form-select {
+  background-color: transparent !important;
+  color: var(--default-text-color) !important;
+}
+
+.select-options {
+  color: #000 !important;
+}
+
+.disabled {
+  background-color: #e9ecef4f !important;
+  // color: #6c757d !important;
+  border-color: #dee2e6 !important;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.footer-buttons {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+}
+
+
+/* ----------- For 90% Resolution (Large screens) ----------- */
+@media (min-width: 1420px) and (max-width: 1560px) {
+  .form-height {
+    min-height: 571px;
+    max-height: 571px;
+  }
+}
+
+/* ----------- For 100% Resolution (Standard desktop) ----------- */
+@media (min-width: 1280px) and (max-width: 1419px) {
+  .form-height {
+    min-height: 571px;
+    max-height: 571px;
+  }
+}
+
+/* ----------- For 110% Resolution (Slight zoom) ----------- */
+@media (min-width: 1163px) and (max-width: 1279px) {
+  .form-height {
+    min-height: 510px;
+    max-height: 510px;
+  }
+}
+
+/* ----------- For 125% Resolution (Zoomed or smaller screens) ----------- */
+@media (min-width: 1024px) and (max-width: 1162px) {
+  .form-height {
+    min-height: 510px;
+    max-height: 510px;
+  }
+}

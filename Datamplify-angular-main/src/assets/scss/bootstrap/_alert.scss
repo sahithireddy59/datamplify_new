@@ -1,0 +1,376 @@
+/*-----Alerts start-----*/
+
+.alert {
+  position: relative;
+  padding: 0.625rem 0.85rem;
+  border-radius: 0.3rem;
+  font-size: 0.8125rem;
+  margin-block-end: 1rem;
+  &:last-child,
+  p {
+    margin-block-end: 0;
+  }
+}
+
+.alert-heading {
+  color: inherit;
+}
+
+.alert-link {
+  &:hover,
+  a:hover {
+    text-decoration: underline;
+  }
+}
+
+.alert-dismissible {
+  padding-inline-end: 3.90625rem;
+  .btn-close {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-end: 0;
+    padding: 0.65rem 1.25rem;
+    color: inherit;
+  }
+}
+
+.alert-default {
+  background-color: $background;
+}
+
+.alert-bg-icon {
+  padding: 7px 7px;
+  font-size: 12px;
+  margin-inline-end: 5px;
+}
+
+.alert-secondary {
+  color: $secondary;
+  background-color: rgba(var(--secondary-rgb), 0.2);
+  border-color: rgba(var(--secondary-rgb), 0.2);
+  hr {
+    border-block-start-color: $secondary;
+  }
+  .alert-link {
+    color: $secondary;
+  }
+  .alert-bg-icon {
+    background-color: $secondary;
+    color: $white;
+  }
+}
+
+.alert-success {
+  color: $success;
+  background-color: rgba(var(--success-rgb), 0.2);
+  border-color: rgba(var(--success-rgb), 0.2);
+  hr {
+    border-block-start-color: $success;
+    opacity: 0.2;
+  }
+  .alert-link {
+    color: $success;
+  }
+  .alert-bg-icon {
+    background-color: $success;
+    color: $white;
+  }
+}
+
+.alert-info {
+  color: $info;
+  background-color: rgba(var(--info-rgb), 0.2);
+  border-color: rgba(var(--info-rgb), 0.2);
+  hr {
+    border-block-start-color: $info;
+    opacity: 0.2;
+  }
+  .alert-link {
+    color: $info;
+  }
+  .alert-bg-icon {
+    background-color: $info;
+    color: $white;
+  }
+}
+
+.alert-warning {
+  color: $warning;
+  background-color: rgba(var(--warning-rgb), 0.2);
+  border-color: rgba(var(--warning-rgb), 0.2);
+  hr {
+    border-block-start-color: $warning;
+    opacity: 0.2;
+  }
+  .alert-link {
+    color: #eba40f;
+  }
+  .alert-bg-icon {
+    background-color: $warning;
+    color: $white;
+  }
+}
+
+.alert-danger {
+  color: $danger;
+  background-color: rgba(var(--danger-rgb), 0.2);
+  border-color: rgba(var(--danger-rgb), 0.2);
+  hr {
+    border-block-start-color: $danger;
+    opacity: 0.2;
+  }
+  .alert-link {
+    color: #ff022c;
+  }
+  .alert-bg-icon {
+    background-color: $danger;
+    color: $white;
+  }
+}
+
+.alert-light {
+  color: $default-color;
+  background-color: $background;
+  border-color: $background;
+  hr {
+    border-block-start-color: #ececf6;
+  }
+  .alert-link {
+    color: #686868;
+  }
+}
+
+.alert-dark {
+  color: $default-color;
+  background-color: var(--dark-rgb);
+  border-color: $border;
+  hr {
+    border-block-start-color: $border;
+  }
+  .alert-link {
+    color: #040505;
+  }
+}
+
+.alert-icon {
+  padding-inline-start: 3rem;
+  > i {
+    color: inherit !important;
+    font-size: 1rem;
+    position: absolute;
+    inset-block-start: 1rem;
+    inset-inline-start: 1rem;
+  }
+}
+
+.alert-avatar {
+  padding-inline-start: 0.75rem !important;
+  // .avatar {
+  //     position: absolute;
+  //     inset-block-start: .1rem;
+  //     inset-inline-start: .75rem;
+  // }
+}
+
+.alert .btn-close {
+  color: inherit;
+  &:hover,
+  &:focus {
+    color: inherit;
+  }
+}
+
+// Outline Alerts
+
+.alert-outline-primary {
+  border: 1px solid $primary;
+  .alert-link,
+  .btn-close {
+    color: $primary;
+  }
+}
+.alert-outline-secondary {
+  border: 1px solid $secondary;
+  .alert-link,
+  .btn-close {
+    color: $secondary;
+  }
+}
+.alert-outline-success {
+  border: 1px solid $success;
+  .alert-link,
+  .btn-close {
+    color: $success;
+  }
+}
+.alert-outline-info {
+  border: 1px solid $info;
+  .alert-link,
+  .btn-close {
+    color: $info;
+  }
+}
+.alert-outline-danger {
+  border: 1px solid $danger;
+  .alert-link,
+  .btn-close {
+    color: $danger;
+  }
+}
+.alert-outline-warning {
+  border: 1px solid $warning;
+  .alert-link,
+  .btn-close {
+    color: $warning;
+  }
+}
+
+// Solid Alerts
+
+.alert-solid-primary {
+  background-color: $primary;
+  color: $white;
+  .btn-close {
+    color: $white;
+  }
+}
+.alert-solid-secondary {
+  background-color: $secondary;
+  color: $white;
+  .btn-close {
+    color: $white;
+  }
+}
+.alert-solid-success {
+  background-color: $success;
+  color: $white;
+  .btn-close {
+    color: $white;
+  }
+}
+.alert-solid-info {
+  background-color: $info;
+  color: $white;
+  .btn-close {
+    color: $white;
+  }
+}
+.alert-solid-danger {
+  background-color: $danger;
+  color: $white;
+  .btn-close {
+    color: $white;
+  }
+}
+.alert-solid-warning {
+  background-color: $warning;
+  color: $white;
+  .btn-close {
+    color: $white;
+  }
+}
+
+// Rounded Alerts
+
+.alert-rounded-primary {
+  background-color: $primary;
+  color: $white;
+  .btn-close {
+    color: $white;
+  }
+}
+.alert-rounded-secondary {
+  background-color: $secondary;
+  color: $white;
+  .btn-close {
+    color: $white;
+  }
+}
+.alert-rounded-success {
+  background-color: $success;
+  color: $white;
+  .btn-close {
+    color: $white;
+  }
+}
+.alert-rounded-info {
+  background-color: $info;
+  color: $white;
+  .btn-close {
+    color: $white;
+  }
+}
+.alert-rounded-danger {
+  background-color: $danger;
+  color: $white;
+  .btn-close {
+    color: $white;
+  }
+}
+.alert-rounded-warning {
+  background-color: $warning;
+  color: $white;
+  .btn-close {
+    color: $white;
+  }
+}
+
+.alert-icon-style {
+  position: absolute;
+  top: -10%;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+// Solid Alerts
+
+.alert-gradient-primary {
+  background: $primary-gradient-1;
+  color: $white;
+  .btn-close {
+    color: $white;
+  }
+}
+.alert-gradient-secondary {
+  background: $secondary-gradient;
+  color: $white;
+  .btn-close {
+    color: $white;
+  }
+}
+.alert-gradient-success {
+  background: $success-gradient;
+  color: $white;
+  .btn-close {
+    color: $white;
+  }
+}
+.alert-gradient-info {
+  background: $info-gradient;
+  color: $white;
+  .btn-close {
+    color: $white;
+  }
+}
+.alert-gradient-danger {
+  background: $danger-gradient;
+  color: $white;
+  .btn-close {
+    color: $white;
+  }
+}
+.alert-gradient-warning {
+  background: $warning-gradient;
+  color: $white;
+  .btn-close {
+    color: $white;
+  }
+}
+.alert {
+  .btn-close {
+    height: 0.5rem;
+    line-height: 1rem;
+  }
+}
+
+/*------ Alerts Ends -------*/

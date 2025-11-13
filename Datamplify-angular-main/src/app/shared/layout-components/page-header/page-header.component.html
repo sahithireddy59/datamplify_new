@@ -1,0 +1,29 @@
+   <!-- PAGE-HEADER -->
+   <div class="page-header d-flex align-items-center justify-content-between border-0 container-background glass-card">
+    <button  *ngIf="isPublicUrl" type="button" class="btn btn-icon btn-primary-light me-3 rounded-5 hamburger-menu">
+        <i class="fa fa-bars" (click)="toggleSidebar()" style=" font-size: 24px;"></i>
+</button>
+    <div class="page-title TitlePaddings" [innerHTML]="dashbaordName"></div>
+    <div *ngIf="!multiLevel" class="d-flex"> 
+        <!-- <button type="button" ngbTooltip="Help" container="body" (click)="helpRoute()" class="btn btn-icon btn-primary-light me-3 rounded-5">
+            <i class="fa fa-question-circle" style=" font-size: 24px;"></i>
+        </button> -->
+        <ol class="breadcrumb" style=" line-height: 2.7;">
+            <!-- <li class="breadcrumb-item"><button (click)="helpRoute(moduleId)">Help Guide</button></li> -->
+            <li class="breadcrumb-item"><a href="/datamplify/home">{{title1}}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{activeitem}}</li>
+        </ol>
+    </div>
+    <div *ngIf="multiLevel" class="d-flex">
+        <!-- <button type="button" (click)="helpRoute()" class="btn btn-icon btn-primary-light me-3 rounded-5">
+            <i class="fa fa-question-circle" style=" font-size: 24px;"></i>
+        </button> -->
+        <ol class="breadcrumb" style=" line-height: 2.7;">
+            <li class="breadcrumb-item"><a href="/datamplify/home">{{title1}}</a></li>
+            <li class="breadcrumb-item"><a href="{{title2Route}}">{{title2}}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{activeitem}}</li>
+        </ol>
+    </div>
+</div>
+
+<!-- PAGE-HEADER END -->

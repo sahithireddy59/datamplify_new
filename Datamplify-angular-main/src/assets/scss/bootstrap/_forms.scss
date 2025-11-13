@@ -1,0 +1,1548 @@
+/*------- Forms start -------*/
+
+.form-control {
+  display: block;
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: $default-color;
+  background-color: $custom-white;
+  background-clip: padding-box;
+  border: 1px solid $input-border;
+  border-radius: 4px;
+  overflow: hidden;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  &::-ms-expand {
+    background-color: transparent;
+    border: 0;
+  }
+  &::placeholder {
+    color: $muted;
+    opacity: 0.7;
+    // float: $float-left;
+  }
+  &:focus {
+    color: $default-color;
+    background-color: $custom-white;
+    outline: 0;
+    box-shadow: none;
+    border-color: $border;
+  }
+  &::-webkit-input-placeholder,
+  &::-moz-placeholder,
+  &:-ms-input-placeholder,
+  &::-ms-input-placeholder {
+    color: $default-color;
+    opacity: 1;
+  }
+  &:disabled,
+  &[readonly] {
+    background-color: $light;
+    opacity: 1;
+  }
+  &:disabled::placeholder {
+    opacity: 0.8;
+  }
+  &::-webkit-file-upload-button {
+    color: #495057;
+    background-color: $background;
+    transition: none;
+    padding: 0.65rem 0.75rem;
+    margin: -0.575rem -0.75rem;
+    -webkit-margin-end: 0.75rem;
+    margin-inline-end: 0.75rem;
+  }
+  &:hover:not(:disabled):not([readonly])::-webkit-file-upload-button {
+    background-color: $background;
+  }
+}
+
+.form-control-sm::-webkit-file-upload-button {
+  padding: 0.55rem 0.5rem;
+  margin: -0.95rem -0.5rem;
+  -webkit-margin-end: 0.5rem;
+  margin-inline-end: 0.5rem;
+}
+
+.form-control-lg::-webkit-file-upload-button {
+  padding: 0.75rem 1rem;
+  margin: -0.8rem -1rem;
+  -webkit-margin-end: 1rem;
+  margin-inline-end: 1rem;
+  font-size: 1rem;
+}
+
+@media screen and (prefers-reduced-motion: reduce) {
+  .form-control {
+    transition: none;
+  }
+}
+
+.form-control-file,
+.form-control-range {
+  display: block;
+  width: 100%;
+}
+
+.col-form-label {
+  padding-block-start: calc(0.375rem + 1px);
+  padding-block-end: calc(0.375rem + 1px);
+  margin-block-end: 0;
+  font-size: inherit;
+  line-height: 1.6;
+}
+
+.col-form-label-lg {
+  padding-block-start: calc(0.5rem + 1px);
+  padding-block-end: calc(0.5rem + 1px);
+  font-size: 1.125rem;
+  line-height: 1.44444444;
+}
+
+.col-form-label-sm {
+  padding-block-start: calc(0.25rem + 1px);
+  padding-block-end: calc(0.25rem + 1px);
+  font-size: 0.875rem;
+  line-height: 1.14285714;
+}
+
+.form-control-plaintext {
+  display: block;
+  width: 100%;
+  padding-block-start: 0.375rem;
+  padding-block-end: 0.375rem;
+  margin-block-end: 0;
+  line-height: 1.6;
+  color: #495057;
+  background-color: transparent;
+  border: solid transparent;
+  border-width: 1px 0;
+  outline: 0;
+  &.form-control-sm {
+    padding-inline-end: 0;
+    padding-inline-start: 0;
+  }
+}
+
+.input-group-sm > {
+  .form-control-plaintext.form-control,
+  .input-group-text > .form-control-plaintext.input-group-text,
+  .input-group-text > .form-control-plaintext.input-group-text,
+  .input-group-text > .form-control-plaintext.btn,
+  .input-group-text > .form-control-plaintext.btn {
+    padding-inline-end: 0;
+    padding-inline-start: 0;
+  }
+}
+
+// .btn-check:focus+.btn-light, .btn-light:focus {
+//     background-color: $custom-white;
+// }
+
+.input-group-sm > .btn,
+.input-group-sm > .form-control,
+.input-group-sm > .form-select,
+.input-group-sm > .input-group-text {
+  border-radius: 5px;
+}
+
+.form-control-plaintext.form-control-lg {
+  padding-inline-end: 0;
+  padding-inline-start: 0;
+}
+
+.input-group-lg > {
+  .form-control-plaintext.form-control,
+  .input-group-text > .form-control-plaintext.input-group-text,
+  .input-group-text > .form-control-plaintext.input-group-text,
+  .input-group-text > .form-control-plaintext.btn,
+  .input-group-text > .form-control-plaintext.btn {
+    padding-inline-end: 0;
+    padding-inline-start: 0;
+  }
+}
+
+.form-control-sm {
+  padding: 0.251rem 0.51rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.input-group-sm > {
+  .form-control,
+  .input-group-text > .input-group-text,
+  .input-group-text > .input-group-text,
+  .input-group-text > .btn,
+  .input-group-text > .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.14285714;
+  }
+}
+
+select.form-control-sm:not([size]):not([multiple]) {
+  height: calc(1.8125rem + 2px);
+}
+
+.input-group-sm > {
+  select.form-control:not([size]):not([multiple]),
+  .input-group-text > select.input-group-text:not([size]):not([multiple]),
+  .input-group-text > select.input-group-text:not([size]):not([multiple]),
+  .input-group-text > select.btn:not([size]):not([multiple]),
+  .input-group-text > select.btn:not([size]):not([multiple]) {
+    height: calc(1.8125rem + 2px);
+  }
+}
+
+.form-control-lg {
+  padding: 0.63rem 1rem;
+  font-size: 1rem;
+  line-height: 1.44444444;
+  border-radius: 7px;
+}
+
+.input-group-lg > {
+  .form-control,
+  .input-group-text > .input-group-text,
+  .input-group-text > .input-group-text,
+  .input-group-text > .btn,
+  .input-group-text > .btn {
+    padding: 0.5rem 1rem;
+    font-size: 1.125rem;
+    line-height: 1.44444444;
+    border-radius: 3px;
+  }
+}
+
+.input-group-lg > {
+  select.form-control:not([size]):not([multiple]),
+  .input-group-text > select.input-group-text:not([size]):not([multiple]),
+  .input-group-text > select.input-group-text:not([size]):not([multiple]),
+  .input-group-text > select.btn:not([size]):not([multiple]),
+  .input-group-text > select.btn:not([size]):not([multiple]) {
+    height: calc(2.6875rem + 2px);
+  }
+}
+
+.form-group {
+  margin-block-end: 1rem;
+  display: block;
+}
+
+.form-text {
+  display: block;
+  margin-block-start: 0.25rem;
+  color: $muted !important;
+}
+
+.form-row {
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+  margin-inline-end: -5px;
+  margin-inline-start: -5px;
+  > {
+    .col,
+    [class*="col-"] {
+      padding-inline-end: 5px;
+      padding-inline-start: 5px;
+    }
+  }
+}
+
+.form-check-input {
+  &:disabled ~ .form-check-label {
+    color: $muted;
+  }
+}
+
+.form-check-label {
+  margin-block-end: 0;
+}
+
+.form-check-inline {
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -ms-flex-align: center;
+  align-items: center;
+  padding-inline-start: 0;
+  margin-inline-end: 0.75rem;
+  .form-check-input {
+    position: static;
+    margin-block-start: 0;
+    margin-inline-end: 0.3125rem;
+    margin-inline-start: 0;
+  }
+}
+
+.was-validated .form-control:valid,
+.form-control.is-valid,
+.was-validated .form-select:valid,
+.form-select.is-valid {
+  border-color: #58c995;
+}
+
+.was-validated .form-control:valid:focus,
+.form-control.is-valid:focus,
+.was-validated .form-select:valid:focus,
+.form-select.is-valid:focus {
+  border-color: #198754;
+  box-shadow: none;
+}
+
+.was-validated .form-control:valid ~ {
+  .valid-feedback,
+  .valid-tooltip {
+    display: block;
+  }
+}
+
+.form-control.is-valid ~ {
+  .valid-feedback,
+  .valid-tooltip {
+    display: block;
+  }
+}
+
+.was-validated .form-select:valid ~ {
+  .valid-feedback,
+  .valid-tooltip {
+    display: block;
+  }
+}
+
+.form-select.is-valid ~ {
+  .valid-feedback,
+  .valid-tooltip {
+    display: block;
+  }
+}
+
+.was-validated .form-check-input:valid ~ .form-check-label,
+.form-check-input.is-valid ~ .form-check-label {
+  color: #198754;
+}
+
+.was-validated .form-check-input:valid ~ {
+  .valid-feedback,
+  .valid-tooltip {
+    display: block;
+  }
+}
+
+.form-check-input.is-valid ~ {
+  .valid-feedback,
+  .valid-tooltip {
+    display: block;
+  }
+}
+
+.was-validated .custom-control-input:valid ~ .custom-control-label,
+.custom-control-input.is-valid ~ .custom-control-label {
+  color: #198754;
+}
+
+.was-validated .custom-control-input:valid ~ .custom-control-label::before,
+.custom-control-input.is-valid ~ .custom-control-label::before {
+  background-color: #198754;
+}
+
+.was-validated .custom-control-input:valid ~ {
+  .valid-feedback,
+  .valid-tooltip {
+    display: block;
+  }
+}
+
+.custom-control-input.is-valid ~ {
+  .valid-feedback,
+  .valid-tooltip {
+    display: block;
+  }
+}
+
+.was-validated
+  .custom-control-input:valid:checked
+  ~ .custom-control-label::before,
+.custom-control-input.is-valid:checked ~ .custom-control-label::before {
+  background-color: #198754;
+}
+
+.was-validated
+  .custom-control-input:valid:focus
+  ~ .custom-control-label::before,
+.custom-control-input.is-valid:focus ~ .custom-control-label::before {
+  box-shadow: 0 0 0 1px $background, 0 0 0 2px rgba(9, 173, 149, 0.25);
+}
+
+.was-validated .form-file-input:valid ~ .form-file-label,
+.form-file-input.is-valid ~ .form-file-label {
+  border-color: #198754;
+}
+
+.was-validated .form-file-input:valid ~ .form-file-label::before,
+.form-file-input.is-valid ~ .form-file-label::before {
+  border-color: inherit;
+}
+
+.was-validated .form-file-input:valid ~ {
+  .valid-feedback,
+  .valid-tooltip {
+    display: block;
+  }
+}
+
+.form-file-input.is-valid ~ {
+  .valid-feedback,
+  .valid-tooltip {
+    display: block;
+  }
+}
+
+.was-validated .form-file-input:valid:focus ~ .form-file-label,
+.form-file-input.is-valid:focus ~ .form-file-label {
+  box-shadow: none;
+}
+
+.was-validated .form-control:invalid,
+.form-control.is-invalid,
+.was-validated .form-select:invalid,
+.form-select.is-invalid {
+  border-color: #e23e3d;
+}
+
+.was-validated .form-control:invalid:focus,
+.form-control.is-invalid:focus,
+.was-validated .form-select:invalid:focus,
+.form-select.is-invalid:focus {
+  border-color: #e23e3d;
+  box-shadow: none;
+}
+
+.was-validated .form-control:invalid ~ {
+  .invalid-feedback,
+  .invalid-tooltip {
+    display: block;
+  }
+}
+
+.form-control.is-invalid ~ {
+  .invalid-feedback,
+  .invalid-tooltip {
+    display: block;
+  }
+}
+
+.was-validated .form-select:invalid ~ {
+  .invalid-feedback,
+  .invalid-tooltip {
+    display: block;
+  }
+}
+
+.form-select.is-invalid ~ {
+  .invalid-feedback,
+  .invalid-tooltip {
+    display: block;
+  }
+}
+
+.was-validated .form-check-input:invalid ~ .form-check-label,
+.form-check-input.is-invalid ~ .form-check-label {
+  color: #e23e3d;
+}
+
+.was-validated .form-check-input:invalid ~ {
+  .invalid-feedback,
+  .invalid-tooltip {
+    display: block;
+  }
+}
+
+.form-check-input.is-invalid ~ {
+  .invalid-feedback,
+  .invalid-tooltip {
+    display: block;
+  }
+}
+
+.was-validated .custom-control-input:invalid ~ .custom-control-label,
+.custom-control-input.is-invalid ~ .custom-control-label {
+  color: #e23e3d;
+}
+
+.was-validated .custom-control-input:invalid ~ .custom-control-label::before,
+.custom-control-input.is-invalid ~ .custom-control-label::before {
+  background-color: #e23e3d;
+}
+
+.was-validated .custom-control-input:invalid ~ {
+  .invalid-feedback,
+  .invalid-tooltip {
+    display: block;
+  }
+}
+
+.custom-control-input.is-invalid ~ {
+  .invalid-feedback,
+  .invalid-tooltip {
+    display: block;
+  }
+}
+
+.was-validated
+  .custom-control-input:invalid:checked
+  ~ .custom-control-label::before,
+.custom-control-input.is-invalid:checked ~ .custom-control-label::before {
+  background-color: #e23e3d;
+}
+
+.was-validated
+  .custom-control-input:invalid:focus
+  ~ .custom-control-label::before,
+.custom-control-input.is-invalid:focus ~ .custom-control-label::before {
+  box-shadow: 0 0 0 1px $background, 0 0 0 2px rgba(232, 38, 70, 0.25);
+}
+
+.was-validated .form-file-input:invalid ~ .form-file-label,
+.form-file-input.is-invalid ~ .form-file-label {
+  border-color: #e23e3d;
+}
+
+.was-validated .form-file-input:invalid ~ .form-file-label::before,
+.form-file-input.is-invalid ~ .form-file-label::before {
+  border-color: inherit;
+}
+
+.was-validated .form-file-input:invalid ~ {
+  .invalid-feedback,
+  .invalid-tooltip {
+    display: block;
+  }
+}
+
+.form-file-input.is-invalid ~ {
+  .invalid-feedback,
+  .invalid-tooltip {
+    display: block;
+  }
+}
+
+.was-validated .form-file-input:invalid:focus ~ .form-file-label,
+.form-file-input.is-invalid:focus ~ .form-file-label {
+  box-shadow: none;
+}
+
+.form-inline {
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-flow: row wrap;
+  flex-flow: row wrap;
+  -ms-flex-align: center;
+  align-items: center;
+}
+
+.header .form-inline {
+  margin-inline-end: 7px;
+}
+
+.form-inline .form-check {
+  width: 100%;
+}
+
+@media (min-width: 576px) {
+  .form-inline {
+    label {
+      display: -ms-flexbox;
+      display: flex;
+      -ms-flex-align: center;
+      align-items: center;
+      -ms-flex-pack: center;
+      justify-content: center;
+      margin-block-end: 0;
+    }
+    .form-group {
+      display: -ms-flexbox;
+      display: flex;
+      -ms-flex: 0 0 auto;
+      flex: 0 0 auto;
+      -ms-flex-flow: row wrap;
+      flex-flow: row wrap;
+      -ms-flex-align: center;
+      align-items: center;
+      margin-block-end: 0;
+    }
+    .form-control {
+      display: inline-block;
+      width: auto;
+    }
+    .form-control-plaintext {
+      display: inline-block;
+    }
+    .input-group,
+    .form-select {
+      width: auto;
+    }
+    .form-check {
+      display: -ms-flexbox;
+      display: flex;
+      -ms-flex-align: center;
+      align-items: center;
+      -ms-flex-pack: center;
+      justify-content: center;
+      width: auto;
+      padding-inline-start: 0;
+    }
+    .form-check-input {
+      position: relative;
+      margin-block-start: 0;
+      margin-inline-end: 0.25rem;
+      margin-inline-start: 0;
+    }
+    .custom-control {
+      -ms-flex-align: center;
+      align-items: center;
+      -ms-flex-pack: center;
+      justify-content: center;
+    }
+    .custom-control-label {
+      margin-block-end: 0;
+    }
+  }
+}
+
+.form-label {
+  display: block;
+  margin-block-end: 0.375rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  margin-block-start: 9px;
+  // opacity: 0.7;
+}
+
+.form-label-small {
+  font-weight: 400;
+  font-size: 87.5%;
+}
+
+.form-footer {
+  margin-block-start: 2rem;
+}
+
+.form-control.header-search {
+  background: $background;
+  border: 1px solid rgba(225, 225, 225, 0.1);
+  color: $white;
+  padding: 0.375rem 0.75rem;
+  width: 100%;
+  margin-block-start: 4px;
+  &::placeholder {
+    color: $white;
+    opacity: 0.7;
+  }
+  &:hover,
+  &:focus {
+    border: 1px solid rgba(225, 225, 225, 0.1);
+    box-shadow: none;
+  }
+}
+
+.form-required {
+  color: #e23e3d;
+  &:before {
+    content: " ";
+  }
+}
+
+.state-valid {
+  background: url("data:image/svg+xml;charset=utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%235eba00' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='feather feather-check'><polyline points='20 6 9 17 4 12'></polyline></svg>")
+    no-repeat center right 0.5rem / 1rem;
+}
+
+.state-invalid {
+  background: url("data:image/svg+xml;charset=utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23cd201f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='feather feather-x'><line x1='18' y1='6' x2='6' y2='18'></line><line x1='6' y1='6' x2='18' y2='18'></line></svg>")
+    no-repeat center right 0.5rem / 1rem;
+}
+
+.wizard-card {
+  .moving-tab {
+    margin-block-start: 5px;
+  }
+  &.form-group .form-control {
+    background-image: linear-gradient(
+      #c4c4c4,
+      #c4c4c4,
+      linear-gradient(#e1e1e2, #e1e1e2)
+    );
+  }
+}
+
+form.convFormDynamic button.submit:hover {
+  color: $white;
+}
+
+.valid-feedback {
+  display: none;
+  width: 100%;
+  margin-block-start: 0.25rem;
+  font-size: 87.5%;
+  color: #198754;
+}
+
+.valid-tooltip {
+  position: absolute;
+  inset-block-start: 100%;
+  z-index: 5;
+  display: none;
+  max-width: 100%;
+  padding: 0.5rem;
+  margin-block-start: 0.1rem;
+  font-size: 0.875rem;
+  line-height: 1;
+  color: $white;
+  background-color: rgb(9, 173, 149);
+  border-radius: 0.2rem;
+}
+
+.invalid-feedback {
+  display: none;
+  width: 100%;
+  margin-block-start: 0.25rem;
+  font-size: 87.5%;
+  color: #e23e3d;
+}
+
+.invalid-tooltip {
+  position: absolute;
+  inset-block-start: 100%;
+  z-index: 5;
+  display: none;
+  max-width: 100%;
+  padding: 0.5rem;
+  margin-block-start: 0.1rem;
+  font-size: 0.875rem;
+  line-height: 1;
+  color: $white;
+  background-color: rgb(232, 38, 70);
+  border-radius: 0.2rem;
+}
+
+ul {
+  li ul:hover {
+    visibility: visible;
+    opacity: 1;
+    display: block;
+  }
+  &.labels-info li {
+    h4 {
+      color: #5c5c5e;
+      font-size: 13px;
+      padding-inline-start: 15px;
+      padding-inline-end: 15px;
+      padding-block-start: 5px;
+      text-transform: uppercase;
+    }
+    margin: 0;
+    a {
+      border-radius: 0;
+      color: #6a6a6a;
+      &:hover,
+      &:focus {
+        background: none repeat scroll 0 0 #d5d7de;
+        color: #6a6a6a;
+      }
+      i {
+        padding-inline-end: 10px;
+      }
+    }
+  }
+}
+
+.files .progress {
+  width: 200px;
+}
+
+* {
+  html .fileinput-button {
+    line-height: 24px;
+    margin: 1px -3px 0 0;
+  }
+  + html .fileinput-button {
+    margin: 1px 0 0;
+    padding: 2px 15px;
+  }
+}
+
+@media (max-width: 767px) {
+  .files {
+    .btn span {
+      display: none;
+    }
+    .preview * {
+      width: 40px;
+    }
+    .name * {
+      display: inline-block;
+      width: 80px;
+      word-wrap: break-word;
+    }
+    .progress {
+      width: 20px;
+    }
+    .delete {
+      width: 60px;
+    }
+  }
+  .border-right-1 {
+    border-inline-end: 0 !important;
+  }
+}
+
+.input-group-lg > .btn,
+.input-group-lg > .form-control,
+.input-group-lg > .form-select,
+.input-group-lg > .input-group-text {
+  font-size: 1.1rem;
+  line-height: 1.64444444;
+}
+
+.form-check-input:focus {
+  border-color: $primary;
+  box-shadow: none;
+}
+
+.form-check-input[type="checkbox"]:indeterminate {
+  background-color: $primary;
+  border-color: $primary;
+}
+
+.form-input-color {
+  height: 2.75rem;
+  padding: 0.4rem;
+}
+
+.form-check-md {
+  .form-check-input {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  label {
+    margin-inline-start: 0.5rem;
+    font-size: 0.95rem;
+    margin-block-start: 3px;
+  }
+}
+
+.form-check-lg {
+  .form-check-input {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  label {
+    margin-inline-start: 0.5rem;
+    font-size: 1rem;
+    margin-block-start: 3px;
+  }
+}
+
+.form-check-input {
+  border-color: $input-border;
+  background-color: $background;
+}
+
+.form-check-md.form-switch .form-check-input {
+  width: 2.25rem;
+}
+
+.form-check-lg.form-switch .form-check-input {
+  width: 2.5rem;
+}
+
+// Color Checkboxes
+
+.form-check-input.form-checked-outline:checked {
+  background-color: transparent;
+  border-color: $primary;
+}
+.form-check-input.form-checked-secondary:checked {
+  background-color: $secondary;
+  border-color: $secondary;
+}
+.form-check-input.form-checked-warning:checked {
+  background-color: $warning;
+  border-color: $warning;
+}
+.form-check-input.form-checked-info:checked {
+  background-color: $info;
+  border-color: $info;
+}
+.form-check-input.form-checked-success:checked {
+  background-color: $success;
+  border-color: $success;
+}
+.form-check-input.form-checked-danger:checked {
+  background-color: $danger;
+  border-color: $danger;
+}
+.form-check-input.form-checked-light:checked {
+  background-color: $background;
+  border-color: $background;
+}
+.form-check-input.form-checked-dark:checked {
+  background-color: $dark;
+  border-color: $border;
+}
+
+.form-checked-outline:checked[type="checkbox"] {
+  background-image: none;
+  position: relative;
+  background-color: transparent;
+}
+.form-checked-outline:checked[type="checkbox"]:before {
+  content: "\f633";
+  font-family: bootstrap-icons !important;
+  position: absolute;
+  color: $primary;
+  width: 0.525rem;
+  height: 0.525rem;
+  inset-block-start: -2px;
+  padding: 2px;
+  font-size: 0.5rem;
+}
+.form-checked-outline:checked[type="checkbox"].form-checked-secondary:before {
+  color: $secondary;
+}
+.form-checked-outline:checked[type="checkbox"].form-checked-warning:before {
+  color: $warning;
+}
+.form-checked-outline:checked[type="checkbox"].form-checked-info:before {
+  color: $info;
+}
+.form-checked-outline:checked[type="checkbox"].form-checked-success:before {
+  color: $success;
+}
+.form-checked-outline:checked[type="checkbox"].form-checked-danger:before {
+  color: $danger;
+}
+.form-checked-outline:checked[type="checkbox"].form-checked-light:before {
+  color: $background;
+}
+.form-checked-outline:checked[type="checkbox"].form-checked-dark:before {
+  color: $default-color;
+}
+
+.form-checked-outline:checked[type="radio"] {
+  background-image: none;
+  position: relative;
+  background-color: transparent;
+}
+.form-checked-outline:checked[type="radio"]:before {
+  content: "\f309";
+  font-family: bootstrap-icons !important;
+  position: absolute;
+  color: $primary;
+  width: 0.525rem;
+  height: 0.525rem;
+  inset-block-start: -1.125rem;
+  inset-inline-start: -0.626rem;
+  font-size: 2rem;
+}
+.form-checked-outline:checked[type="radio"].form-checked-secondary:before {
+  color: $secondary;
+}
+.form-checked-outline:checked[type="radio"].form-checked-warning:before {
+  color: $warning;
+}
+.form-checked-outline:checked[type="radio"].form-checked-info:before {
+  color: $info;
+}
+.form-checked-outline:checked[type="radio"].form-checked-success:before {
+  color: $success;
+}
+.form-checked-outline:checked[type="radio"].form-checked-danger:before {
+  color: $danger;
+}
+.form-checked-outline:checked[type="radio"].form-checked-light:before {
+  color: $background;
+}
+.form-checked-outline:checked[type="radio"].form-checked-dark:before {
+  color: $default-color;
+}
+
+/* Start:: toggle switches-1 */
+.toggle {
+  width: 3.75rem;
+  height: 1.563rem;
+  background-color: $black-2;
+  -webkit-margin-start: 0.625rem;
+  margin-inline-start: 0.625rem;
+  -webkit-margin-after: 0.313rem;
+  margin-block-end: 0.313rem;
+  padding: 0.125rem;
+  border-radius: 0.188rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+.toggle span {
+  position: absolute;
+  inset-block-start: 0.188rem;
+  inset-block-end: 0.25rem;
+  inset-inline-start: 0.188rem;
+  display: block;
+  width: 1.25rem;
+  border-radius: 0.125rem;
+  background-color: $white;
+  box-shadow: 0 0.125rem 0.125rem 0 rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.toggle span::before {
+  content: "on";
+  inset-inline-start: -1.563rem;
+}
+.toggle span::after {
+  content: "off";
+  inset-inline-end: -1.813rem;
+}
+.toggle span::before,
+.toggle span::after {
+  position: absolute;
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: $default-color;
+  inset-block-start: 0.188rem;
+  line-height: 1.38;
+  transition: all 0.2s ease;
+}
+.toggle.toggle-dark span::before,
+.toggle.toggle-dark span::after {
+  color: $white;
+}
+.toggle.on {
+  background-color: $primary-03;
+}
+.toggle.on span {
+  background-color: $primary;
+}
+.toggle.on.toggle-secondary {
+  background-color: rgba(var(--secondary-rgb), 0.4);
+}
+.toggle.on.toggle-secondary span {
+  background-color: $secondary;
+}
+.toggle.on.toggle-warning {
+  background-color: rgba(var(--warning-rgb), 0.4);
+}
+.toggle.on.toggle-warning span {
+  background-color: $warning;
+}
+.toggle.on.toggle-info {
+  background-color: rgba(var(--info-rgb), 0.4);
+}
+.toggle.on.toggle-info span {
+  background-color: $info;
+}
+.toggle.on.toggle-success {
+  background-color: rgba(var(--success-rgb), 0.4);
+}
+.toggle.on.toggle-success span {
+  background-color: $success;
+}
+.toggle.on.toggle-danger {
+  background-color: rgba(var(--danger-rgb), 0.4);
+}
+.toggle.on.toggle-danger span {
+  background-color: $danger;
+}
+.toggle.on.toggle-light {
+  background-color: $light;
+}
+.toggle.on.toggle-light span {
+  background-color: $background;
+}
+.toggle.on.toggle-light span::before,
+.toggle.on.toggle-light span::after {
+  color: var(--text-muted);
+}
+.toggle.on.toggle-dark {
+  background-color: $dark;
+}
+.toggle.on.toggle-dark span {
+  background-color: $background;
+}
+.toggle.on span {
+  inset-inline-start: 2.313rem;
+}
+.toggle.on.toggle-sm span {
+  inset-inline-start: 2.313rem;
+}
+.toggle.on.toggle-sm span::before {
+  inset-block-start: -1px;
+  inset-inline-start: -1.563rem;
+}
+.toggle.on.toggle-lg span {
+  inset-inline-start: 2.563rem;
+}
+.toggle.on.toggle-lg span::before {
+  inset-block-start: 0.5rem;
+  inset-inline-start: -1.75rem;
+}
+.toggle.toggle-sm {
+  height: 1.063rem;
+  width: 3.125rem;
+}
+.toggle.toggle-sm span {
+  width: 0.625rem;
+  height: 0.625rem;
+}
+.toggle.toggle-sm span::after {
+  inset-inline-end: -1.875rem;
+  inset-block-start: -1px;
+}
+.toggle.toggle-lg {
+  height: 2.125rem;
+  width: 4.5rem;
+}
+.toggle.toggle-lg span {
+  width: 1.75rem;
+}
+.toggle.toggle-lg span::after {
+  inset-block-start: 0.5rem;
+  inset-inline-end: -1.938rem;
+}
+
+/* End:: toggle switches-1 */
+
+/* Start:: toggle switches-2 */
+.custom-toggle-switch > input[type="checkbox"] {
+  display: none;
+}
+
+.custom-toggle-switch > label {
+  cursor: pointer;
+  height: 0;
+  position: relative;
+  width: 2.5rem;
+}
+
+.label-primary {
+  background: $primary;
+  color: $white;
+}
+
+.label-secondary {
+  background: $secondary;
+  color: $white;
+}
+
+.label-warning {
+  background: $warning;
+  color: $white;
+}
+
+.label-info {
+  background: $info;
+  color: $white;
+}
+
+.label-success {
+  background: $success;
+  color: $white;
+}
+
+.label-danger {
+  background: $danger;
+  color: $white;
+}
+
+.label-light {
+  background: $light;
+  color: $white;
+}
+
+.label-dark {
+  background: $dark;
+  color: $white;
+}
+
+.custom-toggle-switch > input[type="checkbox"]:checked + label::before {
+  background: inherit;
+  opacity: 0.8;
+}
+
+.custom-toggle-switch > label::before {
+  background: $muted;
+  box-shadow: inset 0px 0px 0.625rem $white-5;
+  border-radius: 0.5rem;
+  content: "";
+  height: 1rem;
+  -webkit-margin-before: -0.5rem;
+  margin-block-start: -0.5rem;
+  position: absolute;
+  opacity: 0.3;
+  transition: all 0.4s ease-in-out;
+  width: 2.5rem;
+}
+.custom-toggle-switch > label::after {
+  background: $background;
+  border-radius: 1rem;
+  box-shadow: 0 0 0.313rem rgba(228, 229, 237, 0.8);
+  content: "";
+  height: 1.5rem;
+  inset-inline-start: -0.25rem;
+  -webkit-margin-before: -0.5rem;
+  margin-block-start: -0.5rem;
+  position: absolute;
+  inset-block-start: -0.25rem;
+  transition: all 0.3s ease-in-out;
+  width: 1.5rem;
+}
+
+.custom-toggle-switch > input[type="checkbox"]:checked + label::after {
+  background: inherit;
+  inset-inline-start: 50%;
+}
+
+.custom-toggle-switch.toggle-sm > label::before {
+  height: 10px;
+  width: 27px;
+  border-radius: 10px;
+}
+
+.custom-toggle-switch.toggle-sm input[type="checkbox"]:checked + label::after {
+  inset-inline-start: 13px;
+}
+
+.custom-toggle-switch.toggle-sm > label::after {
+  height: 17px;
+  width: 17px;
+  border-radius: 50%;
+}
+
+.custom-toggle-switch.toggle-lg > label::before {
+  height: 27px;
+  width: 55px;
+  border-radius: 20px;
+}
+
+.custom-toggle-switch.toggle-lg input[type="checkbox"]:checked + label::after {
+  inset-inline-start: 77%;
+}
+
+.custom-toggle-switch.toggle-lg > label::after {
+  height: 35px;
+  width: 35px;
+  -webkit-margin-before: -8px;
+  margin-block-start: -8px;
+  border-radius: 50%;
+}
+
+/* End:: toggle switches-2 */
+
+/* Start:noUi Slider */
+.noUi-horizontal .noUi-handle {
+  width: 1rem !important;
+  height: 1rem !important;
+  inset-inline-end: -0.063rem !important;
+  top: -0.375rem !important;
+}
+
+.noUi-handle:after,
+.noUi-handle:before {
+  height: 0.35rem !important;
+  width: 1px !important;
+  inset-inline-start: 0.3rem !important;
+  top: 0.25rem !important;
+}
+
+.noUi-handle:after {
+  inset-inline-start: 0.45rem !important;
+}
+
+.noUi-horizontal {
+  height: 0.35rem !important;
+}
+
+.noUi-vertical {
+  width: 0.35rem !important;
+}
+
+.noUi-vertical .noUi-handle {
+  width: 1rem !important;
+  height: 1rem !important;
+}
+
+.noUi-target {
+  background: $background !important;
+  border: 1px solid $border !important;
+  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.05) !important;
+}
+
+.noUi-handle {
+  border: 1px solid $border !important;
+  background: $custom-white !important;
+  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.05) !important;
+}
+
+#result {
+  border: 1px solid $border !important;
+}
+
+.noUi-handle:after,
+.noUi-handle:before {
+  background: $black-3 !important;
+}
+
+.noUi-marker {
+  position: absolute;
+  background: $border !important;
+}
+
+.noUi-tooltip {
+  border: 1px solid $border !important;
+  border-radius: 0.3rem !important;
+  background: $custom-white !important;
+  color: $default-color !important;
+  padding: 0.25rem 0.75rem !important;
+  font-size: 0.85rem !important;
+  line-height: 1 !important;
+}
+
+#slider-fit {
+  padding: 0 1rem;
+}
+
+.noUi-connect {
+  background: $primary !important;
+}
+
+.noUi-vertical .noUi-handle {
+  bottom: -0.275rem !important;
+  inset-inline-end: -0.375rem;
+}
+
+#secondary-colored-slider .noUi-connect {
+  background-color: $secondary !important;
+}
+
+#warning-colored-slider .noUi-connect {
+  background-color: $warning !important;
+}
+
+#info-colored-slider .noUi-connect {
+  background-color: $info !important;
+}
+
+#success-colored-slider .noUi-connect {
+  background-color: $success !important;
+}
+
+#danger-colored-slider .noUi-connect {
+  background-color: $danger !important;
+}
+
+#slider-round {
+  height: 0.625rem !important;
+}
+#slider-round .noUi-handle {
+  height: 1.125rem !important;
+  width: 1.125rem !important;
+  inset-block-start: -0.313rem !important;
+  inset-inline-end: -0.563rem;
+  /* half the width */
+  border-radius: 50px !important;
+  background-color: $primary !important;
+  border: 1px solid $white !important;
+}
+#slider-round .noUi-handle:before,
+#slider-round .noUi-handle:after {
+  display: none !important;
+}
+
+#slider-square {
+  border-radius: 0 !important;
+}
+#slider-square .noUi-handle {
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  background: $primary !important;
+  height: 1.125rem !important;
+  width: 1.125rem !important;
+  inset-block-start: -0.313rem !important;
+  inset-inline-end: -0.563rem !important;
+}
+#slider-square .noUi-handle:before,
+#slider-square .noUi-handle:after {
+  display: none !important;
+}
+
+#color1,
+#color2,
+#color3 {
+  margin: 0.625rem !important;
+  display: inline-block !important;
+  height: 12.5rem !important;
+}
+
+#colorpicker {
+  height: 15rem !important;
+  width: 19.375rem !important;
+  margin: 0 auto !important;
+  padding: 0.625rem !important;
+  border: 1px solid $border !important;
+}
+
+#result {
+  margin: 4.25rem 0 4.25rem 4rem;
+  height: 6.25rem;
+  width: 6.25rem;
+  display: inline-block;
+  vertical-align: top;
+  color: $gray-500;
+  background: $gray-500;
+  border: 1px solid $white;
+  box-shadow: 0 0 0.625rem;
+}
+
+#color1 .noUi-connect {
+  background: $success !important;
+}
+
+#color2 .noUi-connect {
+  background: $secondary !important;
+}
+
+#color3 .noUi-connect {
+  background: $info !important;
+}
+
+#slider-hide .noUi-tooltip {
+  display: none;
+}
+
+#slider-hide .noUi-active .noUi-tooltip {
+  display: block;
+}
+
+.c-1-color {
+  background: $secondary !important;
+}
+
+.c-2-color {
+  background: $warning !important;
+}
+
+.c-3-color {
+  background: $info !important;
+}
+
+.c-4-color {
+  background: $danger !important;
+}
+
+.c-5-color {
+  background: #4d5ddb !important;
+}
+
+#slider-toggle {
+  height: 3.125rem;
+}
+
+#slider-toggle.off .noUi-handle {
+  border-color: $success !important;
+}
+
+.form-floating > .form-control-plaintext ~ label::after,
+.form-floating > .form-control:focus ~ label::after,
+.form-floating > .form-control:not(:placeholder-shown) ~ label::after,
+.form-floating > .form-select ~ label::after {
+  background-color: $custom-white;
+}
+.form-floating > .form-control-plaintext ~ label,
+.form-floating > .form-control:focus ~ label,
+.form-floating > .form-control:not(:placeholder-shown) ~ label,
+.form-floating > .form-select ~ label {
+  color: $default-color;
+}
+
+/* End:noUi Slider */
+
+/*------- Forms End -------*/
+[data-theme-mode="dark"] {
+  .toggle.toggle-dark span::before,
+  .toggle.toggle-dark span::after {
+    color: $black;
+  }
+}
+.selectgroup-input:focus + .selectgroup-button {
+  box-shadow: 0 0 0 2px $primary-02 !important;
+}
+.form-control::-webkit-file-upload-button {
+  color: $default-color;
+  background-color: $background;
+}
+
+.form-control:hover:not(:disabled):not([readonly])::-webkit-file-upload-button {
+  background-color: $background;
+}
+// forms //
+input[type="radio"],
+input[type="checkbox"] {
+  margin-inline-end: 10px;
+}
+#wizard2 ul {
+  flex-wrap: wrap;
+  gap: 3;
+}
+// form input spinners //
+.form-input-spinners .form-control.is-valid,
+.was-validated .form-control:valid {
+  background-position-y: top;
+}
+// .form-control.is-valid,
+// .was-validated .form-control:valid {
+//   background-position-y: top;
+// }
+// form wizards //
+.payment-method ul li img {
+  width: 55px;
+}
+#validationServer01,#validationServer02 {
+  &.form-control.is-valid {
+    background-position-y: center;
+  }
+}
+
+[data-theme-mode="dark"] {
+  input {
+    &[type="week"],
+    &[type="month"],
+    &[type="date"],
+    &[type="datetime-local"],
+    &[type="time"] {
+      &::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+      }
+    }
+  }
+}
+[dir="rtl"] {
+  input {
+    &[type="week"],
+    &[type="month"],
+    &[type="date"],
+    &[type="datetime-local"],
+    &[type="time"] {
+      text-align: end;
+    }
+  }
+}

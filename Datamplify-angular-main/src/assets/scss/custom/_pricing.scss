@@ -1,0 +1,279 @@
+/*-----Pricing start -----*/
+
+.pricing {
+    color: $white;
+}
+
+.pricing {
+    .list-unstyled li {
+        border-block-end: 1px solid $white-1;
+        padding: 7px 0;
+    }
+}
+
+.table> {
+    tbody>tr>th {
+        -webkit-transition: all .3s ease;
+        transition: all .3s ease;
+    }
+    tfoot>tr> {
+        td,
+        th {
+            -webkit-transition: all .3s ease;
+            transition: all .3s ease;
+        }
+    }
+    thead>tr> {
+        td,
+        th {
+            -webkit-transition: all .3s ease;
+            transition: all .3s ease;
+        }
+    }
+}
+
+
+/*------ Pricing Styles ---------*/
+
+.price {
+    .list-group-item {
+        background-color: transparent;
+    }
+}
+
+.product-price {
+    font-size: 1rem;
+    strong {
+        font-size: 1.5rem;
+    }
+}
+
+.pricing-divider-img {
+    position: absolute;
+    inset-inline-start: 0;
+    width: 100%;
+}
+
+.price-detail-wrap .rating-stars {
+    text-align: start !important;
+}
+
+.ribbon-price {
+    position: absolute;
+    inset-block-start: 0;
+    z-index: 8;
+    inset-inline-end: 0;
+    width: 100%;
+    display: block;
+    font-size: 15px;
+    padding: 0;
+    overflow: hidden;
+    height: 100px;
+}
+
+.ribbon-price .badge {
+    float: $float-right;
+    transform: rotate( 45deg);
+    inset-inline-end: -70px;
+    inset-block-start: 21px;
+    position: relative;
+    text-align: center;
+    width: 212px;
+    font-size: 13px;
+    margin: 0;
+    padding: 7px 10px;
+    font-weight: 500;
+}
+.pricing.bg-primary-gradient {
+    border-radius: 0px 60px 0 60px;
+}
+
+.pricing.bg-warning-gradient {
+    border-radius: 0px 60px 0 60px;
+}
+
+.pricing.bg-success-gradient {
+    border-radius: 0px 60px 0 60px;
+}
+
+.pricing.bg-danger-gradient {
+    border-radius: 0px 60px 0 60px;
+}
+
+.price .panel-body .lead strong {
+    line-height: 2;
+    font-size: 30px;
+}
+
+.ribbone1-price .ribbon {
+    position: absolute;
+    inset-inline-end: 6px;
+    inset-block-start: -5px;
+    z-index: 1;
+    overflow: hidden;
+    width: 75px;
+    height: 75px;
+    text-align: end;
+}
+
+.ribbone1-price .ribbon span {
+    font-size: 10px;
+    font-weight: bold;
+    color: #FFF;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 20px;
+    transform: rotate( 45deg);
+    -webkit-transform: rotate( 45deg);
+    width: 100px;
+    display: block;
+    background: #79A70A;
+    background: $primary;
+    box-shadow: 0 3px 10px -5px black;
+    position: absolute;
+    inset-block-start: 19px;
+    inset-inline-end: -21px;
+}
+
+.ribbone1-price .ribbon span::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0px;
+    inset-block-start: 100%;
+    z-index: -1;
+    border-inline-start: 3px solid $primary;
+    border-inline-end: 3px solid transparent;
+    border-block-end: 3px solid transparent;
+    border-block-start: 3px solid $primary;
+}
+
+.ribbone1-price .ribbon span::after {
+    content: "";
+    position: absolute;
+    inset-inline-end: 0px;
+    inset-block-start: 100%;
+    z-index: -1;
+    border-inline-start: 3px solid transparent;
+    border-inline-end: 3px solid $primary;
+    border-block-end: 3px solid transparent;
+    border-block-start: 3px solid $primary;
+}
+
+.price .list-group-flush .list-group-item {
+    border: 0 !important;
+    padding-block-start: 0px;
+    padding-inline-end: 0px;
+    padding-inline-start: 0;
+}
+
+.primary .pricing-divider {
+    padding: 1em 0 1em;
+    position: relative;
+}
+
+.secondary .pricing-divider {
+    background: $white;
+    padding: 1em 0 1em;
+    position: relative;
+}
+
+.danger .pricing-divider {
+    background: $white !important;
+    padding: 1em 0 1em;
+    position: relative;
+}
+
+.success .pricing-divider {
+    background: $white;
+    padding: 1em 0 1em;
+    position: relative;
+}
+
+.pricing-tabs {
+    .toggle, .toggler {
+        display: inline-block;
+        vertical-align: middle; 
+        margin: 10px;
+    }
+    .toggler {
+        color: $muted;
+        transition: .2s;
+        font-weight: bold;
+    }
+    .toggler--is-active {
+        color: $primary;
+    }
+    .b {
+        display: block;
+    }
+    .toggle {
+        position: relative;
+        width: 80px;
+        height: 35px;
+        border-radius: 100px;
+        background-color: $primary;
+        overflow: hidden;
+        box-shadow: inset 0 0 2px 1px rgba(0, 0, 0, 0.05);
+    }
+    .check {
+        position: absolute;
+        display: block;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        z-index: 6;
+        &:checked {
+            & ~ .switch {
+                right: 2px;
+                left: 57.5%;
+                transition: 0.25s cubic-bezier(0.785, 0.135, 0.15, 0.86);
+                transition-property: left, right;
+                transition-delay: .08s, 0s;
+            }
+        }
+    }
+    .switch {
+        position: absolute;
+        left: 2px;
+        top: 2px;
+        bottom: 2px;
+        right: 57.5%;
+        width: 30px;
+        background-color: #fff;
+        border-radius: 36px;
+        z-index: 1;
+        transition: 0.25s cubic-bezier(0.785, 0.135, 0.15, 0.86);
+        transition-property: left, right;
+        transition-delay: 0s, .08s;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+    .pricing-tabs {
+        .toggle.on {
+            background-color: $primary;
+        }
+    }
+    .hide {
+        display: none;
+    }
+}
+
+.pricing-body li {
+    padding: 5px 0px;
+}
+.experience-icon  {
+    height: 50px;
+    width: 50px;
+    padding: 13px;
+}
+.price.card-heighlight {
+    border: 1px solid $primary-02 !important; 
+    box-shadow: none;
+}
+.pricing-tabs .table td {
+    padding: 0.75rem 1.5rem;
+}
+
+/*-----Pricing end -----*/

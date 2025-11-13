@@ -1,0 +1,53 @@
+.modal-large{ width: 1200px !important; position: relative; right: 310px; border-radius: 30px;}
+.card-padding-top { padding-top: 15px; }
+label.form-label {  margin: 0px;}
+.form-check-input{ border-radius: 0.25em; border: 1px solid #008482;}
+.card-box-shadow{ box-shadow: 5px 10px 10px 5px #0000001a;}
+.dropdown-toggle::after{ display: none;}
+a { cursor: pointer;}
+.tiled-header-bg { display: flex; justify-content: space-between; color: #fff;}
+.fe-more-vertical:before { content: "\e99a"; color: #fff;}
+.select-roles-height{ max-height: 150px; overflow-y: scroll;}
+.table-responsive-height{ height: 26rem; }
+.table-primary-position{ position: sticky; top: -1px; }
+.pagination-count{ float: right; font-size: 15px; margin-top: -34px;  }
+.cursor-pointer { cursor: pointer;}
+.search-icon-border-radius{ border-radius: 0px 4px 4px 0px !important; }
+
+// for 90% Resolution //
+@media ( 1420px <= width <= 1560px) {
+a.float-start { font-size: 13px;}
+.card-title{ font-size: 13px;}
+.fs-14 { font-size: 13px !important;}
+.avatar-xl { width: 3rem; height: 3rem; line-height: 3rem; font-size: 0.25rem;}
+.page-title{font-size: 14px;}
+.table tbody td { border-color: var(--default-border); font-size: 13px;}
+.btn, .button-slide-out__above{ font-size: 10px;}
+.logo-txt { font-size: 11px;}
+.tiled-header-bg{ padding: 13px;}
+.tiled-card-body {  padding: 13px;}
+.avatar { width: 2.05rem; height: 2.075rem;}
+.tiled-card-body-padding { padding: 10px;}
+.tiled-card-header-padding { padding: 10px !important;}
+h1#inputModalLabel { font-size: 16px !important;}
+.form-label{ font-size: 13px;}
+}
+
+// for 100% Resolution //
+@media ( 1280px <= width <= 1420px) {
+.page-title{ font-size: 12px; }
+.card-title{ font-size: 12px; }
+a.float-start { font-size: 13px;}
+.fs-14 { font-size: 12px !important;}
+.avatar-xl { width: 3rem; height: 3rem; line-height: 3rem; font-size: 0.25rem;}
+.table tbody td { border-color: var(--default-border); font-size: 13px;}
+.btn, .button-slide-out__above{ font-size: 10px;}
+.logo-txt {font-size: 10px;}
+.tiled-header-bg{ padding: 13px;}
+.tiled-card-body { padding: 13px;}
+.avatar { width: 2.05rem; height: 2.075rem;}
+.tiled-card-body-padding { padding: 10px;}
+.tiled-card-header-padding { padding: 10px !important;}
+h1#inputModalLabel { font-size: 15px !important;}
+.form-label{ font-size: 12px;}
+}

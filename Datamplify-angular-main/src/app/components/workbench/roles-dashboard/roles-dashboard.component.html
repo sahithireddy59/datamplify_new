@@ -1,0 +1,287 @@
+<app-page-header title="Roles List" moduleId="previlages" title1="Home" activeitem="Roles List"></app-page-header>
+
+<div *ngIf="!addRoleDiv" class="main-container container-fluid TopHeader">
+
+    <div class="row" class="card card-padding-top">
+    <div class="col-sm-12 col-lg-12 col-xl-12 p-0">
+      <div class="d-flex justify-content-between px-5">
+        <div class="connect-txt">
+          <h4 class="card-title mt-2">Roles</h4>
+        </div>
+        <div class="new-data-btn d-flex text-align-center">
+          <button *ngIf="gridView" type="button" class="btn btn-icon btn-outline-primary me-1"><i class="fa fa-th-large"></i></button>
+          <button *ngIf="gridView" type="button"  (click)="gridView=false" class="btn btn-icon btn-primary-light me-3" ><i class="fa fa-th-list"></i></button>
+
+          <button *ngIf="!gridView" type="button" (click)="gridView=true" class="btn btn-icon btn-primary-light me-1"><i class="fa fa-th-large"></i></button>
+          <button *ngIf="!gridView" type="button" class="btn btn-icon btn-outline-primary me-3" ><i class="fa fa-th-list"></i></button>
+
+
+          <div class="input-group">
+            <input type="text" class="form-control border-end-0 " placeholder="Search" [(ngModel)]="roleName" (keyup.enter)="searchRoleList()" aria-describedby="button-addon2" >
+            <button class="btn btn-primary border me-2 search-icon-border-radius" (click)="searchRoleList()" type="button" id="button-addon2"><i class="fe fe-search "></i></button>
+            <app-insights-button [classesList]="'btn btn-primary'" [buttonName]="' Add Role'" [previledgeId]="56" [isBtn]="true"
+              (btnClickEvent)="addRolesDivOpen();" [faIconList]="'fa fa-plus'" [isIcon]="true">
+            </app-insights-button>
+          </div>
+        </div>
+    </div>
+    <!-- <div *ngIf="savedUsersList.length === 0">
+      No User, Please Create One!
+    </div> -->
+        <div class="card-body">
+          @if(!gridView){
+            <div class="table-responsive table-responsive-height">
+                <table class="table border text-nowrap text-md-nowrap mb-0">
+                    <thead class="table-primary bg-primary table-primary-position">
+                        <tr>
+                            <th>Name</th>
+                            <th>Created</th>
+                            <th>Last Modified</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody *ngFor="let roles of savedRolesList | paginate : {
+                        itemsPerPage: itemsPerPage,
+                        currentPage: page,
+                        totalItems: totalItems
+                      }">
+                        <tr>
+                            <!-- <td>
+                              <div class="d-flex">
+                           
+                              <div class="content">
+                                <span>Sheet Name : </span>
+                                <a  ngbTooltip="{{sheets.sheet_name}}" (click)="viewSheet(sheets.server_id,sheets.queryset_id,sheets.sheet_id,sheets.sheet_name)" > {{sheets.sheet_name | slice:0:15}}</a>
+                                <p class="mb-0">Created by : {{sheets.created_by}}</p>
+                              </div>
+                          </div>                                  
+                            </td> -->
+                               <td>{{roles.role}}</td>
+                            <td>{{roles.created_at | date}}</td>
+                            <td>{{roles.updated_at | date}}</td>
+
+                            <td>
+                              <div class="hstack gap-2 fs-1">
+                                <app-insights-button [classesList]="'btn btn-icon btn-sm btn-info-light btn-wave waves-effect waves-light'" [previledgeId]="58" [isBtn]="false"
+                                    [toolTip]="'Edit'"
+                                    (btnClickEvent)="updateRolesDivOpen(roles.role_id);getPrevilagesList();getRoleIdDetails(roles.role_id)"
+                                    [faIconList]="'ri-edit-line'" [isIcon]="true"></app-insights-button>
+                                    <app-insights-button [classesList]="'btn btn-icon btn-sm btn-danger-light btn-wave waves-effect waves-light'" [previledgeId]="57" [isBtn]="false"
+                                    [toolTip]="' Delete Role'"
+                                    (btnClickEvent)="deleteRole(roles.role_id)"
+                                    [faIconList]="'ri-delete-bin-7-line'" [isIcon]="true"></app-insights-button>
+                        </div>
+                              </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+          }
+          @if(gridView){
+            <div class="row">
+                <div *ngFor="let roles of savedRolesList  | paginate : {
+                  itemsPerPage: itemsPerPage,
+                  currentPage: page,
+                  totalItems: totalItems
+                }" class="col-md-12 col-xl-3">
+                <div class="card card-box-shadow ">
+                  <div class="card-header tiled-header-bg bg-primary tiled-card-header-padding">
+                    <div class="d-sm-flex align-items-center">
+                      <!-- <span class="avatar avatar-xl rounded-circle">
+                          <img src="./assets/images/charts/table-tiled-icon.jpg" alt="" class="rounded-circle"></span> -->
+                        <div class="ms-2 mt-sm-0 mt-2">
+                          <!-- <span class="text-muted  pe-2 fs-12 float-start">Server</span> -->
+                            <h6 class="mb-1">
+                                <a ngbTooltip="{{roles.role}}" (click)="updateRolesDivOpen(roles.role_id);getPrevilagesList();getRoleIdDetails(roles.role_id)" class="float-start"> {{roles.role | slice:0:15}}</a>
+                            </h6>
+                            
+                        </div>
+                    </div>
+
+                    <div class="col-auto">
+                      <div class="d-flex justify-content-end p-1" ngbDropdown>
+                        <a  data-bs-toggle="dropdown" role="button" ngbDropdownToggle
+                            aria-haspopup="true" aria-expanded="false" class=""><i
+                                class="fe fe-more-vertical fs-18 text-body-secondary"></i>
+                        </a>
+                        <div class="dropdown-menu" ngbDropdownMenu>
+                          <app-insights-button [classesList]="'dropdown-item'" [previledgeId]="58" [isBtn]="false"
+                          [buttonName]="' Edit'" [tabIndex]="0"
+                          (btnClickEvent)="updateRolesDivOpen(roles.role_id);getPrevilagesList();getRoleIdDetails(roles.role_id)"
+                          [faIconList]="'fe fe-edit me-2 d-inline-flex'" [isIcon]="true"></app-insights-button>
+                      <app-insights-button [classesList]="'dropdown-item  btn btn-secondary-light'" [previledgeId]="57" [isBtn]="false"
+                          [buttonName]="' Delete Role'" [tabIndex]="0"
+                          (btnClickEvent)="deleteRole(roles.role_id)"
+                          [faIconList]="'fe fe-trash me-2 d-inline-flex'" [isIcon]="true"></app-insights-button>
+                        </div>
+                    </div>
+                  </div>
+                  </div>
+                  <div class="card-body tiled-card-body-padding">
+                      <div class="row">
+                        
+                          <div  class="col-md-12">
+                             <div class="row">
+                                  <div class="col-md-6">
+                                      <span class="fw-semibold fs-14">Created by:  </span>
+                                  </div>
+                                  <div class="col-md-6">
+                                      <span class="fs-14">{{roles.created_by}}</span>
+                                  </div>
+                              </div>
+                              <div class="row">
+                                  <div class="col-md-6">
+                                      <span class="fw-semibold fs-14">Created on:</span>
+                                  </div>
+                                  <div class="col-md-6">
+                                      <span class="fs-14">{{roles.created_at}}</span>
+                                  </div>
+                              </div>
+                              <div class="row">
+                                <div class="col-md-6">
+                                    <span class="fw-semibold fs-14">Last Modified: </span>
+                                </div>
+                                <div class="col-md-6">
+                                    <span class="fs-14">{{roles.updated_at}}</span>
+                                </div>
+                            </div>
+                          
+                          </div>
+                         
+                      </div>
+                  </div>
+                  </div>
+                    </div>
+          </div>
+        }
+            <pagination-controls previousLabel="Prev" nextLabel="Next" (pageChange)="pageChangegetRolesList((page = $event))"></pagination-controls>
+            <div class="pagination-count">
+              <select  [(ngModel)]="itemsPerPage" (ngModelChange)="getSavedRolesList()" class="form-control cursor-pointer">
+                    <option  value="10"> 10</option>
+                    <option [disabled]="!(totalItems > 10)" value="20"> 20</option>
+                    <option [disabled]="!(totalItems > 20)" value="30"> 30</option>
+                 
+              </select>
+           </div>
+        </div>
+    </div>
+    </div>
+  </div>
+
+  <div *ngIf="addRoleDiv" class="main-container container-fluid TopHeader">
+  
+    <div class="row" class="card p-4" >
+      <div class="col-sm-12 col-lg-12 col-xl-12 p-0" >
+          <div class="modal-header justify-conent-between align-items-center rounded-0 p-2">
+            <h6 *ngIf="!updateRole" class="modal-title ms-1" id="inputModalLabel">Add Role</h6>
+            <h6 *ngIf="updateRole" class="modal-title ms-1" id="inputModalLabel">Update Role</h6>
+
+            <!-- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" (click)="modal.close('cross click')"></button> -->
+            <div class="add-role-save-btn">
+              <button type="button" class="btn btn-primary border" (click)="viewSavedRoles()">
+                View Saved Roles
+              </button>
+            </div>
+          </div>
+          <div class="modal-body p-0">
+           
+            <div class="row  ps-3 pe-3">
+              <div class="col-md-2 border p-0">
+                <div class=" p-1 border-bottom">
+                  <div class="card-body p-2">
+                    <h6>Name</h6>
+                  </div>
+                  <div class="card-body p-2">
+                    <h6>Permission</h6>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-10 border p-1">
+                <div class="flex-grow-1">
+                    <input  type="text" [(ngModel)]="roleTitle"  placeholder="Title" aria-label="Sheet" class="form-control">
+                </div>
+                <div class="row m-1">
+                <div class="col-md-6 p-0 border Available-Permission-card">
+                  <div class="permission-text bg-light p-3 ">
+                    <h6 class="mb-0">Available Permission <i class="fa fa-question-circle" aria-hidden="true"></i></h6>
+                  </div>
+                  <div class="Permission-filter-search">
+                    <div class="input-group">
+                      <input type="text" [(ngModel)]="searchPrevilage" (keydown.enter)="getPrevilagesList()" class="form-control border-end-0"  placeholder="Filter">
+                      <button type="button"  (click)="getPrevilagesList()"  aria-label="button" class="btn input-group-text btn-primary tx-fixed-white border-start-0 ">
+                          <i class="fe fe-search" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <!-- <div class="Permission-body-text"> -->
+                    <select [formControl]="selectControl" multiple class="Permission-body-text">
+                        <option *ngFor="let previlages of  previlagesList" [value]="previlages.id">
+                          {{ previlages.previlage }}
+                        </option>
+                      </select>
+                  <!-- </div> -->
+                  <div (click)="selectAllAndMove()" class="choose-all text-center border cursor-pointer">
+                    <h6>Choose All <i class="fa fa-chevron-circle-right mt-2" aria-hidden="true"></i></h6>
+                  </div>
+                </div>
+                <div class="col-md-1 add-icons arrows-card">
+                 <div class="p-2 bg-light rounded-5">
+                    <a (click)=moveSelectedItems()><i  class="fa fa-arrow-circle-right"></i></a> <br>
+                    <a (click)="moveBackSelectedItems()"><i  class="fa fa-arrow-circle-left"></i></a>
+                  </div>
+                </div>
+                <div class="col-md-5 border p-0 Chosen-Permission-card">
+                  <div class="permission-text bg-light p-3">
+                    <h6 class="mb-0">Chosen Permission <i class="fa fa-question-circle" aria-hidden="true"></i></h6>
+                  </div>
+                  <div class="Permission-filter-search">
+                    <div class="input-group">
+                      <input type="text" [(ngModel)]="searchSelectedPrevilage" (input)="searchInSelectedArray()" class="form-control border-end-0"  placeholder="Filter">
+                      <button type="button" (click)="searchInSelectedArray()"  aria-label="button" class="btn input-group-text btn-primary tx-fixed-white border-start-0 ">
+                          <i class="fe fe-search" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <!-- <div class="Permission-body-text"> -->
+                    <select [formControl]="selectControlSelected" multiple class="Permission-body-text">
+                        <option *ngFor="let previlages of selectedArray" [value]="previlages.id">
+                          {{ previlages.previlage }}
+                        </option>
+                      </select>
+                  <!-- </div> -->
+                  <div (click)="removeAllSelected()" class="choose-all text-center border cursor-pointer">
+                    <h6> <i class="fa fa-chevron-circle-left mt-2 me-1" aria-hidden="true"></i>Remove All</h6>
+                  </div>
+                </div>
+              </div>
+              </div>
+            </div>
+            <div *ngIf="updateRole" class="row ps-3 pe-3">
+                <div class="col-md-2 border p-0">
+                  <div class=" p-1 ">
+                    <div class="card-body p-1">
+                      <h6>User Assigned:</h6>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-10 border p-1">
+                    <div class="user-close-btn">
+                      <div *ngFor="let users of assaignedUsers" class="user-value">
+                          <span aria-hidden="true" class="ng-value-icon left me-1">{{users}}</span>
+                          <!-- <span class="ng-value-label">X</span>  -->
+                      </div>
+                    </div>
+                </div>
+              </div>
+          </div>
+          <div class="modal-footer border">
+              <button *ngIf="!updateRole" type="button" class="btn btn-primary" (click)="addRoles()" >
+                Save <i class="fa fa-file-text-o"></i> 
+              </button>
+              <button *ngIf="updateRole" type="button" class="btn btn-primary" (click)="editRoles()" >
+                Update <i class="fa fa-file-text-o"></i> 
+              </button>
+          </div>
+      </div>
+    </div>
+  </div>

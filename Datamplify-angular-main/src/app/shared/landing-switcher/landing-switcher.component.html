@@ -1,0 +1,106 @@
+
+  <!-- Start Switcher -->
+  <div class="offcanvas offcanvas-end"  tabindex="-1" id="switcher-canvas" aria-labelledby="offcanvasRightLabel">
+    <div class="offcanvas-header border-bottom">
+        <h6 class="offcanvas-title text-uppercase" id="offcanvasRightLabel">Switcher</h6>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close" (click)="SwitcherClose()"><i class="fe fe-x fs-20 fw-bold"></i></button>
+    </div>
+    <div class="offcanvas-body">
+        <div class="">
+            <p class="switcher-style-head">Theme Color Mode:</p>
+            <div class="row switcher-style">
+                <div class="col-4">
+                    <div class="form-check switch-select">
+                        <label class="form-check-label" for="switcher-light-theme">
+                            Light
+                        </label>
+                        <input class="form-check-input" type="radio" name="theme-style" id="switcher-light-theme"
+                        (click)="themeChange('light','light')"  [checked]="localDark['insightapps-theme-mode']!='dark'">
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="form-check switch-select">
+                        <label class="form-check-label" for="switcher-dark-theme">
+                            Dark
+                        </label>
+                        <input class="form-check-input" type="radio" name="theme-style" id="switcher-dark-theme" (click)="themeChange('dark','dark')" checked>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="">
+            <p class="switcher-style-head">Directions:</p>
+            <div class="row switcher-style">
+                <div class="col-4">
+                    <div class="form-check switch-select">
+                        <label class="form-check-label" for="switcher-ltr">
+                            LTR
+                        </label>
+                        <input class="form-check-input" type="radio" name="direction" id="switcher-ltr" (click)="DirectionsChange('ltr')"   [checked]="localdata['insightapps-dir'] != 'rtl'">
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="form-check switch-select">
+                        <label class="form-check-label" for="switcher-rtl" >
+                            RTL
+                        </label>
+                        <input class="form-check-input" type="radio" name="direction" id="switcher-rtl"  (click)="DirectionsChange('rtl')"  [checked]="localdata['insightapps-dir'] == 'rtl'">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="theme-colors">
+            <p class="switcher-style-head">Theme Primary:</p>
+            <div class="d-flex align-items-center switcher-style flex-wrap">
+                <div class="form-check switch-select me-3">
+                    <input class="form-check-input color-input color-primary-1" type="radio"
+                        name="theme-primary" id="switcher-primary"  (click)="primary('58, 88, 146')">
+                </div>
+                <div class="form-check switch-select me-3">
+                    <input class="form-check-input color-input color-primary-2" type="radio"
+                        name="theme-primary" id="switcher-primary1" (click)="primary('92, 144 ,163')">
+                </div>
+                <div class="form-check switch-select me-3">
+                    <input class="form-check-input color-input color-primary-3" type="radio" name="theme-primary"
+                        id="switcher-primary2" (click)="primary('161, 90 ,223')">
+                </div>
+                <div class="form-check switch-select me-3">
+                    <input class="form-check-input color-input color-primary-4" type="radio" name="theme-primary"
+                        id="switcher-primary3" (click)="primary('78 ,172, 76')">
+                </div>
+                <div class="form-check switch-select me-3">
+                    <input class="form-check-input color-input color-primary-5" type="radio" name="theme-primary"
+                        id="switcher-primary4"(click)="primary('223, 90, 90')">
+                </div>
+                <div class="form-check switch-select ps-0 mt-1 color-primary-light">
+                    <div class="theme-container-primary"></div>
+                    <div class="pickr-container-primary">
+                        <div class="pickr">
+    
+                            <button
+                            type="button"
+                            class="pcr-button"
+                            role="button"
+                            aria-label="toggle color picker dialog"
+                             id="lightPrimaryColorID"
+                             style="--pcr-color: rgba(132, 90, 223, 1);"
+                          [style.background]="color1"
+                          [cpAlphaChannel]="'disabled'"
+                          [cpOutputFormat]="'hex'"
+                          [(colorPicker)]="color1"
+                          (cpSliderDragEnd)="dynamicLightPrimary($event)"
+                          >
+                        </button>
+                        </div>
+                    </div>
+            </div>
+        </div>
+        <div>
+            <p class="switcher-style-head">reset:</p>
+            <div class="text-center switcher-style">
+                <a href="javascript:void(0);" id="reset-all" class="btn btn-danger m-1" (click)="reset()">Reset</a> 
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Switcher -->

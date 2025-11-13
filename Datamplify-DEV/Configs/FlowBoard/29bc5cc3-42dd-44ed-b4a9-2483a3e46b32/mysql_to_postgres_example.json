@@ -1,0 +1,77 @@
+{
+    "dag_name": "mysql_to_postgres_mapping",
+    "user_id": "29bc5cc3-42dd-44ed-b4a9-2483a3e46b32",
+    "username": "sahithi",
+    "parameters": [],
+    "sql_parameters": [],
+    "tasks": [
+        {
+            "type": "source_data_object",
+            "id": "SRC_mysql_customers",
+            "format": "database",
+            "hierarchy_id": "YOUR_MYSQL_CONNECTION_ID",
+            "path": "",
+            "source_table_name": "customers",
+            "attributes": [],
+            "source_attributes": [
+                [
+                    "customer_id",
+                    "int",
+                    "customer_id", 
+                    "integer"
+                ],
+                [
+                    "customer_name",
+                    "varchar(255)",
+                    "customer_name",
+                    "character varying"
+                ],
+                [
+                    "email",
+                    "varchar(255)",
+                    "email",
+                    "character varying"
+                ],
+                [
+                    "created_at",
+                    "datetime",
+                    "created_at",
+                    "timestamp with time zone"
+                ],
+                [
+                    "status",
+                    "tinyint",
+                    "status",
+                    "boolean"
+                ]
+            ]
+        },
+        {
+            "type": "target_data_object",
+            "id": "TGT_postgres_customers",
+            "format": "database",
+            "hierarchy_id": "YOUR_POSTGRES_CONNECTION_ID",
+            "path": "",
+            "target_table_name": "customers_migrated",
+            "truncate": false,
+            "create": true,
+            "previous_task_id": "SRC_mysql_customers",
+            "previous_instance_id": "SRC_mysql_customers",
+            "attribute_mapper": [
+                ["customer_id", "customer_id", "customer_id", "integer"],
+                ["customer_name", "customer_name", "customer_name", "character varying"],
+                ["email", "email", "email", "character varying"],
+                ["created_at", "created_at", "created_at", "timestamp with time zone"],
+                ["is_active", "status", "status", "boolean"]
+            ]
+        }
+    ],
+    "flow": [
+        [
+            "SRC_mysql_customers",
+            "TGT_postgres_customers"
+        ]
+    ],
+    "dag_id": "mysql_to_postgres_example",
+    "flow_name": "mysql_to_postgres_mapping"
+}

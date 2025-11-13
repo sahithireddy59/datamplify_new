@@ -1,0 +1,172 @@
+
+/* Start notifications Styles */
+.awn-toast-wrapper{
+  background-color: $light !important;
+  color: $default-color !important;
+}
+#awn-popup-wrapper .awn-popup-body{
+  background: $custom-white !important;
+}
+
+#awn-popup-wrapper .awn-popup-body.awn-popup-confirm .fa{
+  color: $warning !important;
+}
+
+#awn-popup-wrapper .awn-buttons .awn-btn-success{
+  background-color: $success !important;
+}
+
+#awn-popup-wrapper .awn-buttons .awn-btn-success:hover{
+  background-color: $success !important;
+}
+
+#awn-popup-wrapper .awn-buttons .awn-btn-cancel{
+  background-color: $info !important;
+}
+
+#awn-popup-wrapper .awn-buttons .awn-btn-cancel:hover{
+  background-color: $info !important;
+}
+
+.awn-toast{
+  --tw-bg-opacity: 1 !important;
+  background-color: rgb(248 250 252 / var(--tw-bg-opacity)) !important;
+  --tw-text-opacity: 1 !important;
+  color: rgb(51 65 85 / var(--tw-text-opacity)) !important;
+}
+
+.awn-toast{
+  background-color: $light !important;
+  --tw-text-opacity: 1 !important;
+  color: $default-color !important;
+}
+
+
+.awn-toast.awn-toast-success{
+  background-color: $success !important;
+  color: $white !important;
+}
+
+.awn-toast.awn-toast-success .awn-toast-wrapper{
+  border-color: $success !important;
+  opacity: 0.5;
+}
+
+.awn-toast.awn-toast-success .fa, 
+.awn-toast.awn-toast-success b{
+  color: $success !important;
+}
+
+.awn-toast.awn-toast-success .awn-toast-progress-bar:after{
+  background-color: $success  !important;
+}
+
+.awn-toast.awn-toast-info{
+  background-color: $info !important;
+  color: $white !important;
+}
+
+.awn-toast.awn-toast-info .awn-toast-wrapper{
+  border-color: $info !important;
+  opacity: 0.5;
+}
+
+.awn-toast.awn-toast-info .fa, 
+.awn-toast.awn-toast-info b{
+  color: $info !important;
+}
+
+.awn-toast.awn-toast-info .awn-toast-progress-bar:after{
+  background-color: $info !important;
+  color: $white !important;
+}
+
+.awn-toast.awn-toast-alert{
+  background-color: $danger !important;
+  color: $white !important;
+}
+
+.awn-toast.awn-toast-alert .awn-toast-wrapper{
+  border-color:  $danger  !important;
+  opacity: 0.5;
+}
+
+.awn-toast.awn-toast-alert .fa, 
+.awn-toast.awn-toast-alert b{
+  color: $danger  !important;
+}
+
+.awn-toast.awn-toast-alert .awn-toast-progress-bar:after{
+  background-color: $danger  !important;
+}
+
+.awn-toast.awn-toast-warning{
+  background-color: $warning !important;
+  color: $white !important;
+}
+
+.awn-toast.awn-toast-warning .awn-toast-wrapper{
+  border-color: $warning !important;
+  opacity: 0.5;
+}
+
+.awn-toast.awn-toast-warning .fa, 
+.awn-toast.awn-toast-warning b{
+  color: $warning !important;
+}
+
+.awn-toast.awn-toast-warning .awn-toast-progress-bar:after{
+  background-color: $warning !important;
+}
+
+#awn-popup-wrapper .awn-popup-body.awn-popup-async-block{
+  --tw-text-opacity: 1 !important;
+  color: rgb(51 65 85 / var(--tw-text-opacity)) !important;
+}
+
+#awn-popup-wrapper .awn-popup-body.awn-popup-async-block{
+  font-size: 1.5rem !important;
+  line-height: 2rem !important;
+  font-weight: 600 !important;
+  --tw-text-opacity: 1 !important;
+  color: rgb(100 116 139 / var(--tw-text-opacity)) !important;
+}
+
+#awn-toast-container{
+  right: 0px !important;
+  z-index: 10 !important;
+}
+
+[dir="rtl"] #awn-toast-container{
+  left: 0px !important;
+  right: auto !important;
+}
+
+@media (min-width: 480px){
+  #awn-toast-container{
+    right: 24px !important;
+  }
+  [dir="rtl"] #awn-toast-container{
+    left: 24px !important;
+  }
+}
+
+[dir="rtl"] .awn-toast-wrapper{
+  padding-right: 16px;
+  padding-left: 88px;
+}
+
+[dir="rtl"] .awn-popup-loading-dots{
+  margin-right: 24px;
+  margin-left: 0px;
+}
+
+[dir="rtl"] .awn-toast-icon {
+  left: 16px;
+  right: auto !important;
+}
+.awn-popup-loading-dots,.awn-popup-loading-dots:after,.awn-popup-loading-dots:before {
+  background:$default-color !important;
+}
+
+/* End notifications Styles */

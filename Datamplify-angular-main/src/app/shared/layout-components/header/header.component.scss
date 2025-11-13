@@ -1,0 +1,46 @@
+.cursor{
+cursor: pointer;
+}
+.public-logo-header{
+    max-width: 14%;
+    margin-left: -155px;
+}
+.mobile-icon-public{
+    margin-right: 435px;
+}
+.gradient-text {
+  background: linear-gradient(90deg, #4f46e5, #a855f7, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: bold;
+}
+.glass-dropdown {
+    background: var(--custom-white); /* semi-transparent */
+    backdrop-filter: blur(12px); /* glass blur effect */
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2); /* subtle border */
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); /* soft shadow */
+}
+.dropdown-item {
+    color: var(--default-tetx-color); /* adjust text color for contrast */
+}
+.dropdown-item:hover {
+    background: var(--primary-color); /* hover effect */
+    color: #fff;
+}
+.dropdown-divider {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.container-background {
+  background: var(--main-header-bg);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}

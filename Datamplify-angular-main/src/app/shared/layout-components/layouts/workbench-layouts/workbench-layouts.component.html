@@ -1,0 +1,17 @@
+
+<app-switcher></app-switcher>
+<div class="page">
+    <div class="page-main">
+        <app-header></app-header>
+        <app-sidebar appHoverEffectSidebar></app-sidebar>
+        <div class="main-content app-content mt-0 p-0"  (click)="togglesidemenuBody()">
+
+                <router-outlet></router-outlet>
+            
+            
+        </div>
+    </div>
+    <!-- <app-footer></app-footer> -->
+<!-- <app-tab-to-top></app-tab-to-top> -->
+</div>
+<!-- <div id="responsive-overlay" (click)="clearToggle()"></div> -->

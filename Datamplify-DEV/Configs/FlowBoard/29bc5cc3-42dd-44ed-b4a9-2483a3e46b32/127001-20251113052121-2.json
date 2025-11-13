@@ -1,0 +1,88 @@
+{
+    "dag_name": "test_mongo",
+    "parameters": [],
+    "sql_parameters": [],
+    "tasks": [
+        {
+            "type": "source_data_object",
+            "id": "SRC_test_data",
+            "format": "database",
+            "hierarchy_id": "081ab056-7cdf-4ba2-8e63-5504552562a3",
+            "path": "",
+            "source_table_name": "test_data",
+            "attributes": [],
+            "source_attributes": [
+                [
+                    "_id",
+                    "VARCHAR(24)",
+                    "_id",
+                    "VARCHAR(24)"
+                ],
+                [
+                    "first_name",
+                    "VARCHAR(255)",
+                    "first_name",
+                    "VARCHAR(255)"
+                ],
+                [
+                    "last_name",
+                    "VARCHAR(255)",
+                    "last_name",
+                    "VARCHAR(255)"
+                ],
+                [
+                    "email",
+                    "VARCHAR(255)",
+                    "email",
+                    "VARCHAR(255)"
+                ],
+                [
+                    "status",
+                    "VARCHAR(50)",
+                    "status",
+                    "VARCHAR(50)"
+                ],
+                [
+                    "address.city",
+                    "VARCHAR(255)",
+                    "address.city",
+                    "VARCHAR(255)"
+                ],
+                [
+                    "address.country",
+                    "VARCHAR(255)",
+                    "address.country",
+                    "VARCHAR(255)"
+                ],
+                [
+                    "created_at",
+                    "TIMESTAMP",
+                    "created_at",
+                    "TIMESTAMP"
+                ]
+            ]
+        },
+        {
+            "type": "target_data_object",
+            "id": "TGT_mongo_db",
+            "format": "database",
+            "hierarchy_id": "51bf5764-b32e-4cb1-a4cc-472feb09a23d",
+            "path": "",
+            "target_table_name": "mongo_db",
+            "truncate": false,
+            "create": true,
+            "previous_task_id": "SRC_test_data",
+            "previous_instance_id": "SRC_test_data"
+        }
+    ],
+    "flow": [
+        [
+            "SRC_test_data",
+            "TGT_mongo_db"
+        ]
+    ],
+    "dag_id": "127001-20251113052121-2",
+    "flow_name": "test_mongo",
+    "user_id": "29bc5cc3-42dd-44ed-b4a9-2483a3e46b32",
+    "username": "sahithi"
+}

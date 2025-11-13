@@ -1,0 +1,258 @@
+<app-page-header title="FlowBoard" moduleId="flowBoardList" title1="Home" activeitem="FlowBoard"></app-page-header>
+
+
+<div class="main-container container-fluid TopHeader container-background p-0">
+    <div class="card mb-0 rounded-0" style="min-height: 466px;">
+        <div class="d-flex justify-content-end px-5 mt-2">
+            <div class="d-flex text-align-center">
+                <button type="button" ngbTooltip="Grid View" triggers="hover" (click)="gridView=true"
+                    class="btn btn-icon btn-outline-primary me-1" [ngClass]="gridView ? 'active' : ''"><i
+                        class="fa fa-th-large"></i></button>
+                <button type="button" ngbTooltip="List View" triggers="hover" (click)="gridView=false"
+                    class="btn btn-icon btn-outline-primary me-2" [ngClass]="!gridView ? 'active' : ''"><i
+                        class="fa fa-th-list"></i></button>
+
+                <div class="flex-grow-1 position-relative me-2" style="max-width: 400px;">
+                    <div class="d-flex align-items-center glass-light rounded-pill shadow-sm overflow-hidden">
+                        <input type="text" placeholder="Search" [(ngModel)]="search"
+                            (keyup.enter)="page = 1; getFlowboardList();"
+                            class="form-control border-0 bg-transparent ps-3 py-2" />
+
+                        <button type="button" class="btn rounded-pill px-3 border-0 search-btn"
+                            (click)="page = 1; getFlowboardList();">
+                            <i class="fe fe-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <button class="btn mode-btn btn-sm rounded-5" (click)="goToFlowboard()">
+                    <i class="fe fe-plus me-1"></i>New FlowBoard
+                </button>
+            </div>
+        </div>
+        <!-- <div *ngIf="dataFlowList.length === 0" class="ms-2">
+            No FlowBoards to display!
+        </div> -->
+        <div class="card-body d-flex flex-column" style="min-height: 100vh;">
+            <div class="flex-grow-1">
+                @if(!gridView){
+                <div *ngIf="!isLoading" class="list-group">
+                    <div class="list-group-item p-3 mb-2 glass-card rounded-4"
+                        *ngFor="let dataFlow of dataFlowList | paginate : { itemsPerPage: pageSize, currentPage: page, totalItems: totalItems }; let index = index">
+            
+                        <div class="d-flex align-items-center justify-content-between flex-wrap">
+                            <!-- Left: Monitor Title -->
+                            <div class="d-flex align-items-center flex-grow-1 me-3">
+                                <div class="me-2 icon-bounce rounded-circle bg-info-subtle d-flex align-items-center justify-content-center"
+                                    style="width: 40px; height: 40px;">
+                                    <i class="fe fe-git-branch fs-5 text-info"></i>
+                                </div>
+                                <div>
+                                    <h6 [ngbTooltip]="dataFlow.Flow_name" class="fw-semibold mb-0 text-truncate"
+                                        style="max-width: 200px; cursor: pointer !important; font-size: 14px;" (click)="editFlowboard(dataFlow.id)">
+                                        {{ dataFlow.Flow_name | slice: 0: 18 }}
+                                    </h6>
+                                </div>
+                            </div>
+            
+                            <!-- Middle: Dates Info -->
+                            <div class="d-flex align-items-center text-muted small flex-wrap gap-4 me-4">
+                                <div>
+                                    <span class="fw-semibold">Created At:</span>
+                                    <span>{{ dataFlow.created_at | date: 'mediumDate' }}</span>
+                                </div>
+                                <div>
+                                    <span class="fw-semibold">Last Modified:</span>
+                                    <span>{{ dataFlow.updated_at | date: 'mediumDate' }}</span>
+                                </div>
+                            </div>
+            
+                            <!-- Right: Settings Icon -->
+                            <div class="d-flex">
+                                <button class="btn btn-outline-primary-light shadow-sm rounded-4 btn-sm flex-fill me-2"
+                                    (click)="editFlowboard(dataFlow.id)">
+                                    <i class="bi bi-pencil me-1"></i>
+                                </button>
+                                <button class="btn btn-outline-danger-light rounded-4 shadow-sm btn-sm flex-fill"
+                                    (click)="deleteFlowboard(dataFlow)">
+                                    <i class="bi bi-trash me-1"></i>
+                                </button>
+                                <!-- <button class="btn btn-sm">
+                                            <i class="bi bi-gear"></i>
+                                        </button> -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <ng-container *ngIf="isLoading">
+                    <div class="list-group">
+                        <div class="list-group-item p-3 mb-2 glass-card rounded-4" *ngFor="let sk of skeletons">
+                            <div class="d-flex align-items-center">
+            
+                                <!-- Left: Icon + Job Name -->
+                                <div class="d-flex align-items-center flex-shrink-0" style="width: 55%;">
+                                    <div class="skeleton rounded-circle me-2" style="width: 40px; height: 40px;"></div>
+                                    <div class="skeleton" style="width: 200px; height: 16px;"></div>
+                                </div>
+            
+                                <!-- Middle: Created Date -->
+                                <div class="flex-shrink-0" style="width: 180px;">
+                                    <div class="skeleton" style="width: 140px; height: 14px;"></div>
+                                </div>
+            
+                                <!-- Middle: Modified Date -->
+                                <div class="flex-shrink-0" style="width: 180px;">
+                                    <div class="skeleton" style="width: 140px; height: 14px;"></div>
+                                </div>
+            
+                                <!-- Right: Actions -->
+                                <div class="ms-auto d-flex gap-2">
+                                    <div class="skeleton rounded-4" style="width: 32px; height: 32px;"></div>
+                                    <div class="skeleton rounded-4" style="width: 32px; height: 32px;"></div>
+                                </div>
+            
+                            </div>
+                        </div>
+                    </div>
+                </ng-container>
+                }
+                @if(gridView){
+                <div *ngIf="!isLoading" class="row g-4">
+                    <div class="col-12 col-md-6 col-lg-4"
+                        *ngFor="let dataFlow of dataFlowList | paginate : { itemsPerPage: pageSize, currentPage: page, totalItems: totalItems }; let index = index">
+                        <div class="glass-card h-100">
+                            <div class="p-4">
+                                <div class="d-flex align-items-start justify-content-between mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <!-- <div class="fs-2 me-1 icon-bounce"><img src="./assets/images/charts/post-tiled-icon.jpg"
+                                                        alt="postgresql data flow" class="rounded-circle"
+                                                        style="width: 30px;height: 30px;"></div> -->
+                                        <div class="me-2 icon-bounce rounded-circle bg-info-subtle d-flex align-items-center justify-content-center"
+                                            style="width: 40px; height: 40px;">
+                                            <i class="fe fe-git-branch fs-5 text-info"></i>
+                                        </div>
+                                        <div>
+                                            <h5 [ngbTooltip]="dataFlow.Flow_name" class="fw-semibold mb-1" style="font-size: 14px; cursor: pointer !important;" (click)="editFlowboard(dataFlow.id)">
+                                                {{ dataFlow.Flow_name | slice: 0: 18 }}
+                                            </h5>
+                                            <!-- <p class="text-muted small mb-0">{{ connection.subType }}</p> -->
+                                        </div>
+                                    </div>
+                                    <!-- <button class="btn btn-sm ">
+                                                <i class="bi bi-gear"></i>
+                                            </button> -->
+                                </div>
+            
+                                <!-- <div class="d-flex align-items-center justify-content-between mb-3">
+                                                                        <span class="status-badge"><i class="bi bi-wifi me-1"></i>{{ connection.status }}</span>
+                                                                        <span class="time-text"><i class="bi bi-clock me-1"></i>{{ connection.lastSync }}</span>
+                                                                    </div> -->
+            
+                                <!-- <p class="large mb-0">{{ connection.description }}</p> -->
+            
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <span class="small text-muted"> Created On</span>
+                                    <span class="small  text-capitalize"> {{ dataFlow.created_at | date: 'mediumDate'
+                                        }} </span>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="small text-muted">Last Modified</span>
+                                    <span class="small text-capitalize">{{ dataFlow.updated_at | date: 'mediumDate'
+                                        }}</span>
+                                </div>
+            
+            
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-outline-primary-light p-1 rounded-5 shadow-sm btn-sm flex-fill"
+                                        (click)="editFlowboard(dataFlow.id)">
+                                        <i class="bi bi-pencil me-1"></i> Edit
+                                    </button>
+                                    <button class="btn btn-outline-danger-light p-1 rounded-5 shadow-sm btn-sm flex-fill"
+                                        (click)="deleteFlowboard(dataFlow)">
+                                        <i class="bi bi-trash me-1"></i> Delete
+                                    </button>
+                                </div>
+                            </div>
+            
+                        </div>
+                    </div>
+                </div>
+
+                <ng-container *ngIf="isLoading">
+                    <div class="row g-4">
+                        <div class="col-12 col-md-6 col-lg-4" *ngFor="let sk of skeletons">
+                            <div class="glass-card h-100">
+                                <div class="p-4">
+                                    <!-- Skeleton Header -->
+                                    <div class="d-flex align-items-start justify-content-between mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="skeleton rounded-circle me-3" style="width: 40px; height: 40px;"></div>
+                                            <div>
+                                                <div class="skeleton mb-2" style="width: 120px; height: 12px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+            
+                                    <!-- Skeleton Body -->
+                                    <!-- <div class="skeleton mb-2" style="width: 100%; height: 10px;"></div> -->
+                                    <!-- <div class="skeleton mb-2" style="width: 90%; height: 10px;"></div>
+                                    <div class="skeleton mb-3" style="width: 95%; height: 10px;"></div> -->
+
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <div class="skeleton" style="width: 60px; height: 10px;"></div>
+                                        <div class="skeleton" style="width: 100px; height: 10px;"></div>
+                                    </div>
+                                    
+                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                        <div class="skeleton" style="width: 80px; height: 10px;"></div>
+                                        <div class="skeleton" style="width: 120px; height: 10px;"></div>
+                                    </div>
+            
+                                    <!-- Skeleton Footer -->
+                                    <div class="d-flex gap-2">
+                                        <div class="skeleton rounded-5" style="flex:1; height: 28px;"></div>
+                                        <div class="skeleton rounded-5" style="flex:1; height: 28px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </ng-container>
+                }
+                @if(dataFlowList.length === 0 && !isLoading){
+                <div class="d-flex flex-column align-items-center justify-content-center py-5 text-center text-muted">
+                    <!-- Icon -->
+                    <div class="mb-3">
+                        <div class="rounded-circle bg-info-subtle d-flex align-items-center justify-content-center"
+                            style="width: 56px; height: 56px;">
+                            <i class="fe fe-git-branch text-info fs-3"></i>
+                        </div>
+                    </div>
+            
+                    <!-- Message -->
+                    <h5 class="fw-semibold text-dark mb-1">No Flowboards Found</h5>
+                    <p class="small mb-0" style="max-width: 360px;">
+                        You haven’t created any Flowboards yet. Start by creating a new one to manage your flows efficiently.
+                    </p>
+                </div>
+                }
+            </div>
+            <div *ngIf="dataFlowList.length > 0" class="d-flex align-items-center justify-content-between mt-2">
+                <div>
+                    <pagination-controls previousLabel="Prev" nextLabel="Next"
+                    (pageChange)="page = $event; getFlowboardList()"></pagination-controls>
+                </div>
+                <div>
+                    <!-- <div class="pagination-count"> -->
+                    <select [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()" class="form-select form-select-sm cursor"
+                        [disabled]="!pageSize">
+                        <option class="select-options" value="9"> 9</option>
+                        <option class="select-options" [disabled]="!(totalItems > 9)" value="18"> 18</option>
+                        <option class="select-options" [disabled]="!(totalItems > 18)" value="27"> 27</option>
+                    </select>
+                <!-- </div> -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

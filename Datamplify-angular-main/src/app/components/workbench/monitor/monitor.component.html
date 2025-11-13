@@ -1,0 +1,514 @@
+<div class="container-fluid container-background">
+
+    <!-- Header -->
+    <div *ngIf="!isFullLogView" class="d-flex align-items-center justify-content-between mb-4">
+        <!-- Left: Back + Title -->
+        <div class="d-flex align-items-center">
+            <button class="btn mode-btn me-3" (click)="goBackToMonitorList()">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </button>
+            <div>
+                <h4 class="fw-bold mb-1 text-dark">{{ dagName || 'Task Name' }}</h4>
+                <p class="text-muted mb-0">Task execution details and monitoring</p>
+            </div>
+        </div>
+    
+        <!-- Right: Refresh Button -->
+        <div class="d-flex align-items-center">
+            <button class="btn mode-btn d-flex align-items-center me-2" (click)="refreshMonitorData()">
+                <i class="fa-solid fa-rotate-right me-2"></i> Refresh
+            </button>
+
+            <!-- <button class="btn mode-btn d-flex align-items-center" (click)="runPipeline()">
+                <i class="fe fe-play me-2"></i> Run
+            </button> -->
+        </div>
+    </div>
+
+    <div *ngIf="isFullLogView" class="d-flex align-items-center justify-content-between mb-4">
+        <!-- Left: Back + Title -->
+        <div class="d-flex align-items-center">
+            <button class="btn mode-btn me-3" (click)="isFullLogView = false;">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </button>
+            <div class="p-1 d-flex align-items-center rounded-3 me-3" 
+            [ngClass]="{'bg-success-subtle text-success': selectedTask.state === 'success',
+                        'bg-danger-subtle text-danger': selectedTask.state === 'failed',
+                        'bg-info-subtle text-info': selectedTask.state === 'running',
+                        'bg-warning-subtle text-warning': selectedTask.state === 'upstream_failed',
+                        'bg-secondary-subtle text-secondary': selectedTask.state === 'removed'
+                    }">
+                <i *ngIf="selectedTask.state === 'success'" class="fa-regular fa-circle-check fs-5"></i>
+                <i *ngIf="selectedTask.state === 'failed'" class="fa-solid fa-circle-exclamation fs-5"></i>
+                <i *ngIf="selectedTask.state === 'running'" class="fe fe-activity fs-5"></i>
+                <i *ngIf="selectedTask.state === 'upstream_failed'" class="fa-solid fa-triangle-exclamation fs-5"></i>
+                <i *ngIf="selectedTask.state === 'removed'" class="fa-solid fa-ban fs-5"></i>
+            </div>
+            <div>
+                <h4 class="fw-bold mb-1 text-dark">{{ selectedTask.task_id || 'Task Name' }}</h4>
+                <div class="d-flex">
+                    <p class="text-muted mb-0 me-2">Run: </p>
+                    <span class="badge status-badge rounded-5" 
+                    [ngClass]="{
+                                 'text-success bg-success-subtle': selectedTask.state === 'success',
+                                 'text-danger bg-danger-subtle': selectedTask.state === 'failed',
+                                 'text-info bg-info-subtle': selectedTask.state === 'running',
+                                 'text-warning bg-warning-subtle': selectedTask.state === 'upstream_failed',
+                                 'text-secondary bg-light': selectedTask.state === 'removed'
+                               }">
+                        {{ selectedTask.state }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Cards -->
+    <div *ngIf="!isFullLogView" class="row g-3 mb-4">
+        <!-- Schedule -->
+        <div class="col-md-4">
+            <div class="glass-card d-flex align-items-center p-3 h-100">
+                <div class="icon-circle bg-primary-subtle text-primary me-3">
+                    <i class="fa-solid fa-calendar-days fs-5 bounce-icon"></i>
+                </div>
+                <div class="text-start">
+                    <h6 class="text-muted mb-1">Schedule</h6>
+                    <h6 class="fw-semibold text-dark mb-0">{{ schedule || 'None' }}</h6>
+                </div>
+            </div>
+        </div>
+    
+        <!-- Latest Run -->
+        <div class="col-md-4">
+            <div class="glass-card d-flex align-items-center p-3 h-100">
+                <div class="icon-circle bg-info-subtle text-info me-3">
+                    <i class="fa-solid fa-clock-rotate-left fs-5 bounce-icon"></i>
+                </div>
+                <div class="text-start">
+                    <h6 class="text-muted mb-1">Latest Run</h6>
+                    <h6 class="fw-semibold text-primary mb-0">
+                        {{ (latestRunTimestamp | date:'yyyy-MM-dd HH:mm:ss') || 'None' }}
+                    </h6>
+                </div>
+            </div>
+        </div>
+    
+        <!-- Next Run -->
+        <div class="col-md-4">
+            <div class="glass-card d-flex align-items-center p-3 h-100">
+                <div class="icon-circle bg-success-subtle text-success me-3">
+                    <i class="fa-solid fa-diagram-next fs-5 bounce-icon"></i>
+                </div>
+                <div class="text-start">
+                    <h6 class="text-muted mb-1">Next Run</h6>
+                    <h6 class="fw-semibold text-dark mb-0">{{ (nextRunTimestamp | date:'yyyy-MM-dd HH:mm:ss') || 'None' }}</h6>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="isFullLogView" class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="glass-card d-flex align-items-center p-3 h-100">
+                <div class="icon-circle bg-primary-subtle text-primary me-3">
+                    <i class="fa-solid fa-circle-play fs-5 bounce-icon"></i>
+                </div>
+                <div class="text-start">
+                    <h6 class="text-muted mb-1">Start</h6>
+                    <h6 class="fw-semibold text-dark mb-0">{{ (selectedTask.start_date | date:'yyyy-MM-dd HH:mm:ss') || 'None' }}</h6>
+                </div>
+            </div>
+        </div>
+    
+        <div class="col-md-4">
+            <div class="glass-card d-flex align-items-center p-3 h-100">
+                <div class="icon-circle bg-info-subtle text-info me-3">
+                    <i class="fa-solid fa-circle-stop fs-5 bounce-icon"></i>
+                </div>
+                <div class="text-start">
+                    <h6 class="text-muted mb-1">End</h6>
+                    <h6 class="fw-semibold text-dark mb-0">
+                        {{ (selectedTask.end_date | date:'yyyy-MM-dd HH:mm:ss') || 'None' }}
+                    </h6>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="glass-card d-flex align-items-center p-3 h-100">
+                <div class="icon-circle bg-success-subtle text-success me-3">
+                    <i class="fa-solid fa-clock fs-5 bounce-icon"></i>
+                </div>
+                <div class="text-start">
+                    <h6 class="text-muted mb-1">Duration</h6>
+                    <h6 class="fw-semibold text-primary mb-0">{{ selectedTask.duration || 'None' }}s</h6>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tabs -->
+    <div *ngIf="!isFullLogView" class="custom-tabs d-flex justify-content-between mb-2">
+        <div class="nav-item" style="width: 32%;">
+            <button class="nav-link fw-semibold w-100"
+            [ngClass]="activeTab === 'overview' ? 'tab-active' : 'tab-inactive'"
+            (click)="activeTab = 'overview'; getRunsList(dagId, 14, 1, '', '', '-run_after');">Overview</button>
+        </div>
+
+        <div class="nav-item" style="width: 32%;">
+            <button class="nav-link fw-semibold w-100"
+            [ngClass]="activeTab === 'runs' ? 'tab-active' : 'tab-inactive'"
+            (click)="activeTab = 'runs'; filteredRuns = []; getRunsList(dagId, pageSize, currentPage, '', '', '-run_after')">Runs</button>
+        </div>
+
+        <div class="nav-item" style="width: 32%;">
+            <button class="nav-link fw-semibold w-100"
+            [ngClass]="activeTab === 'tasks' ? 'tab-active' : 'tab-inactive'"
+            (click)="activeTab = 'tasks'; getTaskListData();">Tasks</button>
+        </div>
+    </div>
+
+    <!-- Tab Content -->
+    <div *ngIf="!isFullLogView" class="tab-content" id="taskTabsContent">
+        <!-- Overview -->
+        <div class="tab-pane fade" id="overview" role="tabpanel" [ngClass]="activeTab === 'overview' ? 'show active' : ''">
+            <div class="row g-1">
+                <!-- Left Card -->
+                <div class="col-md-4 pe-1">
+                    <div class="glass-card p-3 h-100">
+                        <div class="d-flex justify-content-between mb-3">
+                            <h6 class="fw-semibold text-dark" style="font-size: 15px;">Task Status History</h6>
+                            <!-- <p class="text-muted small">5 Runs</p> -->
+                            <div class="btn-group me-2" ngbDropdown container="body">
+                                <button type="button" class="btn mode-btn" ngbDropdownToggle>
+                                    {{lastXRuns}} Runs
+                                </button>
+                                <ul ngbDropdownMenu>
+                                    <li (click)="lastXRuns = 5; getTasksAndRunsStatus(dagId)"><a ngbDropdownItem>5 Runs</a></li>
+                                    <li (click)="lastXRuns = 10; getTasksAndRunsStatus(dagId)"><a ngbDropdownItem>10 Runs</a></li>
+                                    <li (click)="lastXRuns = 25; getTasksAndRunsStatus(dagId)"><a ngbDropdownItem>25 Runs</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <!-- Placeholder Pie Chart -->
+                        <div class="chart-placeholder d-flex flex-column">
+                            <div echarts [options]="sidebarChartOptions" class="echart1" style="height: 300px;"></div>
+                            <div>
+                                <h6 class="mt-4 mb-2 text-dark">
+                                    Task Quick Status
+                                    <!-- <small class="text-muted">(Last {{ lastXRuns }} Runs)</small> -->
+                                </h6>
+                                <div class="left-overview-tasks">
+                                    <ul class="list-group">
+                                        @for(task of tasksRunStatuses; let i = $index; track i) {
+                                        <li *ngIf="!unWantedTasks.includes(task.name)"
+                                            class="list-group-item d-flex justify-content-between align-items-center py-2 px-2 border-0">
+                                
+                                            <!-- Task Name -->
+                                            <span class="me-2 col-5" style="cursor: pointer;">
+                                                <a class="text-decoration-none" [ngbTooltip]="task.name">
+                                                    {{ task.name.length > 15 ?( task.name | slice: 0: 12) + '...' : task.name }}
+                                                </a>
+                                            </span>
+                                
+                                            <!-- Status Indicators -->
+                                            <div class="d-flex gap-1 flex-shrink-0">
+                                                <div *ngFor="let statusInfo of task.statuses; let i = index" class="rounded-3"
+                                                    style="width: 18px; height: 18px;"
+                                                    [ngClass]="{
+                                                              'bg-success': statusInfo.status === 'success',
+                                                              'bg-danger': statusInfo.status === 'failed',
+                                                              'bg-info': statusInfo.status === 'running',
+                                                              'bg-warning': statusInfo.status === 'upstream_failed'
+                                                            }"
+                                                    [style.background-color]="statusInfo.status === 'removed' ? '#6c757d' : ''"
+                                                    ngbTooltip="Run: {{statusInfo.runAfter | date:'yyyy-MM-dd HH:mm:ss' }}, Status: {{statusInfo.status}}"
+                                                    container="body">
+                                
+                                                    <!-- Icons -->
+                                                    <i *ngIf="statusInfo.status === 'success'"
+                                                        class="fa fa-check text-light d-flex align-items-center justify-content-center mt-1"
+                                                        style="font-size: 0.7rem;"></i>
+                                                    <i *ngIf="statusInfo.status === 'failed'"
+                                                        class="fa fa-remove text-light d-flex align-items-center justify-content-center mt-1"
+                                                        style="font-size: 0.7rem;"></i>
+                                                    <i *ngIf="statusInfo.status === 'running'"
+                                                        class="bi bi-hourglass-split text-light d-flex align-items-center justify-content-center mt-1"
+                                                        style="font-size: 0.7rem;"></i>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Card -->
+                <div class="col-md-8 ps-2">
+                    <div class="glass-card p-3 h-100">
+                        <h6 class="fw-semibold text-dark" style="font-size: 15px;">{{mainChartTitle}}</h6>
+                        <!-- Placeholder Bar Chart -->
+                        <div class="chart-placeholder d-flex flex-column mt-4">
+                            <div echarts [options]="chartOptions" class="echart"></div>
+
+                            <div class="row g-3 mt-4">
+                                <!-- Avg Duration -->
+                                <div class="col-md-4">
+                                    <div class="glass-card p-3 text-center" style="background: transparent; backdrop-filter: none;">
+                                        <h3 class="fw-bold text-info" style="font-size: 22px;">{{avgDurationOfRuns}}s</h3>
+                                        <p class="text-muted mb-0">Avg Duration</p>
+                                    </div>
+                                </div>
+                            
+                                <!-- Best Time -->
+                                <div class="col-md-4">
+                                    <div class="glass-card p-3 text-center" style="background: transparent; backdrop-filter: none;">
+                                        <h3 class="fw-bold text-success" style="font-size: 22px;">{{bestDurationOfRuns}}s</h3>
+                                        <p class="text-muted mb-0">Best Duration</p>
+                                    </div>
+                                </div>
+                            
+                                <!-- Worst Time -->
+                                <div class="col-md-4">
+                                    <div class="glass-card p-3 text-center" style="background: transparent; backdrop-filter: none;">
+                                        <h3 class="fw-bold text-danger" style="font-size: 22px;">{{worstDurationOfRuns}}s</h3>
+                                        <p class="text-muted mb-0">Worst Duration</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Runs -->
+        <div class="tab-pane fade" id="runs" role="tabpanel"
+        [ngClass]="activeTab === 'runs' ? 'show active' : ''">
+            <div class="glass-card p-4">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                    <!-- <div> -->
+                        <h6 class="fw-bold mb-3 text-dark">Run History</h6>
+                    <!-- </div> -->
+                    <div class="d-flex justify-content-end mb-3">
+                        <div class="btn-group me-2" ngbDropdown container="body">
+                            <button type="button" class="btn mode-btn" ngbDropdownToggle>
+                                <i class="fa-solid fa-filter"></i> {{ selectedStateFilter }}
+                            </button>
+                            <ul ngbDropdownMenu>
+                                <li (click)="getRunsList(dagId, pageSize, 1, '', '', orderBy); selectedStateFilter = 'All States'"><a ngbDropdownItem>All States</a></li>
+                                <li (click)="getRunsList(dagId, pageSize, 1, 'queued', '', orderBy); selectedStateFilter = 'Queued'"><a ngbDropdownItem><span class="badge bg-warning">Queued</span></a></li>
+                                <li (click)="getRunsList(dagId, pageSize, 1, 'running', '', orderBy); selectedStateFilter = 'Running'"><a ngbDropdownItem><span class="badge bg-info">Running</span></a></li>
+                                <li (click)="getRunsList(dagId, pageSize, 1, 'success', '', orderBy); selectedStateFilter = 'Success'"><a ngbDropdownItem><span class="badge bg-success">Success</span></a></li>
+                                <li (click)="getRunsList(dagId, pageSize, 1, 'failed', '', orderBy); selectedStateFilter = 'Failed'"><a ngbDropdownItem><span class="badge bg-danger">Failed</span></a></li>
+                            </ul>
+                        </div>
+                        <div class="btn-group" ngbDropdown container="body">
+                            <button type="button" class="btn mode-btn" ngbDropdownToggle>
+                               <i class="fa-solid fa-tags"></i> {{ selectedRunTypeFilter }}
+                            </button>
+                            <ul ngbDropdownMenu>
+                                <li (click)="getRunsList(dagId, pageSize, 1, '', '', orderBy); selectedRunTypeFilter = 'All Run Types'"><a ngbDropdownItem>All Run Types</a></li>
+                                <li (click)="getRunsList(dagId, pageSize, 1, '', 'manual', orderBy); selectedRunTypeFilter = 'manual'"><a ngbDropdownItem>Manual</a></li>
+                                <li (click)="getRunsList(dagId, pageSize, 1, '', 'scheduled', orderBy); selectedRunTypeFilter = 'scheduled'"><a ngbDropdownItem>Scheduled</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            
+                <!-- Run History Table -->
+                <div class="p-1">
+                    <div class="table-responsive" style="overflow-x: hidden;">
+                        <table class="table align-middle text-start glass-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-dark">Run After</th>
+                                    <th class="text-dark">State</th>
+                                    <th class="text-dark">Run Type</th>
+                                    <th class="text-dark">Start Date</th>
+                                    <th class="text-dark">Duration</th>
+                                    <th class="text-dark">End Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let run of filteredRuns | paginate: { itemsPerPage: pageSize, currentPage: currentPage, totalItems: totalItems }">
+                                    <!-- Run After -->
+                                    <td class="fw-semibold text-primary">
+                                        <a class="link-primary fw-medium" style="cursor: pointer;" (click)="getTaskListOfRun(run.dag_id, run.dag_run_id)">
+                                            {{ run.run_after | date:'yyyy-MM-dd HH:mm:ss' }}
+                                        </a>
+                                    </td>
+                                
+                                    <!-- State -->
+                                    <td>
+                                        <span class="badge rounded-pill" [ngClass]="{
+                                            'bg-success-subtle text-success': run.state === 'success',
+                                            'bg-danger-subtle text-danger': run.state === 'failed',
+                                            'bg-info-subtle text-info': run.state === 'running'
+                                          }">
+                                            {{ run.state }}
+                                        </span>
+                                    </td>
+                                
+                                    <!-- Run Type -->
+                                    <td>{{ run.run_type }}</td>
+                                
+                                    <!-- Start Date -->
+                                    <td>{{ run.start_date | date:'yyyy-MM-dd HH:mm:ss' }}</td>
+                                
+                                    <!-- Duration -->
+                                    <td>{{ run.duration }}</td>
+                                
+                                    <!-- End Date -->
+                                    <td>{{ run.end_date ? (run.end_date | date:'yyyy-MM-dd HH:mm:ss') : 'N/A' }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <pagination-controls previousLabel="Prev" nextLabel="Next" (pageChange)="currentPage = $event; getRunsList(dagId, pageSize, currentPage, '', '', '-run_after')"></pagination-controls>
+                </div>
+            
+            </div>
+        </div>
+
+        <!-- Tasks -->
+        <div class="tab-pane fade" id="tasks" role="tabpanel" [ngClass]="activeTab === 'tasks' ? 'show active' : ''">
+            <div class="row g-4">
+                <!-- Left: Sub Tasks -->
+                <div [ngClass]="selectedTask ? 'col-md-6' : 'col-12'">
+                    <div class="glass-card p-3 h-100">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fa-solid fa-database text-primary me-2"></i>
+                            <h5 class="fw-bold mb-0 text-dark">{{ filteredTasks.length }} Tasks</h5>
+                        </div>
+                        <div class="left-tasks-list ps-1 pe-1">
+                            @for(task of filteredTasks; let i = $index; track i) {
+                            <div class="task-card p-2 mb-3" (click)="selectedTask = task; getLogsOfTaskInstance(task.dag_id, task.dag_run_id, task.task_id)">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <!-- Left: Icon + Task Name -->
+                                    <div class="d-flex align-items-center p-2">
+                                        <div class="d-flex align-items-center justify-content-center rounded-circle me-2"
+                                            style="width: 32px; height: 32px;" [ngClass]="{
+                                               'bg-success-subtle text-success': task.state === 'success',
+                                               'bg-danger-subtle text-danger': task.state === 'failed',
+                                               'bg-info-subtle text-info': task.state === 'running',
+                                               'bg-warning-subtle text-warning': task.state === 'upstream_failed',
+                                               'bg-secondary-subtle text-secondary': task.state === 'removed'
+                                             }">
+                                            <i *ngIf="task.state === 'success'" class="fa-regular fa-circle-check fs-5"></i>
+                                            <i *ngIf="task.state === 'failed'" class="fa-solid fa-circle-exclamation fs-5"></i>
+                                            <i *ngIf="task.state === 'running'" class="fe fe-activity fs-5"></i>
+                                            <i *ngIf="task.state === 'upstream_failed'" class="fa-solid fa-triangle-exclamation fs-5"></i>
+                                            <i *ngIf="task.state === 'removed'" class="fa-solid fa-ban fs-5"></i>
+                                        </div>
+                                
+                                        <h6 class="mb-0 fw-semibold text-dark" style="cursor: pointer;">{{ task.task_id }}</h6>
+                                    </div>
+                                
+                                    <!-- Right: Status + Button -->
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge status-badge rounded-5 me-2" [ngClass]="{
+                                            'bg-success text-success-subtle': task.state === 'success',
+                                            'bg-danger text-danger-subtle': task.state === 'failed',
+                                            'bg-info text-info-subtle': task.state === 'running',
+                                            'bg-warning text-warning-subtle': task.state === 'upstream_failed',
+                                            'bg-secondary text-light': task.state === 'removed'
+                                          }">
+                                            {{ task.state }}
+                                        </span>
+                                        <button class="btn btn-sm mode-btn rounded-5" (click)="selectedTask = task; getLogsOfTaskInstance(task.dag_id, task.dag_run_id, task.task_id)">view logs</button>
+                                        <!-- <button class="btn btn-outline-dark rounded-pill btn-sm view-btn">
+                                            View Details
+                                        </button> -->
+                                    </div>
+                                </div>
+                                
+                                <!-- Fields in row -->
+                                <div class="row small text-dark g-3">
+                                    <div class="col">
+                                        <p class="mb-0"><strong>Start:</strong></p>
+                                        <p class="mb-0">{{ (task.start_date | date:'yyyy-MM-dd HH:mm:ss') || 'N/A' }}</p>
+                                    </div>
+                                    <div class="col">
+                                        <p class="mb-0"><strong>End:</strong></p>
+                                        <p class="mb-0">{{ (task.end_date | date:'yyyy-MM-dd HH:mm:ss') || 'N/A' }}</p>
+                                    </div>
+                                    <div class="col">
+                                        <p class="mb-0"><strong>Duration:</strong></p>
+                                        <p class="mb-0">{{ task.duration ? (task.duration + 's') : 'N/A' }}</p>
+                                    </div>
+                                    <div *ngIf="!selectedTask && task?.miniChartData?.length ?? 0 > 0" class="col d-flex align-items-end justify-content-end" style="height:30px;">
+                                        <div *ngFor="let bar of task.miniChartData" class="me-1" [style.width.px]="5"
+                                            [style.height.%]="bar.heightPercentage" [style.max-height.%]="300"
+                                            [ngClass]="{
+                                                        'bg-success': bar.status === 'success',
+                                                        'bg-danger': bar.status === 'failed',
+                                                        'bg-info': bar.status === 'running',
+                                                        'bg-warning': bar.status === 'upstream_failed',
+                                                        'bg-secondary': bar.status === 'skipped'
+                                                     }" style="flex-basis: 6px;"
+                                            ngbTooltip="Status: {{bar.status}}, Duration: {{bar.duration}}sec" container="body"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            
+                <!-- Right: Quick Logs Preview -->
+                <div *ngIf="selectedTask" class="col-md-6">
+                    <div class="glass-card p-3 h-100">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fa-solid fa-clipboard-list text-danger me-2"></i>
+                                <h5 class="fw-bold mb-0 text-dark">Quick Logs Preview</h5>
+                            </div>
+                            <div class="d-flex">
+                                <button class="btn btn-primary rounded-5 me-2" [disabled]="!selectedTask" (click)="isFullLogView = true;"> <i class="fe fe-eye text-dark me-2"></i> View Full Logs</button>
+                                <button class="btn bg-danger-subtle rounded-5" (click)="selectedTask = null;"> <i class="fa-solid fa-circle-xmark text-danger"></i></button>
+                            </div>
+                        </div>
+
+                        <ng-container *ngIf="!selectedTask; else logsView">
+                            <div class="d-flex flex-column justify-content-center align-items-center text-center" style="margin-top: 35%;">
+                                <div class="empty-state">
+                                    <i class="fa-solid fa-circle-exclamation fa-3x mb-3" style="color: #6c757d;"></i>
+                                    <p class="fw-semibold text-muted">
+                                        Click on a task from the left panel to view its logs
+                                    </p>
+                                    <p class="text-muted small">
+                                        Available tasks:
+                                        <span class="fw-semibold">{{ availableTasks.join(', ') }}</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </ng-container>
+                        
+                        <!-- Actual Logs -->
+                        <ng-template #logsView>
+                            <app-etl-logger-view [logs]="filteredTaskInstanceLogs"></app-etl-logger-view>
+                        </ng-template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="isFullLogView" class="col-12">
+        <div class="glass-card p-3 h-100 d-flex flex-column">
+            <!-- Header -->
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-center">
+                    <i class="fa-solid fa-eye text-danger me-2"></i>
+                    <h5 class="fw-bold mb-0 text-dark">Logs</h5>
+                </div>
+            </div>
+    
+            <app-etl-logger-view [logs]="filteredTaskInstanceLogs"></app-etl-logger-view>
+        </div>
+    </div>
+</div>

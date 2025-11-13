@@ -1,0 +1,84 @@
+{
+    "dag_name": "mongodb_to_postgres_mapping",
+    "user_id": "29bc5cc3-42dd-44ed-b4a9-2483a3e46b32",
+    "username": "sahithi",
+    "parameters": [],
+    "sql_parameters": [],
+    "tasks": [
+        {
+            "type": "source_data_object",
+            "id": "SRC_mongodb_users",
+            "format": "database",
+            "hierarchy_id": "YOUR_MONGODB_CONNECTION_ID",
+            "path": "",
+            "source_table_name": "users_collection",
+            "attributes": [],
+            "source_attributes": [
+                [
+                    "_id",
+                    "ObjectId",
+                    "_id", 
+                    "string"
+                ],
+                [
+                    "username",
+                    "string",
+                    "username",
+                    "string"
+                ],
+                [
+                    "email",
+                    "string",
+                    "email",
+                    "string"
+                ],
+                [
+                    "age",
+                    "int",
+                    "age",
+                    "integer"
+                ],
+                [
+                    "profile",
+                    "object",
+                    "profile_data",
+                    "jsonb"
+                ],
+                [
+                    "created_at",
+                    "date",
+                    "created_at",
+                    "timestamp"
+                ]
+            ]
+        },
+        {
+            "type": "target_data_object",
+            "id": "TGT_postgres_users",
+            "format": "database",
+            "hierarchy_id": "YOUR_POSTGRES_CONNECTION_ID",
+            "path": "",
+            "target_table_name": "users_migrated",
+            "truncate": false,
+            "create": true,
+            "previous_task_id": "SRC_mongodb_users",
+            "previous_instance_id": "SRC_mongodb_users",
+            "attribute_mapper": [
+                ["user_id", "_id", "_id", "character varying"],
+                ["username", "username", "username", "character varying"],
+                ["email", "email", "email", "character varying"],
+                ["age", "age", "age", "integer"],
+                ["profile_json", "profile", "profile_data", "jsonb"],
+                ["created_at", "created_at", "created_at", "timestamp with time zone"]
+            ]
+        }
+    ],
+    "flow": [
+        [
+            "SRC_mongodb_users",
+            "TGT_postgres_users"
+        ]
+    ],
+    "dag_id": "mongodb_to_postgres_example",
+    "flow_name": "mongodb_to_postgres_mapping"
+}

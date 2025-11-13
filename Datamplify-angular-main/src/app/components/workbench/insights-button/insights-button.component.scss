@@ -1,0 +1,14 @@
+button.viewQueryImg {
+    border: none;
+    background: none;
+  }
+  .viewQueryImg img{
+    height: 30px;
+    width: 30px;
+    object-fit: cover;
+  }
+  .maind-flex{
+    display: flex;
+    justify-content: flex-end;  
+  }
+  .icon-outline { color: transparent; -webkit-text-stroke: 1px black;}

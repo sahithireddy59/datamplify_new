@@ -1,0 +1,84 @@
+{
+    "dag_name": "mysql_to_mongodb_mapping",
+    "user_id": "29bc5cc3-42dd-44ed-b4a9-2483a3e46b32",
+    "username": "sahithi",
+    "parameters": [],
+    "sql_parameters": [],
+    "tasks": [
+        {
+            "type": "source_data_object",
+            "id": "SRC_mysql_products",
+            "format": "database",
+            "hierarchy_id": "YOUR_MYSQL_CONNECTION_ID",
+            "path": "",
+            "source_table_name": "products",
+            "attributes": [],
+            "source_attributes": [
+                [
+                    "product_id",
+                    "int",
+                    "product_id", 
+                    "integer"
+                ],
+                [
+                    "product_name",
+                    "varchar(255)",
+                    "name",
+                    "string"
+                ],
+                [
+                    "price",
+                    "decimal(10,2)",
+                    "price",
+                    "double"
+                ],
+                [
+                    "category",
+                    "varchar(100)",
+                    "category",
+                    "string"
+                ],
+                [
+                    "description",
+                    "text",
+                    "description",
+                    "string"
+                ],
+                [
+                    "created_at",
+                    "datetime",
+                    "created_at",
+                    "date"
+                ]
+            ]
+        },
+        {
+            "type": "target_data_object",
+            "id": "TGT_mongodb_products",
+            "format": "database",
+            "hierarchy_id": "YOUR_MONGODB_CONNECTION_ID",
+            "path": "",
+            "target_table_name": "products_collection",
+            "truncate": false,
+            "create": true,
+            "previous_task_id": "SRC_mysql_products",
+            "previous_instance_id": "SRC_mysql_products",
+            "attribute_mapper": [
+                ["product_id", "product_id", "_id", "ObjectId"],
+                ["name", "product_name", "name", "string"],
+                ["price", "price", "price", "double"],
+                ["category", "category", "category", "string"],
+                ["description", "description", "description", "string"],
+                ["created_at", "created_at", "created_at", "date"]
+            ]
+        }
+    ],
+    "flow": [
+        [
+            "SRC_mysql_products",
+            "TGT_mongodb_products"
+        ]
+    ],
+    "dag_id": "mysql_to_mongodb_example",
+    "flow_name": "mysql_to_mongodb_mapping"
+}

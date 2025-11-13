@@ -1,0 +1,248 @@
+/* Glassmorphism Style */
+.container-background {
+    background: var(--custom-white);
+    min-height: 100vh;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    color: #fff;
+    padding-top: 70px;
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Glass Button */
+.glass-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 0.75rem;
+    backdrop-filter: blur(10px);
+    transition: all 0.2s ease;
+}
+
+.glass-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+    transform: scale(1.05);
+}
+
+/* Tabs */
+.glass-tabs .nav-link {
+    color: #555;
+    border-radius: 0.75rem;
+    margin-right: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.glass-tabs .nav-link.active {
+    background: rgba(0, 123, 255, 0.2);
+    color: #0d6efd;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+}
+
+.glass-tabs .nav-link:hover {
+    background: rgba(0, 123, 255, 0.1);
+    transform: scale(1.05);
+}
+
+/* Placeholder Charts */
+.chart-placeholder {
+    min-height: 400px;
+    max-height: 800px;
+}
+
+.custom-tabs {
+    // background: rgba(255, 255, 255, 0.08);
+    background: var(--glass-bar-bg-color);
+    border-radius: 2rem;
+    padding: 4px;
+    width: 100%;
+}
+
+/* Default inactive tabs */
+.tab-inactive {
+    background: transparent;
+    color: var(--default-text-color);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+/* Active tab look */
+.tab-active {
+    background: var(--primary-color);
+    border-radius: 2rem;
+    color: #fff;
+}
+
+.runs-select {
+    width: 23%;
+    height: 30px;
+    font-size: 60%;
+    background-color: #fff;
+      color: #000;
+}
+
+.left-overview-tasks {
+    max-height: 200px;
+    overflow: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+}
+
+.icon-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+.bounce-icon {
+    display: inline-block;
+    line-height: 1;
+    animation: bounce 1.8s infinite ease-in-out;
+}
+
+.mode-btn {
+    border-radius: 1rem;
+    background: linear-gradient(90deg, #3b82f6 0%, #9b25f2 70%);
+    color: #fff;
+    transition: transform .18s ease, box-shadow .18s ease;
+
+    &:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08),
+            0 6px 12px rgba(14, 165, 233, 0.15);
+        border: 1px solid #7c5cff !important;
+    }
+}
+
+.glass-table thead {
+  background: rgba(255, 255, 255, 0.1);
+}
+.glass-table tbody tr {
+  transition: all 0.2s ease;
+}
+.glass-table tbody tr:hover {
+//   background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(2px);
+  transform: scale(1.01);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* State Pills */
+// .state-pill {
+//   padding: 0.4rem 0.8rem;
+//   font-size: 0.8rem;
+//   text-transform: capitalize;
+//   transition: all 0.2s ease;
+// }
+.state-pill:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Remove Bootstrap's default border */
+.glass-table th,
+.glass-table td {
+  border-bottom: none !important;
+}
+
+/* Stronger border under header row */
+.glass-table thead tr {
+  border-bottom: 2px solid var(--default-border);
+}
+
+/* Subtle border for data rows */
+.glass-table tbody tr {
+  border-bottom: 1px solid var(--default-border);
+  transition: all 0.2s ease;
+}
+
+.dropdown-menu{
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.dropdown-item:hover{
+    background-color: var(--primary-color);
+    color: var(--default-text-color);
+    border-radius: 7px;
+}
+
+/* Glass effect card */
+.task-card {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 7px rgba(0, 0, 0, 0.12);
+  transition: all 0.3s ease;
+}
+
+/* Hover effect */
+.task-card:hover {
+  transform: scale(1.01);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+.left-tasks-list {
+    min-height: 400px;
+    max-height: 585px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+}
+
+/* Status badge (pill with subtle border) */
+.status-badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+}
+
+.icon-wrap{ border:1px solid rgba(14,165,233,.3); transition: transform .3s, box-shadow .3s; }
+
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #d5d4d4 37%, #f0f0f0 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease infinite;
+    border-radius: 4px;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -400px 0;
+    }
+
+    100% {
+        background-position: 400px 0;
+    }
+}

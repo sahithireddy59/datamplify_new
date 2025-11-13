@@ -1,0 +1,316 @@
+
+/*----- Switcher start -----*/
+
+/* Start::OffCanvas */
+.offcanvas {
+    background-color: $custom-white;
+  }
+  
+  .offcanvas-body {
+    flex-grow: 1;
+    padding: 1rem 1rem;
+    overflow-y: auto;
+  }
+  
+  /* End::OffCanvas */
+  
+  /* Start::Switcher */
+  #switcher-main-tab {
+    border-block-end: 0;
+  }
+  
+  #switcher-canvas {
+    width: 25rem;
+  
+    .offcanvas-body {
+      padding: 0 0 3.125rem 0;
+    }
+  
+    .canvas-footer {
+      padding: 0.75rem;
+      position: absolute;
+      inset-block-end: -3px;
+      width: 100%;
+      background-color: $custom-white;
+      // border-block-start: 1px dashed $border;
+      box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.5);
+    }
+  
+    #switcher-main-tab button.nav-link {
+      width: 50%;
+      border-radius: 0;
+      border-block-end: 1px solid $border;
+      color: $default-color;
+      font-weight: 600;
+  
+      &.active {
+        color: $primary;
+        background-color: rgba(var(--primary-rgb), 0.2);
+        border-color: transparent;
+      }
+  
+      &:hover {
+        border-color: transparent;
+      }
+    }
+  }
+  
+  .switcher-style {
+    padding: 0.875rem 1.563rem;
+  
+    h6 {
+      margin-block-end: 0.625rem;
+    }
+  }
+  
+  .switch-select {
+    .form-check-label {
+      font-size: 0.813rem;
+    }
+  
+    &.form-check {
+      margin-block-end: 0;
+      min-height: auto;
+    }
+  }
+  
+  .menu-image {
+    .bgimage-input {
+      width: 3.5rem;
+      height: 5.625rem;
+      border-radius: 5px;
+      border: 0;
+  
+      &.form-check-input:focus {
+        border-color: transparent;
+        box-shadow: 0 0 0 0.25rem $black-1;
+      }
+  
+      &.bg-img1 {
+        background-image: url(../images/menu-bg-images/bg-img1.jpg) !important;
+        background-position: center;
+        background-size: cover;
+        background-repeat: no-repeat;
+  
+        &.form-check-input:checked[type="radio"] {
+          background-color: none;
+        }
+      }
+  
+      &.bg-img2 {
+        background-image: url(../images/menu-bg-images/bg-img2.jpg) !important;
+        background-position: center;
+        background-size: cover;
+        background-repeat: no-repeat;
+  
+        &.form-check-input:checked[type="radio"] {
+          background-color: none;
+        }
+      }
+  
+      &.bg-img3 {
+        background-image: url(../images/menu-bg-images/bg-img3.jpg) !important;
+        background-position: center;
+        background-size: cover;
+        background-repeat: no-repeat;
+  
+        &.form-check-input:checked[type="radio"] {
+          background-color: none;
+        }
+      }
+  
+      &.bg-img4 {
+        background-image: url(../images/menu-bg-images/bg-img4.jpg) !important;
+        background-position: center;
+        background-size: cover;
+        background-repeat: no-repeat;
+  
+        &.form-check-input:checked[type="radio"] {
+          background-color: none;
+        }
+      }
+  
+      &.bg-img5 {
+        background-image: url(../images/menu-bg-images/bg-img5.jpg) !important;
+        background-position: center;
+        background-size: cover;
+        background-repeat: no-repeat;
+  
+        &.form-check-input:checked[type="radio"] {
+          background-color: none;
+        }
+      }
+    }
+  }
+  
+  .theme-colors {
+    &.switcher-style {
+      padding: 0.938rem 1.563rem;
+    }
+  
+    .switch-select {
+      .color-input {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 5px;
+        border: 0.188rem solid $border;
+  
+        &.color-white {
+          background-color: $white;
+  
+          &.form-check-input:checked[type="radio"] {
+            box-shadow: 0 0 0 0.1rem rgba(0, 0, 0, 0.05) !important;
+          }
+        }
+  
+        &.color-dark {
+          background-color: #000;
+  
+          &.form-check-input:checked[type="radio"] {
+            box-shadow: 0 0 0 0.1rem rgba(14, 16, 20, 0.2);
+          }
+        }
+  
+        &.color-primary {
+          background-color: $primary;
+  
+          &.form-check-input:checked[type="radio"] {
+            box-shadow: 0 0 0 0.1rem rgba(var(--primary-rgb), 0.2);
+          }
+        }
+  
+        &.color-primary-1 {
+          background-color: rgb(58, 88, 146);
+  
+          &.form-check-input:checked[type="radio"] {
+            box-shadow: 0 0 0 0.1rem rgba(58, 88, 146, 0.2);
+          }
+        }
+  
+        &.color-primary-2 {
+          background-color: rgb(92, 144, 163);
+  
+          &.form-check-input:checked[type="radio"] {
+            box-shadow: 0 0 0 0.1rem rgba(92, 144, 163, 0.2);
+          }
+        }
+  
+        &.color-primary-3 {
+          background-color: rgb(161, 90, 223);
+  
+          &.form-check-input:checked[type="radio"] {
+            box-shadow: 0 0 0 0.1rem rgba(161, 90, 223, 0.2);
+          }
+        }
+  
+        &.color-primary-4 {
+          background-color: rgb(78, 172, 76);
+  
+          &.form-check-input:checked[type="radio"] {
+            box-shadow: 0 0 0 0.1rem rgba(78, 172, 76, 0.2);
+          }
+        }
+  
+        &.color-primary-5 {
+          background-color: rgb(223, 90, 90);
+  
+          &.form-check-input:checked[type="radio"] {
+            box-shadow: 0 0 0 0.1rem rgba(223, 90, 90, 0.2);
+          }
+        }
+  
+        &.color-gradient {
+          background-image: linear-gradient(to right top, $primary, #6e72a8);
+  
+          &.form-check-input:checked[type="radio"] {
+            box-shadow: 0 0 0 0.1rem rgba(94, 118, 166, 0.2);
+          }
+        }
+  
+        &.color-transparent {
+          // background-image: url(../images/transparent.png) !important;
+  
+          &.form-check-input:checked[type="radio"] {
+            box-shadow: 0 0 0 0.1rem rgba(0, 0, 0, 0.05);
+          }
+        }
+  
+        &.color-bg-1 {
+          background-color: rgb(50, 62, 93);
+        }
+  
+        &.color-bg-2 {
+          background-color: rgb(8, 78, 115);
+        }
+  
+        &.color-bg-3 {
+          background-color: rgb(79, 50, 93);
+        }
+  
+        &.color-bg-4 {
+          background-color: rgb(24, 101, 51);
+        }
+  
+        &.color-bg-5 {
+          background-color: rgb(93, 50, 50);
+        }
+      }
+  
+      .form-check-input:checked[type="radio"] {
+        background-image: none;
+        box-shadow: 0 0 0 0.1rem rgba(var(--primary-rgb)) !important;;
+      }
+  
+      .form-check-input:focus {
+        box-shadow: none;
+      }
+  
+      .form-check-input:active {
+        filter: brightness(100%);
+      }
+    }
+  }
+  
+  .switcher-style-head {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-block-end: 0;
+    background: $light;
+    padding: 0.313rem 0.625rem;
+    color: $default-color;
+  
+    .switcher-style-description {
+      float: right;
+      font-size: 0.625rem;
+      background-color: rgba(var(--secondary-rgb), 0.2);
+      color: $secondary;
+      padding: 0.125rem 0.313rem;
+      border-radius: 5px;
+    }
+  }
+  
+  .theme-container-primary,
+  .theme-container-background {
+    button {
+      display: none;
+    }
+  }
+
+//   .theme-colors .switch-select .color-input.form-check-input:checked:before {
+//     position: absolute;
+//     content: "\ea5e";
+//     font-family: tabler-icons!important;
+//     color: rgb(var(--success-rgb));
+//     width: 100%;
+//     height: 100%;
+//     display: flex;
+//     align-items: center;
+//     justify-content: center;
+//     font-size: 1.35rem;
+//     font-weight: 600;
+// }
+[loader=disable] #loader {
+  display: none;
+}
+
+/*----- Switcher end -----*/

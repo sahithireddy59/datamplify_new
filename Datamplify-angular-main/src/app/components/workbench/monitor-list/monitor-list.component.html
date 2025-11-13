@@ -1,0 +1,279 @@
+<app-page-header title="Monitors" moduleId="monitorList" title1="Home" activeitem="Monitors"></app-page-header>
+
+
+<div class="main-container container-fluid TopHeader container-background p-0">
+    <div class="card mb-0 rounded-0" style="min-height: 466px;">
+        <div class="card-body d-flex flex-column" style="min-height: 100vh;">
+            <div *ngIf="!isLoading" class="row mb-3">
+                <div class="col-4" *ngFor="let card of kpiCards">
+                    <div class="card glass-card mb-0 rounded-4 border-0">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="fw-600 mb-1">{{ card.title }}</div>
+                                    <h4 [ngClass]="card.valueClass" class="fw-bold">{{ card.value }}</h4>
+                                    <div *ngIf="card.subText" [ngClass]="card.subTextClass" class="mt-1">{{ card.subText
+                                        }}</div>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <span class="p-2 rounded-3 d-flex align-items-center justify-content-center"
+                                        [ngClass]="card.iconBg" style="width: 46px; height: 46px;">
+                                        <i [ngClass]="card.icon"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <ng-container *ngIf="isLoading">
+                <div class="row mb-4">
+                    <div class="col-4" *ngFor="let sk of kpiSkeletons">
+                        <div class="card glass-card mb-0 rounded-4 border-0">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+            
+                                    <!-- Left side: Title, Value, Subtext -->
+                                    <div>
+                                        <div class="skeleton mb-2" style="width: 100px; height: 14px;"></div>
+                                        <div class="skeleton mb-2" style="width: 60px; height: 24px;"></div>
+                                        <div class="skeleton" style="width: 80px; height: 12px;"></div>
+                                    </div>
+            
+                                    <!-- Right side: Icon placeholder -->
+                                    <div class="d-flex align-items-center">
+                                        <div class="skeleton rounded-3" style="width: 46px; height: 46px;"></div>
+                                    </div>
+            
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </ng-container>
+
+            <div class="card glass-card mb-0 rounded-4 border-0 mb-3" style="height: 70px;">
+                <div class="d-flex justify-content-between align-items-center px-2 h-100">
+            
+                    <!-- Search bar -->
+                    <!-- <div class="flex-grow-1 position-relative"> -->
+                        <div class="d-flex align-items-center glass-bar rounded-pill w-100">
+                            <i class="fa fa-search ms-3 text-dark"></i>
+                            <input type="text" placeholder="Search Monitor..." [(ngModel)]="search"
+                                (keyup.enter)="page = 1; getMonitorList()"
+                                class="form-control border-0 bg-transparent px-3 py-2 text-dark" />
+                        </div>
+                    <!-- </div> -->
+            
+                    <!-- Grid / List toggle -->
+                    <div class="d-flex ms-3">
+                        <button type="button" ngbTooltip="Grid View" triggers="hover" (click)="gridView = true"
+                            class="btn btn-icon toggle-btn me-2" [ngClass]="gridView ? 'active' : ''">
+                            <i class="fa fa-th-large"></i>
+                        </button>
+            
+                        <button type="button" ngbTooltip="List View" triggers="hover" (click)="gridView = false"
+                            class="btn btn-icon toggle-btn" [ngClass]="!gridView ? 'active' : ''">
+                            <i class="fa fa-th-list"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-grow-1">
+                @if(!gridView){
+                <div *ngIf="!isLoading" class="list-group">
+                    <div class="list-group-item p-3 mb-2 glass-card rounded-4"
+                        *ngFor="let monitor of monitorsList | paginate : { itemsPerPage: pageSize, currentPage: page, totalItems: totalItems }; let index = index">
+            
+                        <div class="d-flex align-items-center">
+            
+                            <!-- Left: Icon + Monitor Title -->
+                            <div class="d-flex align-items-center flex-shrink-0" style="width: 60%;">
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2 icon-bounce"
+                                    style="width: 36px; height: 36px; font-weight: 600;">
+                                    {{ monitor.name.charAt(0).toUpperCase() }}
+                                </div>
+                                <h6 [ngbTooltip]="monitor.name" class="fw-semibold mb-0 text-truncate"
+                                    style="max-width: 200px; cursor: pointer !important" (click)="goToMonitor(monitor.source_id)">
+                                    {{ monitor.name.length > 18 ? (monitor.name | slice: 0: 16) + '...' : monitor.name }}
+                                </h6>
+                            </div>
+            
+                            <!-- Middle: Latest Run (fixed width column) -->
+                            <div class="text-muted small flex-shrink-0" style="width: 180px;">
+                                <span class="fw-semibold">Latest Run:</span>
+                                <span>{{ monitor.started_at | date: 'mediumDate' }}</span>
+                            </div>
+            
+                            <!-- Right: Badges (takes remaining space, right-aligned) -->
+                            <div class="ms-auto d-flex gap-2">
+                                <span class="badge rounded-pill flex-shrink-0 text-center px-3" style="width: 90px;"
+                                    [ngClass]="monitor.source_type === 'flowboard' ? 'bg-info-subtle text-info' : 'bg-warning-subtle text-warning'">
+                                    {{ monitor.source_type === 'flowboard' ? 'Flowboard' : 'Taskplan' }}
+                                </span>
+                                <span class="badge rounded-pill flex-shrink-0 text-center px-3" style="width: 80px;"
+                                    [ngClass]="monitor.status === 'success' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'">
+                                    {{ monitor.status | titlecase }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <ng-container *ngIf="isLoading">
+                    <div class="list-group">
+                        <div class="list-group-item p-3 mb-2 glass-card rounded-4" *ngFor="let sk of listSkeletons">
+                            <div class="d-flex align-items-center">
+            
+                                <!-- Left: Icon + Title -->
+                                <div class="d-flex align-items-center flex-shrink-0" style="width: 60%;">
+                                    <div class="skeleton rounded-circle me-2" style="width: 36px; height: 36px;"></div>
+                                    <div class="skeleton" style="width: 200px; height: 16px;"></div>
+                                </div>
+            
+                                <!-- Middle: Latest Run (fixed width column) -->
+                                <div class="flex-shrink-0" style="width: 180px;">
+                                    <div class="skeleton" style="width: 140px; height: 14px;"></div>
+                                </div>
+            
+                                <!-- Right: Badges -->
+                                <div class="ms-auto d-flex gap-2">
+                                    <div class="skeleton rounded-pill flex-shrink-0" style="width: 90px; height: 22px;"></div>
+                                    <div class="skeleton rounded-pill flex-shrink-0" style="width: 80px; height: 22px;"></div>
+                                </div>
+            
+                            </div>
+                        </div>
+                    </div>
+                </ng-container>
+                }
+                @if(gridView){
+                <div *ngIf="!isLoading" class="row g-4">
+                    <div class="col-12 col-md-6 col-lg-4"
+                        *ngFor="let monitor of monitorsList | paginate : { itemsPerPage: pageSize, currentPage: page, totalItems: totalItems }; let index = index">
+                        <div class="glass-card h-100">
+                            <div class="p-4">
+                                <div class="d-flex align-items-start justify-content-between mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <!-- <div class="fs-2 me-3 icon-bounce">{{ connection.icon }}</div> -->
+                                        <div class="rounded-circle bg-primary text-white icon-bounce d-flex align-items-center justify-content-center me-3"
+                                            style="width: 40px; height: 40px; font-size: 18px; font-weight: 600;">
+                                            {{ monitor.name.charAt(0).toUpperCase() }}
+                                        </div>
+                                        <div>
+                                            <h6 [ngbTooltip]="monitor.name" class="fw-semibold mb-0 text-truncate" style="cursor: pointer !important;"
+                                                (click)="goToMonitor(monitor.source_id)">{{ monitor.name.length > 18 ? (monitor.name
+                                                | slice: 0: 16) + '...' : monitor.name }}</h6>
+                                            <p class="text-muted small mb-0">{{ monitor.source_type === 'flowboard' ? 'Flowboard' :
+                                                'Taskplan' }}</p>
+                                            <!-- <div class="d-flex gap-2">
+                                                        <span class="badge rounded-pill mt-1" [ngClass]="monitor.source_type === 'flowboard' ? 'bg-info' : 'bg-warning'">
+                                                            {{ monitor.source_type === 'flowboard' ? 'Flowboard' : 'Taskplan' }}
+                                                        </span>
+                                                    </div> -->
+                                        </div>
+                                    </div>
+                                    <!-- <button class="btn btn-sm ">
+                                                <i class="bi bi-gear"></i>
+                                            </button> -->
+                                    <span class="badge rounded-pill"
+                                        [ngClass]="monitor.status === 'success' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'">
+                                        {{ monitor.status | titlecase }}
+                                    </span>
+                                </div>
+            
+                                <!-- <div class="d-flex align-items-center justify-content-between mb-3">
+                                                                    <span class="status-badge"><i class="bi bi-wifi me-1"></i>{{ connection.status }}</span>
+                                                                    <span class="time-text"><i class="bi bi-clock me-1"></i>{{ connection.lastSync }}</span>
+                                                                </div> -->
+            
+                                <!-- <p class="large mb-0">{{ connection.description }}</p> -->
+            
+                                <!-- <div class="d-flex align-items-center justify-content-between">
+                                            <span class="small text-muted"> Scheduled On</span>
+                                            <span class="small  text-capitalize"> {{ monitor.schedule | date: 'mediumDate' }} </span>
+                                        </div> -->
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <span class="small text-muted">Latest Run</span>
+                                    <span class="small text-capitalize">{{ monitor.started_at | date: 'mediumDate'}}</span>
+                                </div>
+                                <!-- <div class="d-flex align-items-center justify-content-between">
+                                            <span class="small text-muted">Next Run</span>
+                                            <span class="small text-capitalize">{{ monitor.next_run | date: 'mediumDate' }}</span>
+                                        </div> -->
+                            </div>
+            
+                        </div>
+                    </div>
+                </div>
+                <ng-container *ngIf="isLoading">
+                    <div class="row g-4">
+                        <div class="col-12 col-md-6 col-lg-4" *ngFor="let sk of listSkeletons">
+                            <div class="glass-card h-100">
+                                <div class="p-4">
+            
+                                    <!-- Header -->
+                                    <div class="d-flex align-items-start justify-content-between mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="skeleton rounded-circle me-3" style="width: 40px; height: 40px;"></div>
+                                            <div>
+                                                <div class="skeleton mb-2" style="width: 120px; height: 14px;"></div>
+                                                <div class="skeleton rounded-pill" style="width: 70px; height: 20px;"></div>
+                                            </div>
+                                        </div>
+                                        <div class="skeleton rounded-pill" style="width: 60px; height: 20px;"></div>
+                                    </div>
+            
+                                    <!-- Body -->
+                                    <!-- <div class="skeleton mb-2" style="width: 100%; height: 10px;"></div> -->
+                                    <!-- <div class="skeleton mb-2" style="width: 90%; height: 10px;"></div>
+                                            <div class="skeleton mb-3" style="width: 95%; height: 10px;"></div> -->
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <div class="skeleton" style="width: 60px; height: 10px;"></div>
+                                        <div class="skeleton" style="width: 100px; height: 10px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </ng-container>
+                }
+                @if(monitorsList.length === 0 && !isLoading){
+                <div class="d-flex flex-column align-items-center justify-content-center py-5 text-center text-muted">
+                    <!-- Icon -->
+                    <div class="mb-3">
+                        <div class="rounded-circle bg-info-subtle d-flex align-items-center justify-content-center"
+                            style="width: 56px; height: 56px;">
+                            <i class="fe fe-monitor text-info fs-3"></i>
+                        </div>
+                    </div>
+            
+                    <!-- Message -->
+                    <h5 class="fw-semibold text-dark mb-1">No Monitor Found</h5>
+                    <!-- <p class="small mb-0" style="max-width: 360px;">
+                        You haven’t created any Monitor yet. Start by creating a new one to manage your tasks efficiently.
+                    </p> -->
+                </div>
+                }
+            </div>
+
+            <div *ngIf="monitorsList.length > 0" class="d-flex align-items-center justify-content-between mt-2">
+                <div>
+                    <pagination-controls previousLabel="Prev" nextLabel="Next"
+                        (pageChange)="page = $event; getMonitorList()"></pagination-controls>
+                </div>
+                <div>
+                    <!-- <div class="pagination-count"> -->
+                    <select [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()" class="form-select form-select-sm cursor"
+                        [disabled]="!pageSize">
+                        <option class="select-options" value="9"> 9</option>
+                        <option class="select-options" [disabled]="!(totalItems > 9)" value="18"> 18</option>
+                        <option class="select-options" [disabled]="!(totalItems > 18)" value="27"> 27</option>
+                    </select>
+                    <!-- </div> -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
