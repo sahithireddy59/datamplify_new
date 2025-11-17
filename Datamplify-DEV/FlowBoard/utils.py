@@ -20,10 +20,22 @@ from Airflow.utils import replace_params_in_json
 from sqlalchemy.exc import SQLAlchemyError
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,  # Changed to DEBUG for more verbose logging
     format='[%(asctime)s] %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Update Strategy Constants (similar to Informatica)
+UPDATE_STRATEGIES = {
+    'INSERT': 'insert',           # Insert new records only
+    'UPDATE': 'update',           # Update existing records only  
+    'UPSERT': 'upsert',           # Insert new, update existing (merge)
+    'DELETE': 'delete',           # Delete matching records
+    'DD_UPDATE': 'dd_update',
+    'TRUNCATE_INSERT': 'truncate_insert',  # Truncate table then insert
+    'REPLACE': 'replace',         # Drop and recreate table
+    'APPEND': 'append'            # Append to existing data
+}
 
 
 def xcom_pull(ti, task_id, value):
@@ -371,6 +383,7 @@ def Extract_from_database(
     source_attributes,
     attributes,
     target_hierarchy_id,
+    target_table_name=None,
     **kwargs
 ):
     """
@@ -405,10 +418,13 @@ def Extract_from_database(
 
     # Handle MongoDB separately as it doesn't use SQL/DuckDB
     if source_db_type == 'MONGODB' or target_db_type == 'MONGODB':
+        logger.info(f"[MongoDB Detection] Source DB Type: {source_db_type}, Target DB Type: {target_db_type}")
+        logger.info(f"[MongoDB Detection] Received target_table_name parameter: {target_table_name}")
+        
         return Extract_from_mongodb(
             hierarchy_id, user_id, table_name, task_id, dag_id,
             source_attributes, attributes, target_hierarchy_id,
-            source_db_type, target_db_type, **kwargs
+            source_db_type, target_db_type, target_table_name, **kwargs
         )
 
     # Attach source database with correct type (SQL databases only)
@@ -508,6 +524,7 @@ def Extract_from_mongodb(
     target_hierarchy_id,
     source_db_type,
     target_db_type,
+    target_table_name=None,
     **kwargs
 ):
     """
@@ -520,14 +537,28 @@ def Extract_from_mongodb(
     import time
 
     unix_suffix = int(time.time())
-    target_table_name = f"extracted_{task_id}_{unix_suffix}"
+    temp_table_name = f"extracted_{task_id}_{unix_suffix}"
 
-    if source_db_type == 'MONGODB':
+    if source_db_type == 'MONGODB' and target_db_type == 'MONGODB':
+        # For MongoDB to MongoDB transfer, use the actual target table name
+        # If target_table_name is provided, use it; otherwise fall back to temp name
+        actual_target_table = target_table_name or temp_table_name
+        logger.info(f"[Extract_from_mongodb] Received target_table_name parameter: {target_table_name}")
+        logger.info(f"[Extract_from_mongodb] Using actual_target_table: {actual_target_table}")
+        logger.info(f"[Extract_from_mongodb] MongoDB to MongoDB transfer: source={table_name}, target={actual_target_table}")
+        
+        return extract_mongodb_to_mongodb(
+            hierarchy_id, user_id, table_name, task_id, dag_id,
+            source_attributes, attributes, target_hierarchy_id,
+            actual_target_table, **kwargs
+        )
+    
+    elif source_db_type == 'MONGODB':
         # Extract FROM MongoDB TO SQL Database/CSV
         return extract_from_mongodb_to_sql(
             hierarchy_id, user_id, table_name, task_id, dag_id,
             source_attributes, attributes, target_hierarchy_id,
-            target_db_type, target_table_name, **kwargs
+            target_db_type, temp_table_name, **kwargs
         )
 
     elif target_db_type == 'MONGODB':
@@ -535,7 +566,7 @@ def Extract_from_mongodb(
         return load_sql_to_mongodb(
             hierarchy_id, user_id, table_name, task_id, dag_id,
             source_attributes, attributes, target_hierarchy_id,
-            source_db_type, target_table_name, **kwargs
+            source_db_type, temp_table_name, **kwargs
         )
 
     else:
@@ -557,6 +588,156 @@ def flatten_document(doc, parent_key='', sep='_'):
         else:
             items.append((new_key, v))
     return dict(items)
+
+def extract_mongodb_to_mongodb(
+    hierarchy_id,
+    user_id,
+    table_name,
+    task_id,
+    dag_id,
+    source_attributes,
+    attributes,
+    target_hierarchy_id,
+    target_table_name,
+    **kwargs
+):
+    """
+    Direct MongoDB to MongoDB transfer - copies data from source MongoDB collection to target MongoDB collection.
+    This avoids the need for intermediate SQL temp tables.
+    """
+    from Connections.utils import generate_engine
+    from pymongo import MongoClient
+    from pymongo.database import Database
+    from pymongo.collection import Collection
+    import logging
+
+    logger = logging.getLogger(__name__)
+    ti = kwargs.get('ti')
+
+    try:
+        logger.info(f"[MongoDB→MongoDB] Starting direct transfer from {table_name} to {target_table_name}")
+
+        # Get source MongoDB connection
+        source_engine_data = generate_engine(hierarchy_id, user_id)
+        source_mongo_engine = source_engine_data["engine"]
+
+        # Get target MongoDB connection  
+        target_engine_data = generate_engine(target_hierarchy_id, user_id)
+        target_mongo_engine = target_engine_data["engine"]
+
+        # Resolve source collection
+        source_collection = None
+        if isinstance(source_mongo_engine, Collection):
+            source_collection = source_mongo_engine
+        elif isinstance(source_mongo_engine, Database):
+            source_collection = source_mongo_engine[table_name]
+        elif isinstance(source_mongo_engine, MongoClient):
+            if '.' in table_name:
+                db_name, coll_name = table_name.split('.', 1)
+            else:
+                db_name = 'default'
+                coll_name = table_name
+            source_collection = source_mongo_engine[db_name][coll_name]
+        else:
+            raise TypeError(f"Unsupported source MongoDB engine type: {type(source_mongo_engine)}")
+
+        # Resolve target collection
+        target_collection = None
+        if isinstance(target_mongo_engine, Collection):
+            target_collection = target_mongo_engine
+        elif isinstance(target_mongo_engine, Database):
+            target_collection = target_mongo_engine[target_table_name]
+        elif isinstance(target_mongo_engine, MongoClient):
+            if '.' in target_table_name:
+                db_name, coll_name = target_table_name.split('.', 1)
+            else:
+                db_name = 'default'
+                coll_name = target_table_name
+            target_collection = target_mongo_engine[db_name][coll_name]
+        else:
+            raise TypeError(f"Unsupported target MongoDB engine type: {type(target_mongo_engine)}")
+
+        logger.info(f"[MongoDB→MongoDB] Source: {source_collection.full_name}")
+        logger.info(f"[MongoDB→MongoDB] Target: {target_collection.full_name}")
+
+        # Build projection based on source_attributes
+        projection = None
+        if source_attributes:
+            proj = {}
+            for attr in source_attributes:
+                if isinstance(attr, (list, tuple)) and len(attr) > 0:
+                    field_name = attr[0]
+                else:
+                    field_name = attr
+                proj[str(field_name)] = 1
+            projection = proj
+
+        # Read from source collection
+        cursor = source_collection.find({}, projection)
+        documents = list(cursor)
+        
+        logger.info(f"[MongoDB→MongoDB] Found {len(documents)} documents in source collection")
+
+        if not documents:
+            logger.warning(f"[MongoDB→MongoDB] No documents found in source collection {source_collection.full_name}")
+            result = {
+                'status': 200,
+                'target_table': target_table_name,
+                'query': f'-- No data found in MongoDB collection {table_name}'
+            }
+            if ti:
+                ti.xcom_push(key='return_value', value=result)
+            return result
+
+        # Apply attribute mapping if specified
+        if attributes:
+            for doc in documents:
+                for attr in attributes:
+                    if isinstance(attr, (list, tuple)) and len(attr) >= 3:
+                        source_field, target_field = attr[0], attr[2]
+                        if source_field in doc and source_field != target_field:
+                            doc[target_field] = doc.pop(source_field)
+
+        # Clear target collection (optional - could be configurable)
+        # target_collection.delete_many({})
+
+        # Insert documents into target collection in batches
+        batch_size = 1000
+        total_inserted = 0
+        
+        for i in range(0, len(documents), batch_size):
+            batch = documents[i:i + batch_size]
+            if batch:
+                target_collection.insert_many(batch)
+                total_inserted += len(batch)
+                logger.info(f"[MongoDB→MongoDB] Inserted batch {i//batch_size + 1}: {len(batch)} documents")
+
+        logger.info(f"[MongoDB→MongoDB] Successfully transferred {total_inserted} documents")
+
+        result = {
+            'status': 200,
+            'target_table': target_table_name,
+            'query': f'-- Transferred {total_inserted} documents from {source_collection.full_name} to {target_collection.full_name}'
+        }
+
+        if ti:
+            ti.xcom_push(key='return_value', value=result)
+            logger.info(f"[MongoDB→MongoDB] Pushed result to XCom for task {task_id}")
+
+        return result
+
+    except Exception as e:
+        error_msg = f"Error in extract_mongodb_to_mongodb: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        result = {
+            'status': 500,
+            'message': error_msg,
+            'target_table': target_table_name
+        }
+        if ti:
+            ti.xcom_push(key='return_value', value=result)
+        return result
+
 
 def extract_from_mongodb_to_sql(
     hierarchy_id,
@@ -776,7 +957,6 @@ def extract_from_mongodb_to_sql(
         return result_dict
 
 
-
 def load_sql_to_mongodb(
     hierarchy_id,
     user_id,
@@ -791,248 +971,186 @@ def load_sql_to_mongodb(
     **kwargs
 ):
     """
-    Load data FROM SQL Database (MySQL/PostgreSQL) TO MongoDB
+    Load data FROM SQL Database (MySQL/PostgreSQL) TO MongoDB.
+    Uses DuckDB to read from SQL and pymongo to insert into Mongo.
+
+    Important fix:
+    - Fully qualifies Postgres table as "schema"."table" to avoid
+      'relation ... does not exist' errors.
     """
     from Connections.utils import generate_engine
     from pymongo import MongoClient
     import pandas as pd
     import duckdb
+    import logging
+
+    logger = logging.getLogger(__name__)
 
     # Get source SQL database connection
     source_engine_data = generate_engine(hierarchy_id, user_id)
-    source_engine = source_engine_data['engine']
-    source_schema = source_engine_data['schema']
+    source_engine = source_engine_data["engine"]
+    source_schema = source_engine_data.get("schema", "public")
 
-    # Get MongoDB connection
+    # Get MongoDB connection (target)
     target_engine_data = generate_engine(target_hierarchy_id, user_id)
-    mongo_client = target_engine_data['engine']
+    mongo_client = target_engine_data["engine"]  # should be MongoClient/Database/Collection
 
     # Extract data from SQL database using DuckDB
-    conn = duckdb.connect(database=':memory:')
+    conn = duckdb.connect(database=":memory:")
 
+    # Attach source database
     source_conn_str = str(source_engine.url)
-    if source_db_type == 'MYSQL':
+    if source_db_type == "MYSQL":
         conn.sql(f"ATTACH '{source_conn_str}' AS source_db (TYPE MYSQL);")
-        query_function = 'mysql_query'
-    elif source_db_type == 'POSTGRESQL':
-        conn.sql(f"ATTACH '{source_conn_str}' AS source_db (TYPE POSTGRES, SCHEMA '{source_schema}');")
-        query_function = 'postgres_query'
+        query_function = "mysql_query"
+        # For MySQL the DB is already in the connection, so table_name is fine
+        if "." in table_name:
+            full_table_name = table_name  # db.table or schema.table
+        else:
+            full_table_name = table_name
+    elif source_db_type == "POSTGRESQL":
+        conn.sql(
+            f"ATTACH '{source_conn_str}' AS source_db (TYPE POSTGRES, SCHEMA '{source_schema}');"
+        )
+        query_function = "postgres_query"
+
+        # If table_name already has a schema, quote both parts
+        if "." in table_name:
+            sch, tbl = table_name.split(".", 1)
+            full_table_name = f'"{sch}"."{tbl}"'
+        else:
+            # Use the schema from generate_engine
+            full_table_name = f'"{source_schema}"."{table_name}"'
     else:
         raise ValueError(f"Unsupported source database type: {source_db_type}")
 
+    # Build SQL query
     if source_attributes:
-        columns = [attr[0] if isinstance(attr, list) else attr for attr in source_attributes]
-        column_list = ', '.join(columns)
+        # source_attributes like [["empid", ...], ["emp", ...], ...]
+        columns = [
+            (attr[0] if isinstance(attr, (list, tuple)) else attr)
+            for attr in source_attributes
+        ]
+        column_list = ", ".join(columns)
     else:
-        column_list = '*'
+        column_list = "*"
 
-    sql_query = f"SELECT {column_list} FROM {table_name}"
+    sql_query = f"SELECT {column_list} FROM {full_table_name}"
+    logger.info(f"[SQL→Mongo] Executing source query: {sql_query}")
 
-    result = conn.sql(f"SELECT * FROM {query_function}('source_db', $${sql_query}$$)")
+    try:
+        result = conn.sql(
+            f"SELECT * FROM {query_function}('source_db', $${sql_query}$$)"
+        )
+    except Exception as e:
+        logger.error(
+            f"[SQL→Mongo] Error executing query on source_db: {sql_query} | {e}",
+            exc_info=True,
+        )
+        # Optional: list tables for debugging
+        try:
+            if source_db_type == "POSTGRESQL":
+                debug_res = conn.sql(
+                    f"SELECT * FROM {query_function}('source_db', $$"
+                    f"SELECT table_schema, table_name FROM information_schema.tables "
+                    f"WHERE table_type='BASE TABLE'$$)"
+                )
+                logger.info("[SQL→Mongo] Available tables:\n%s", debug_res.df())
+            elif source_db_type == "MYSQL":
+                debug_res = conn.sql(
+                    f"SELECT * FROM {query_function}('source_db', $$SHOW TABLES$$)"
+                )
+                logger.info("[SQL→Mongo] Available tables:\n%s", debug_res.df())
+        except Exception as e2:
+            logger.warning(
+                f"[SQL→Mongo] Failed to list tables for debugging: {e2}", exc_info=True
+            )
+
+        return {
+            "status": 500,
+            "target_table": target_table_name,
+            "query": f"-- Error executing source query: {sql_query}",
+            "message": str(e),
+        }
+
     df = result.df()
 
     if df.empty:
-        logger.info("No data found in source SQL table")
+        logger.info(
+            f"[SQL→Mongo] No data found in source SQL table/query: {full_table_name}"
+        )
         return {
-            'status': 200,
-            'target_table': target_table_name,
-            'query': f'-- No data found in SQL table {table_name}'
+            "status": 200,
+            "target_table": target_table_name,
+            "query": f"-- No data found in SQL table {full_table_name}",
         }
 
+    # Apply attribute mapping if specified (optional)
     if attributes:
         mapped_columns = {}
         for attr in attributes:
-            if isinstance(attr, list) and len(attr) >= 3:
+            # support formats like [source_col, dtype, target_col]
+            if isinstance(attr, (list, tuple)) and len(attr) >= 3:
                 source_col, target_col = attr[0], attr[2]
                 if source_col in df.columns:
                     mapped_columns[source_col] = target_col
         if mapped_columns:
             df = df.rename(columns=mapped_columns)
 
-    documents = df.to_dict('records')
+    # Convert DataFrame to MongoDB documents
+    documents = df.to_dict("records")
 
-    db_name = target_table_name.split('.')[0] if '.' in target_table_name else 'default'
-    collection_name = target_table_name.split('.')[1] if '.' in target_table_name else target_table_name
+    # Decide Mongo database + collection
+    # If user passes something like "db.collection" as target_table_name, reuse that
+    if "." in target_table_name:
+        db_name, collection_name = target_table_name.split(".", 1)
+    else:
+        db_name = "default"
+        collection_name = target_table_name
 
-    db = mongo_client[db_name]
-    collection = db[collection_name]
+    # Resolve mongo_client: it can be MongoClient, Database, or Collection
+    from pymongo import MongoClient
+    from pymongo.database import Database
+    from pymongo.collection import Collection
 
+    if isinstance(mongo_client, Collection):
+        # If a collection is directly returned, ignore db_name/collection_name and use it
+        collection = mongo_client
+    elif isinstance(mongo_client, Database):
+        collection = mongo_client[collection_name]
+    elif isinstance(mongo_client, MongoClient):
+        db = mongo_client[db_name]
+        collection = db[collection_name]
+    else:
+        raise TypeError(
+            f"Unsupported Mongo engine type: {type(mongo_client)} "
+            "(expected MongoClient, Database, or Collection)"
+        )
+
+    # Insert documents in batches
     batch_size = 1000
     total_inserted = 0
+    for i in range(0, len(documents), batch_size):
+        batch = documents[i : i + batch_size]
+        if batch:
+            collection.insert_many(batch)
+            total_inserted += len(batch)
 
-    for batch in [documents[i:i + batch_size] for i in range(0, len(documents), batch_size)]:
-        collection.insert_many(batch)
-        total_inserted += len(batch)
-
-    logger.info(f"Inserted {total_inserted} documents into MongoDB collection {collection_name}")
+    logger.info(
+        f"[SQL→Mongo] Inserted {total_inserted} documents into MongoDB collection "
+        f"{collection.full_name}"
+    )
 
     return {
-        'status': 200,
-        'target_table': target_table_name,
-        'query': f'-- Loaded {len(documents)} documents from SQL table {table_name} to MongoDB collection {collection_name}'
+        "status": 200,
+        "target_table": target_table_name,
+        "query": (
+            f"-- Loaded {total_inserted} rows from SQL table {full_table_name} "
+            f"to Mongo collection {collection.full_name}"
+        ),
     }
 
 
-def Load_into_database(
-    hierarchy_id,
-    user_id,
-    dag_id,
-    truncate,
-    create,
-    format,
-    previous_id,
-    instance_id,
-    target_table_name,
-    attribute_mapper,
-    sources,
-    **kwargs
-):
-    """
-    Load data into target database from the previous task's output
-    """
-    from Connections.utils import generate_engine
-    from Connections.models import Connections, DatabaseConnections
-    import duckdb
-    from sqlalchemy import text, inspect
-    import logging
-
-    logger = logging.getLogger(__name__)
-
-    ti = kwargs.get('ti')
-
-    def _xcom_pull_table_name(ti, task_id, key):
-        value = ti.xcom_pull(task_ids=task_id, key=key)
-        if value and isinstance(value, dict) and 'target_table' in value:
-            return value['target_table']
-        return None
-
-    try:
-        # Get database connection details
-        engine_data = generate_engine(hierarchy_id, user_id=user_id)
-        engine = engine_data['engine']
-        schema = engine_data['schema']
-
-        # Get database type (PostgreSQL, MySQL, etc.)
-        conn_obj = Connections.objects.get(id=hierarchy_id, user_id=user_id)
-        db_conn = DatabaseConnections.objects.get(id=conn_obj.table_id)
-        db_type = db_conn.server_type.name.upper()
-
-        # Get the source table name from the previous task's XCom
-        extract_table_name = None
-        for source_task_id, _ in sources:
-            extract_table_name = _xcom_pull_table_name(ti, source_task_id, 'return_value')
-            if extract_table_name:
-                break
-
-        if not extract_table_name:
-            raise ValueError(f"No valid table name found in XCom for sources: {sources}")
-
-        with engine.begin() as connection:
-            inspector = inspect(engine)
-            table_exists = inspector.has_table(extract_table_name, schema=schema)
-
-            if not table_exists:
-                all_schemas = ['public', schema, 'information_schema']
-                found_schema = None
-
-                for check_schema in all_schemas:
-                    if inspector.has_table(extract_table_name, schema=check_schema):
-                        found_schema = check_schema
-                        break
-
-                if found_schema:
-                    logger.warning(
-                        f"Table {extract_table_name} found in schema '{found_schema}' instead of '{schema}'. Using found schema."
-                    )
-                    schema = found_schema
-                else:
-                    all_tables = []
-                    for check_schema in all_schemas:
-                        try:
-                            tables = inspector.get_table_names(schema=check_schema)
-                            all_tables.extend([f"{check_schema}.{t}" for t in tables])
-                        except Exception:
-                            pass
-
-                    raise ValueError(
-                        f"Source table {schema}.{extract_table_name} does not exist. "
-                        f"Available tables: {all_tables}"
-                    )
-
-            count_query = text(f'SELECT COUNT(*) FROM "{schema}"."{extract_table_name}"')
-            result = connection.execute(count_query)
-            row_count = result.scalar()
-
-            if create:
-                create_query = text(f'''
-                    CREATE TABLE IF NOT EXISTS "{schema}"."{target_table_name}" AS 
-                    SELECT * FROM "{schema}"."{extract_table_name}" 
-                    WHERE 1=0
-                ''')
-                connection.execute(create_query)
-                logger.info(f"Created table {schema}.{target_table_name}")
-
-            if truncate:
-                truncate_query = text(f'TRUNCATE TABLE "{schema}"."{target_table_name}"')
-                connection.execute(truncate_query)
-                logger.info(f"Truncated table {schema}.{target_table_name}")
-
-            if attribute_mapper:
-                columns = [f'"{col[0]}"' for col in attribute_mapper]
-                column_str = ', '.join(columns)
-                select_columns = ', '.join([f'"{col[2]}" as "{col[0]}"' for col in attribute_mapper])
-            else:
-                columns_query = text("""
-                    SELECT column_name 
-                    FROM information_schema.columns 
-                    WHERE table_schema = :schema AND table_name = :table
-                    ORDER BY ordinal_position
-                """)
-                result = connection.execute(
-                    columns_query,
-                    {'schema': schema, 'table': extract_table_name}
-                )
-                columns = [row[0] for row in result.fetchall()]
-                column_str = ', '.join([f'"{col}"' for col in columns])
-                select_columns = column_str
-
-            batch_size = 1000
-            total_batches = (row_count // batch_size) + (1 if row_count % batch_size > 0 else 0)
-            logger.info(f"Starting data load: {row_count} rows in {total_batches} batches")
-
-            for batch_num in range(total_batches):
-                offset = batch_num * batch_size
-                insert_query = text(f"""
-                    INSERT INTO "{schema}"."{target_table_name}" ({column_str})
-                    SELECT {select_columns}
-                    FROM "{schema}"."{extract_table_name}"
-                    ORDER BY 1
-                    LIMIT {batch_size} OFFSET {offset}
-                """)
-                connection.execute(insert_query)
-                logger.info(
-                    f"Loaded batch {batch_num + 1}/{total_batches} "
-                    f"(rows {offset + 1}-{min(offset + batch_size, row_count)})..."
-                )
-
-            logger.info(f"Successfully loaded {row_count} rows into {schema}.{target_table_name}")
-
-            return {
-                'status': 200,
-                'message': f'Successfully loaded {row_count} rows into {schema}.{target_table_name}'
-            }
-
-    except SQLAlchemyError as e:
-        error_msg = f"Database error in Load_into_database: {str(e)}"
-        logger.error(error_msg, exc_info=True)
-        return {'status': 500, 'message': error_msg}
-    except Exception as e:
-        error_msg = f"Unexpected error in Load_into_database: {str(e)}"
-        logger.error(error_msg, exc_info=True)
-        return {
-            'status': 500,
-            'message': error_msg
-        }
 
 
 def Delete_temp_tables(sources, hierarchy_id, user_id, **kwargs):
@@ -1066,6 +1184,7 @@ def Extraction(
     source_attributes,
     attributes,
     target_hierarchy_id,
+    target_table_name=None,
     **kwargs
 ):
     """
@@ -1110,7 +1229,8 @@ def Extraction(
         logger.info('source is database')
         db_extract = Extract_from_database(
             hierarchy_id, user_id, source_table_name, task_id, dag_id,
-            source_attributes, attributes, target_hierarchy_id, **kwargs
+            source_attributes, attributes, target_hierarchy_id, 
+            target_table_name=target_table_name, **kwargs
         )
         if db_extract['status'] == 200:
             query = db_extract['query']
@@ -1126,6 +1246,599 @@ def Extraction(
             logger.error(f"""[Error] {db_extract['message']}""")
 
 
+def load_sql_to_mongodb_direct(source_schema, source_table_name, mongo_engine, target_table_name, attribute_mapper, **kwargs):
+    """
+    Load data from SQL temp table directly into MongoDB collection.
+    This is used when the target is MongoDB but source data is in a SQL temp table.
+    """
+    from Connections.utils import generate_engine
+    from pymongo import MongoClient
+    from pymongo.database import Database
+    from pymongo.collection import Collection
+    import pandas as pd
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    try:
+        # Get task instance from kwargs
+        ti = kwargs.get('ti')
+        if not ti:
+            raise ValueError("Task instance (ti) not found in kwargs")
+            
+        # We need to get the source SQL connection to read the temp table
+        # The temp table was created by the extraction step, so we need to find which SQL DB it's in
+        
+        # Get the previous task result to find which database connection was used for extraction
+        previous_task_result = ti.xcom_pull(task_ids=kwargs.get('previous_id'), key='return_value')
+        if not previous_task_result:
+            raise ValueError("Could not get previous task result to determine source database")
+        
+        logger.info(f"Previous task result: {previous_task_result}")
+        
+        # The key insight: In MongoDB extraction, the temp table is created using the target_hierarchy_id
+        # which points to a SQL database. But in loading, target_hierarchy_id points to MongoDB.
+        # We need to find the SQL database that was used during extraction.
+        
+        # The extraction step used target_hierarchy_id to create the temp table in a SQL database
+        # We need to get that same SQL database connection to read the temp table
+        
+        # Let's try to get the SQL database connection that was used during extraction
+        # This information should be available from the DAG configuration or previous task
+        
+        from Connections.utils import generate_engine
+        from sqlalchemy import create_engine, text, inspect
+        import os
+        
+        # Strategy 1: Try to get the SQL database connection from the extraction step
+        # The extraction step should have stored this information
+        sql_engine = None
+        
+        # First, let's try to get the SQL database that was used as target in extraction
+        # This might be stored in the previous task result or DAG configuration
+        
+        # For MongoDB->SQL extraction, there should be an intermediate SQL database
+        # Let's try to find it from the system configuration
+        
+        try:
+            # Try to get all SQL database connections and find the right one
+            from Connections.models import Connections, DatabaseConnections
+            
+            # Get all SQL database connections for this user
+            sql_connections = Connections.objects.filter(
+                user_id=kwargs.get('user_id'), 
+                format='database'
+            )
+            
+            sql_hierarchy_id = None
+            for conn in sql_connections:
+                try:
+                    db_conn = DatabaseConnections.objects.get(id=conn.table_id)
+                    if db_conn.server_type.name.upper() in ['POSTGRESQL', 'MYSQL']:
+                        sql_hierarchy_id = conn.id
+                        logger.info(f"Found SQL database connection: {conn.id} ({db_conn.server_type.name})")
+                        break
+                except Exception as e:
+                    continue
+            
+            if sql_hierarchy_id:
+                # Use the SQL database connection
+                sql_engine_data = generate_engine(sql_hierarchy_id, kwargs.get('user_id'))
+                sql_engine = sql_engine_data['engine']
+                logger.info(f"Using SQL database connection {sql_hierarchy_id} for temp table access")
+            else:
+                raise Exception("No SQL database connection found")
+                
+        except Exception as e:
+            logger.warning(f"Could not find SQL database connection: {str(e)}")
+            # Fallback to configured database URL
+            temp_db_url = os.getenv('TEMP_DATABASE_URL', "postgresql+psycopg2://postgres:postgres@host.docker.internal:5432/Datamplify3?options=-csearch_path%3Ddatamplify_staging")
+            sql_engine = create_engine(temp_db_url)
+            logger.info(f"Using fallback database connection: {temp_db_url}")
+        
+        logger.info(f"Looking for temp table {source_table_name} in database")
+        
+        # Try to find the table in different schemas
+        inspector = inspect(sql_engine)
+        schemas_to_check = [source_schema, 'public', 'datamplify_staging', 'animal_biome_production']
+        
+        found_schema = None
+        for schema in schemas_to_check:
+            try:
+                if inspector.has_table(source_table_name, schema=schema):
+                    found_schema = schema
+                    logger.info(f"Found temp table {source_table_name} in schema: {schema}")
+                    break
+            except Exception as e:
+                logger.debug(f"Error checking schema {schema}: {str(e)}")
+                continue
+        
+        if not found_schema:
+            # List all available tables for debugging
+            all_tables = []
+            for schema in schemas_to_check:
+                try:
+                    tables = inspector.get_table_names(schema=schema)
+                    all_tables.extend([f"{schema}.{t}" for t in tables])
+                except Exception as e:
+                    logger.debug(f"Error listing tables in schema {schema}: {str(e)}")
+            
+            # Also try to find tables that match the pattern in any schema
+            matching_tables = []
+            for schema in schemas_to_check:
+                try:
+                    tables = inspector.get_table_names(schema=schema)
+                    for table in tables:
+                        if 'extracted_SRC' in table or source_table_name.split('_')[-1] in table:
+                            matching_tables.append(f"{schema}.{table}")
+                except Exception as e:
+                    logger.debug(f"Error searching for matching tables in schema {schema}: {str(e)}")
+            
+            error_msg = f"Temp table {source_table_name} not found in any schema.\n"
+            error_msg += f"Checked schemas: {schemas_to_check}\n"
+            error_msg += f"Available tables: {all_tables[:20]}...\n"
+            if matching_tables:
+                error_msg += f"Tables with similar names: {matching_tables}"
+            
+            logger.error(error_msg)
+            
+            # Instead of failing, let's try a different approach
+            # Maybe the temp table is in the same database but we need to look harder
+            logger.info("Attempting broader search for temp table...")
+            
+            # Try to get all schemas in the database
+            try:
+                all_schemas_query = "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT IN ('information_schema', 'pg_catalog', 'pg_toast')"
+                with sql_engine.connect() as conn:
+                    result = conn.execute(text(all_schemas_query))
+                    all_schemas = [row[0] for row in result.fetchall()]
+                    logger.info(f"All available schemas: {all_schemas}")
+                    
+                    # Search in all schemas
+                    for schema in all_schemas:
+                        try:
+                            if inspector.has_table(source_table_name, schema=schema):
+                                found_schema = schema
+                                logger.info(f"Found temp table {source_table_name} in schema: {schema}")
+                                break
+                        except Exception as e:
+                            continue
+            except Exception as e:
+                logger.error(f"Error during broader search: {str(e)}")
+            
+            if not found_schema:
+                raise ValueError(error_msg)
+        
+        # Read data from SQL temp table using the found schema
+        query = f'SELECT * FROM "{found_schema}"."{source_table_name}"'
+        logger.info(f"Reading temp table with query: {query}")
+        df = pd.read_sql(query, sql_engine)
+        
+        if df.empty:
+            logger.warning(f"No data found in temp table {source_schema}.{source_table_name}")
+            return {
+                'status': 200,
+                'message': f"No data to load from {source_schema}.{source_table_name} to MongoDB",
+                'target_table': target_table_name
+            }
+        
+        logger.info(f"Read {len(df)} rows from SQL temp table")
+        
+        # Apply attribute mapping if specified
+        if attribute_mapper:
+            mapped_columns = {}
+            for attr in attribute_mapper:
+                if isinstance(attr, (list, tuple)) and len(attr) >= 3:
+                    source_col, target_col = attr[0], attr[2]
+                    if source_col in df.columns:
+                        mapped_columns[source_col] = target_col
+            if mapped_columns:
+                df = df.rename(columns=mapped_columns)
+                logger.info(f"Applied column mapping: {mapped_columns}")
+        
+        # Convert DataFrame to MongoDB documents
+        documents = df.to_dict('records')
+        
+        # Handle MongoDB connection - it could be MongoClient, Database, or Collection
+        if isinstance(mongo_engine, Collection):
+            collection = mongo_engine
+            logger.info(f"Using existing MongoDB collection: {collection.full_name}")
+        elif isinstance(mongo_engine, Database):
+            collection = mongo_engine[target_table_name]
+            logger.info(f"Using MongoDB collection: {mongo_engine.name}.{target_table_name}")
+        elif isinstance(mongo_engine, MongoClient):
+            # Need to determine database and collection names
+            if '.' in target_table_name:
+                db_name, collection_name = target_table_name.split('.', 1)
+            else:
+                db_name = 'default'
+                collection_name = target_table_name
+            
+            db = mongo_engine[db_name]
+            collection = db[collection_name]
+            logger.info(f"Using MongoDB collection: {db_name}.{collection_name}")
+        else:
+            raise TypeError(f"Unsupported MongoDB engine type: {type(mongo_engine)}")
+        
+        # Clear existing data if needed (equivalent to truncate)
+        # For now, we'll append data. In the future, this could be configurable
+        
+        # Insert documents in batches
+        batch_size = 1000
+        total_inserted = 0
+        
+        for i in range(0, len(documents), batch_size):
+            batch = documents[i:i + batch_size]
+            if batch:
+                collection.insert_many(batch)
+                total_inserted += len(batch)
+                logger.info(f"Inserted batch {i//batch_size + 1}: {len(batch)} documents")
+        
+        logger.info(f"Successfully loaded {total_inserted} documents into MongoDB collection {collection.full_name}")
+        
+        return {
+            'status': 200,
+            'message': f"Successfully loaded {total_inserted} documents into MongoDB collection {collection.full_name}",
+            'target_table': target_table_name
+        }
+        
+    except Exception as e:
+        error_msg = f"Error in load_sql_to_mongodb_direct: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return {
+            'status': 500,
+            'message': error_msg
+        }
+
+
+def Load_into_database(
+    hierarchy_id,
+    user_id,
+    dag_id,
+    truncate,
+    create,
+    format,
+    previous_id,
+    instance_id,
+    target_table_name,
+    attribute_mapper,
+    sources,
+    update_strategy='append',
+    key_columns=None,
+    **kwargs
+):
+    """
+    Load data into target database from the previous task's output.
+    This function handles the actual data loading from source table to target table.
+    """
+    from Connections.utils import generate_engine
+    from Connections.models import Connections, DatabaseConnections
+    from sqlalchemy import text, inspect
+    import logging
+    import time
+
+    logger = logging.getLogger(__name__)
+
+    try:
+        ti = kwargs.get('ti')
+        if not ti:
+            raise ValueError("Task instance (ti) not found in kwargs")
+
+        # Get previous task result to find source table
+        previous_task_result = ti.xcom_pull(task_ids=previous_id, key='return_value')
+        if not previous_task_result or 'target_table' not in previous_task_result:
+            raise ValueError(f"No valid table information found from previous task {previous_id}")
+
+        source_table_name = previous_task_result['target_table']
+        source_schema = previous_task_result.get('schema', 'public')
+
+        # Get database connection details
+        engine_data = generate_engine(hierarchy_id, user_id=user_id)
+        engine = engine_data['engine']
+        target_schema = engine_data.get('schema', 'public')
+        
+        # Get database type (PostgreSQL, MySQL, MongoDB, etc.)
+        try:
+            conn = Connections.objects.get(id=hierarchy_id, user_id=user_id)
+            db_conn = DatabaseConnections.objects.get(id=conn.table_id)
+            db_type = db_conn.server_type.name.upper()
+            
+            logger.info(f"Target database type: {db_type}")
+            logger.info(f"Target engine type: {type(engine)}")
+            logger.info(f"Loading from {source_schema}.{source_table_name} to target: {target_table_name}")
+            
+        except Exception as e:
+            logger.error(f"Error getting database type: {str(e)}")
+            # Try to detect MongoDB by engine type
+            from pymongo import MongoClient
+            from pymongo.database import Database as MongoDatabase
+            from pymongo.collection import Collection as MongoCollection
+            
+            if isinstance(engine, (MongoClient, MongoDatabase, MongoCollection)):
+                db_type = 'MONGODB'
+                logger.info(f"Detected MongoDB by engine type: {type(engine)}")
+            else:
+                raise
+
+        # Check if target is MongoDB
+        if db_type == 'MONGODB':
+            logger.info("Target is MongoDB - MongoDB to MongoDB transfer should be handled directly in extraction")
+            # For MongoDB targets, the extraction step should handle the direct transfer
+            # No need for intermediate SQL temp tables
+            logger.info("MongoDB target detected - assuming direct MongoDB to MongoDB transfer was completed in extraction step")
+            return {
+                'status': 200,
+                'message': f"MongoDB to MongoDB transfer completed in extraction step for target: {target_table_name}",
+                'target_table': target_table_name
+            }
+
+        # For SQL targets, use transaction context manager
+        with engine.begin() as connection:
+            # Check if source table exists
+            inspector = inspect(engine)
+            table_exists = inspector.has_table(source_table_name, schema=source_schema)
+            
+            if not table_exists:
+                # Try to find the table in other schemas
+                all_schemas = ['public', source_schema, target_schema]
+                found_schema = None
+                
+                for check_schema in all_schemas:
+                    if inspector.has_table(source_table_name, schema=check_schema):
+                        found_schema = check_schema
+                        break
+                
+                if found_schema:
+                    logger.warning(f"Table {source_table_name} found in schema '{found_schema}' instead of '{source_schema}'. Using found schema.")
+                    source_schema = found_schema
+                else:
+                    # List all available tables for debugging
+                    all_tables = []
+                    for check_schema in all_schemas:
+                        try:
+                            tables = inspector.get_table_names(schema=check_schema)
+                            all_tables.extend([f"{check_schema}.{t}" for t in tables])
+                        except:
+                            pass
+                    
+                    raise ValueError(f"Source table {source_schema}.{source_table_name} does not exist. Available tables: {all_tables}")
+            
+            # Get row count from source table
+            count_query = text(f'SELECT COUNT(*) FROM "{source_schema}"."{source_table_name}"')
+            result = connection.execute(count_query)
+            row_count = result.scalar()
+            
+            logger.info(f"Source table has {row_count} rows")
+            
+            if create:
+                # Create target table with the same structure as source
+                create_query = text(f'''
+                    CREATE TABLE IF NOT EXISTS "{target_schema}"."{target_table_name}" AS 
+                    SELECT * FROM "{source_schema}"."{source_table_name}" 
+                    WHERE 1=0
+                ''')
+                connection.execute(create_query)
+                logger.info(f"Created table {target_schema}.{target_table_name}")
+            
+            if truncate:
+                truncate_query = text(f'TRUNCATE TABLE "{target_schema}"."{target_table_name}"')
+                connection.execute(truncate_query)
+                logger.info(f"Truncated table {target_schema}.{target_table_name}")
+            
+            # Get column information for mapping
+            if attribute_mapper:
+                # Store raw column names; apply quoting only when building SQL
+                columns = [col[0] for col in attribute_mapper]
+                column_str = ', '.join([f'"{col}"' for col in columns])
+                select_columns = ', '.join([f'"{col[2]}" as "{col[0]}"' for col in attribute_mapper])
+            else:
+                # If no attribute mapping, use all columns from source
+                columns_query = text(f"""
+                    SELECT column_name 
+                    FROM information_schema.columns 
+                    WHERE table_schema = :schema AND table_name = :table
+                    ORDER BY ordinal_position
+                """)
+                result = connection.execute(columns_query, {'schema': source_schema, 'table': source_table_name})
+                columns = [row[0] for row in result.fetchall()]
+                column_str = ', '.join([f'"{col}"' for col in columns])
+                select_columns = column_str
+            
+            # Apply update strategy
+            logger.info(f"Applying update strategy: {update_strategy}")
+            
+            if update_strategy == 'truncate_insert':
+                # Truncate and insert
+                truncate_query = text(f'TRUNCATE TABLE "{target_schema}"."{target_table_name}"')
+                connection.execute(truncate_query)
+                logger.info(f"Truncated table {target_schema}.{target_table_name}")
+                
+                insert_query = text(f"""
+                    INSERT INTO "{target_schema}"."{target_table_name}" ({column_str})
+                    SELECT {select_columns} FROM "{source_schema}"."{source_table_name}"
+                """)
+                connection.execute(insert_query)
+                logger.info(f"Successfully loaded {row_count} rows using TRUNCATE_INSERT strategy")
+                
+            elif update_strategy == 'replace':
+                # Drop and recreate table
+                drop_query = text(f'DROP TABLE IF EXISTS "{target_schema}"."{target_table_name}"')
+                connection.execute(drop_query)
+                logger.info(f"Dropped table {target_schema}.{target_table_name}")
+                
+                create_query = text(f'''
+                    CREATE TABLE "{target_schema}"."{target_table_name}" AS 
+                    SELECT {select_columns} FROM "{source_schema}"."{source_table_name}"
+                ''')
+                connection.execute(create_query)
+                logger.info(f"Successfully loaded {row_count} rows using REPLACE strategy")
+                
+            elif update_strategy == 'upsert' and key_columns:
+                # Upsert (merge) operation
+                key_columns_list = key_columns if isinstance(key_columns, list) else [key_columns]
+                key_conditions = ' AND '.join([f'target."{key}" = source."{key}"' for key in key_columns_list])
+                
+                # Create a temporary table with source data
+                temp_table = f"temp_{target_table_name}_{int(time.time())}"
+                create_temp_query = text(f'''
+                    CREATE TEMP TABLE "{temp_table}" AS 
+                    SELECT {select_columns} FROM "{source_schema}"."{source_table_name}"
+                ''')
+                connection.execute(create_temp_query)
+                
+                # Update existing records
+                update_columns = [col for col in columns if col not in key_columns_list]
+                if update_columns:
+                    update_sets = ', '.join([f'"{col}" = source."{col}"' for col in update_columns])
+                    update_query = text(f'''
+                        UPDATE "{target_schema}"."{target_table_name}" AS target
+                        SET {update_sets}
+                        FROM "{temp_table}" AS source
+                        WHERE {key_conditions}
+                    ''')
+                    connection.execute(update_query)
+                    logger.info(f"Updated existing records using key columns: {key_columns_list}")
+                
+                # Insert new records
+                insert_query = text(f'''
+                    INSERT INTO "{target_schema}"."{target_table_name}" ({column_str})
+                    SELECT {select_columns} FROM "{temp_table}" AS source
+                    WHERE NOT EXISTS (
+                        SELECT 1 FROM "{target_schema}"."{target_table_name}" AS target
+                        WHERE {key_conditions}
+                    )
+                ''')
+                connection.execute(insert_query)
+                logger.info(f"Successfully loaded {row_count} rows using UPSERT strategy")
+
+            elif update_strategy == 'dd_update' and key_columns:
+                # DD_UPDATE: update existing, insert new, and delete rows missing in source
+                key_columns_list = key_columns if isinstance(key_columns, list) else [key_columns]
+                key_conditions = ' AND '.join([f'target."{key}" = source."{key}"' for key in key_columns_list])
+
+                # Create a temporary table with source data
+                temp_table = f"temp_{target_table_name}_{int(time.time())}"
+                create_temp_query = text(f'''
+                    CREATE TEMP TABLE "{temp_table}" AS 
+                    SELECT {select_columns} FROM "{source_schema}"."{source_table_name}"
+                ''')
+                connection.execute(create_temp_query)
+
+                # Update existing records
+                update_columns = [col for col in columns if col not in key_columns_list]
+                if update_columns:
+                    update_sets = ', '.join([f'"{col}" = source."{col}"' for col in update_columns])
+                    update_query = text(f'''
+                        UPDATE "{target_schema}"."{target_table_name}" AS target
+                        SET {update_sets}
+                        FROM "{temp_table}" AS source
+                        WHERE {key_conditions}
+                    ''')
+                    connection.execute(update_query)
+
+                # Insert new records
+                insert_query = text(f'''
+                    INSERT INTO "{target_schema}"."{target_table_name}" ({column_str})
+                    SELECT {select_columns} FROM "{temp_table}" AS source
+                    WHERE NOT EXISTS (
+                        SELECT 1 FROM "{target_schema}"."{target_table_name}" AS target
+                        WHERE {key_conditions}
+                    )
+                ''')
+                connection.execute(insert_query)
+
+                # Delete rows in target that are missing in source
+                delete_conditions = ' AND '.join([
+                    f'target."{key}" NOT IN (SELECT "{key}" FROM "{temp_table}")'
+                    for key in key_columns_list
+                ])
+
+                delete_query = text(f'''
+                    DELETE FROM "{target_schema}"."{target_table_name}" AS target
+                    WHERE {delete_conditions}
+                ''')
+                connection.execute(delete_query)
+
+                logger.info(f"Successfully synchronized target using DD_UPDATE strategy with key columns: {key_columns_list}")
+                
+            elif update_strategy == 'update' and key_columns:
+                # Update only existing records
+                key_columns_list = key_columns if isinstance(key_columns, list) else [key_columns]
+                key_conditions = ' AND '.join([f'target."{key}" = source."{key}"' for key in key_columns_list])
+                update_columns = [col for col in columns if col not in key_columns_list]
+                
+                if update_columns:
+                    update_sets = ', '.join([f'"{col}" = source."{col}"' for col in update_columns])
+                    update_query = text(f'''
+                        UPDATE "{target_schema}"."{target_table_name}" AS target
+                        SET {update_sets}
+                        FROM "{source_schema}"."{source_table_name}" AS source
+                        WHERE {key_conditions}
+                    ''')
+                    connection.execute(update_query)
+                    logger.info(f"Successfully updated records using UPDATE strategy with key columns: {key_columns_list}")
+                
+            elif update_strategy == 'delete' and key_columns:
+                # Delete matching records
+                key_columns_list = key_columns if isinstance(key_columns, list) else [key_columns]
+                key_conditions = ' AND '.join([f'target."{key}" IN (SELECT "{key}" FROM "{source_schema}"."{source_table_name}")' for key in key_columns_list])
+                
+                delete_query = text(f'''
+                    DELETE FROM "{target_schema}"."{target_table_name}" AS target
+                    WHERE {key_conditions}
+                ''')
+                connection.execute(delete_query)
+                logger.info(f"Successfully deleted records using DELETE strategy with key columns: {key_columns_list}")
+                
+            elif update_strategy == 'insert':
+                # Insert only new records (skip duplicates)
+                if key_columns:
+                    key_columns_list = key_columns if isinstance(key_columns, list) else [key_columns]
+                    key_conditions = ' AND '.join([f'target."{key}" = source."{key}"' for key in key_columns_list])
+                    
+                    insert_query = text(f'''
+                        INSERT INTO "{target_schema}"."{target_table_name}" ({column_str})
+                        SELECT {select_columns} FROM "{source_schema}"."{source_table_name}" AS source
+                        WHERE NOT EXISTS (
+                            SELECT 1 FROM "{target_schema}"."{target_table_name}" AS target
+                            WHERE {key_conditions}
+                        )
+                    ''')
+                    connection.execute(insert_query)
+                    logger.info(f"Successfully inserted new records using INSERT strategy with key columns: {key_columns_list}")
+                else:
+                    # Simple insert without duplicate checking
+                    insert_query = text(f"""
+                        INSERT INTO "{target_schema}"."{target_table_name}" ({column_str})
+                        SELECT {select_columns} FROM "{source_schema}"."{source_table_name}"
+                    """)
+                    connection.execute(insert_query)
+                    logger.info(f"Successfully inserted {row_count} rows using INSERT strategy")
+                    
+            else:  # Default: append
+                # Simple append (insert all records)
+                insert_query = text(f"""
+                    INSERT INTO "{target_schema}"."{target_table_name}" ({column_str})
+                    SELECT {select_columns} FROM "{source_schema}"."{source_table_name}"
+                """)
+                connection.execute(insert_query)
+                logger.info(f"Successfully loaded {row_count} rows using APPEND strategy")
+            
+            return {
+                'status': 200,
+                'message': f"Successfully loaded {row_count} rows into {target_schema}.{target_table_name}",
+                'target_table': target_table_name
+            }
+            
+    except Exception as e:
+        error_msg = f"Error in Load_into_database: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return {
+            'status': 500,
+            'message': error_msg
+        }
+
+
 def Loading(
     hierarchy_id,
     user_id,
@@ -1138,12 +1851,17 @@ def Loading(
     target_table_name,
     attribute_mapper,
     sources,
+    update_strategy='append',
+    key_columns=None,
     **kwargs
 ):
     """
     Load data into target database from the previous task's output
     """
     try:
+        print(f"[Loading] STARTING - Target: {target_table_name}")
+        print(f"[Loading] Update Strategy: {update_strategy}, Key Columns: {key_columns}")
+        print(f"[Loading] Previous Task ID: {previous_id}")
         ti = kwargs.get('ti')
         if not ti:
             raise ValueError("Task instance (ti) not found in kwargs")
@@ -1167,6 +1885,42 @@ def Loading(
             )
             logger.debug(f"Previous task result: {previous_task_result}")
 
+            # Check if target is MongoDB before calling Load_into_database
+            try:
+                from Connections.models import Connections, DatabaseConnections
+                conn = Connections.objects.get(id=hierarchy_id, user_id=user_id)
+                db_conn = DatabaseConnections.objects.get(id=conn.table_id)
+                db_type = db_conn.server_type.name.upper()
+                
+                logger.info(f"[Loading] Target database type: {db_type}")
+                
+                if db_type == 'MONGODB':
+                    logger.info("[Loading] Target is MongoDB - MongoDB to MongoDB transfer completed in extraction")
+                    return {
+                        'status': 200,
+                        'message': f'MongoDB to MongoDB transfer completed for target: {target_table_name}'
+                    }
+            except Exception as e:
+                logger.warning(f"[Loading] Could not determine database type: {str(e)}")
+                # Try to detect by engine type
+                try:
+                    from Connections.utils import generate_engine
+                    engine_data = generate_engine(hierarchy_id, user_id=user_id)
+                    engine = engine_data['engine']
+                    
+                    from pymongo import MongoClient
+                    from pymongo.database import Database as MongoDatabase
+                    from pymongo.collection import Collection as MongoCollection
+                    
+                    if isinstance(engine, (MongoClient, MongoDatabase, MongoCollection)):
+                        logger.info("[Loading] Detected MongoDB by engine type - skipping SQL loading")
+                        return {
+                            'status': 200,
+                            'message': f'MongoDB to MongoDB transfer completed for target: {target_table_name}'
+                        }
+                except Exception as e2:
+                    logger.error(f"[Loading] Error detecting MongoDB by engine type: {str(e2)}")
+
             db_load = Load_into_database(
                 hierarchy_id=hierarchy_id,
                 user_id=user_id,
@@ -1179,6 +1933,8 @@ def Loading(
                 target_table_name=target_table_name,
                 attribute_mapper=attribute_mapper,
                 sources=sources,
+                update_strategy=update_strategy,
+                key_columns=key_columns,
                 **kwargs
             )
 
@@ -1639,6 +2395,67 @@ def Normalizer(
     return target_table_name
 
 
+def UpdateStrategy(update_strategy, key_columns, previous_instance_id, dag_id, task_id, target_hierarchy_id, user_id, sources=None, **kwargs):
+    """
+    Update Strategy transformation - sets strategy and key columns for downstream target loading
+    Similar to Informatica Update Strategy transformation
+    """
+    try:
+        print(f"[UpdateStrategy] STARTING - Task ID: {task_id}")
+        print(f"[UpdateStrategy] Strategy: {update_strategy}, Keys: {key_columns}")
+        
+        ti = kwargs.get('ti')
+        if not ti:
+            print("[UpdateStrategy] ERROR: Task instance (ti) not found in kwargs")
+            raise ValueError("Task instance (ti) not found in kwargs")
+
+        logger.info(f"[UpdateStrategy] Processing update strategy: {update_strategy}")
+        logger.info(f"[UpdateStrategy] Key columns: {key_columns}")
+        print(f"[UpdateStrategy] Processing update strategy: {update_strategy}")
+        print(f"[UpdateStrategy] Key columns: {key_columns}")
+
+        # Get the previous task result (source data table)
+        previous_task_result = ti.xcom_pull(task_ids=previous_instance_id, key='return_value')
+        if not previous_task_result:
+            print(f"[UpdateStrategy] ERROR: No data received from previous task: {previous_instance_id}")
+            raise ValueError(f"No data received from previous task: {previous_instance_id}")
+
+        source_table = previous_task_result.get('target_table')
+        source_schema = previous_task_result.get('schema', 'public')
+
+        if not source_table:
+            print("[UpdateStrategy] ERROR: No source table found in previous task result")
+            raise ValueError("No source table found in previous task result")
+
+        print(f"[UpdateStrategy] Source table: {source_schema}.{source_table}")
+        logger.info(f"[UpdateStrategy] Source table: {source_schema}.{source_table}")
+
+        # Create a result that includes the update strategy metadata
+        result = {
+            'status': 200,
+            'target_table': source_table,  # Pass through the table name
+            'schema': source_schema,       # Pass through the schema
+            'update_strategy': update_strategy,
+            'key_columns': key_columns,
+            'query': f'-- UpdateStrategy: {update_strategy}, Key Columns: {key_columns}'
+        }
+
+        # Push result to XCom for downstream tasks
+        ti.xcom_push(key='return_value', value=result)
+        ti.xcom_push(key=task_id, value=source_table)
+
+        logger.info(f"[UpdateStrategy] Completed successfully. Strategy: {update_strategy}")
+        return result
+
+    except Exception as e:
+        error_msg = f"Error in UpdateStrategy transformation: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return {
+            'status': 500,
+            'message': error_msg
+        }
+
+
 def Pivot(
     group_by_cols,
     pivot_col,
@@ -1849,7 +2666,7 @@ def Union(
     return target_table_name
 
 
-def UpdateStrategy(
+def UpdateStrategyExecutor(
     target_table,
     join_key,
     update_mappings,

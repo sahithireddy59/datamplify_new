@@ -1,0 +1,108 @@
+{
+    "dag_name": "upsert_update",
+    "parameters": [],
+    "sql_parameters": [],
+    "tasks": [
+        {
+            "type": "source_data_object",
+            "id": "SRC_employees_source",
+            "format": "database",
+            "hierarchy_id": "51bf5764-b32e-4cb1-a4cc-472feb09a23d",
+            "path": "",
+            "source_table_name": "employees_source",
+            "attributes": [],
+            "source_attributes": [
+                [
+                    "empid",
+                    "integer",
+                    "empid",
+                    "integer"
+                ],
+                [
+                    "name",
+                    "text",
+                    "name",
+                    "text"
+                ],
+                [
+                    "salary",
+                    "integer",
+                    "salary",
+                    "integer"
+                ],
+                [
+                    "dept",
+                    "text",
+                    "dept",
+                    "text"
+                ]
+            ]
+        },
+        {
+            "type": "UpdateStrategy",
+            "id": "update_strategy_1",
+            "update_strategy": "upsert",
+            "key_columns": [
+                "empid"
+            ],
+            "previous_task_id": "SRC_employees_source",
+            "previous_instance_id": "SRC_employees_source"
+        },
+        {
+            "type": "target_data_object",
+            "id": "TGT_employees_target_upinsert",
+            "attribute_mapper": [
+                [
+                    "empid",
+                    "integer",
+                    "empid",
+                    "integer"
+                ],
+                [
+                    "name",
+                    "text",
+                    "name",
+                    "text"
+                ],
+                [
+                    "salary",
+                    "integer",
+                    "salary",
+                    "integer"
+                ],
+                [
+                    "dept",
+                    "text",
+                    "dept",
+                    "text"
+                ]
+            ],
+            "format": "database",
+            "hierarchy_id": "51bf5764-b32e-4cb1-a4cc-472feb09a23d",
+            "path": "",
+            "target_table_name": "employees_target_upinsert",
+            "truncate": false,
+            "create": false,
+            "update_strategy": "upsert",
+            "key_columns": [
+                "empid"
+            ],
+            "previous_task_id": "update_strategy_1",
+            "previous_instance_id": "update_strategy_1"
+        }
+    ],
+    "flow": [
+        [
+            "SRC_employees_source",
+            "update_strategy_1"
+        ],
+        [
+            "update_strategy_1",
+            "TGT_employees_target_upinsert"
+        ]
+    ],
+    "dag_id": "127001-20251114072653-4",
+    "flow_name": "upsert_update",
+    "user_id": "29bc5cc3-42dd-44ed-b4a9-2483a3e46b32",
+    "username": "sahithi"
+}

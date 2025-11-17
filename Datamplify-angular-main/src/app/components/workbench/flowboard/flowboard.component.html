@@ -265,24 +265,41 @@
                                                                                         </table>
                                                                                     </div>
                                                                                     <div *ngIf="selectedNode.data.type === 'target_data_object'">
-                                                                                        <div>
+                                                                                        <div class="mb-2">
                                                                                             <input type="checkbox" id="truncate" name="truncate"
                                                                                                 [(ngModel)]="selectedNode.data.nodeData.properties.truncate"
                                                                                                 (change)="updateNode('properties')" />
-                                                                                            <label for="truncate"> Truncate Before Load</label>
+                                                                                            <label for="truncate" class="ms-1"> Truncate Before Load</label>
                                                                                         </div>
-                                                                                        <!-- <div>
-                                                                                                                                                                                                                <input type="checkbox" id="create" name="create" [(ngModel)]="selectedNode.data.nodeData.properties.create" (change)="updateNode('properties')" />
-                                                                                                                                                                                                                <label for="create"> Create Target</label>
-                                                                                                                                                                                                            </div> -->
-                                                                                        <!-- <div>
-                                                                                                                                                                <label class="label-font-weight" for="preSQL">Pre-SQL</label><br>
-                                                                                                                                                                <textarea id="preSQL" name="preSQL" rows="3"></textarea>
-                                                                                                                                                            </div>
-                                                                                                                                                            <div>
-                                                                                                                                                                <label class="label-font-weight" for="postSQL">Post-SQL</label><br>
-                                                                                                                                                                <textarea id="postSQL" name="postSQL" rows="3"></textarea>
-                                                                                                                                                            </div> -->
+
+                                                                                        <div class="mb-2">
+                                                                                            <label class="label-font-weight" for="updateStrategy">Update Strategy</label><br>
+                                                                                            <select id="updateStrategy" class="form-select form-select-sm"
+                                                                                                [(ngModel)]="selectedNode.data.nodeData.properties.updateStrategy"
+                                                                                                (change)="updateNode('properties')">
+                                                                                                <option class="select-options" value="append">Append (default)</option>
+                                                                                                <option class="select-options" value="insert">Insert (new rows only)</option>
+                                                                                                <option class="select-options" value="update">Update only</option>
+                                                                                                <option class="select-options" value="upsert">Upsert (insert or update)</option>
+                                                                                                <option class="select-options" value="delete">Delete matching</option>
+                                                                                                <option class="select-options" value="dd_update">DD_UPDATE (Delete rows missing in source)</option>
+                                                                                                <option class="select-options" value="truncate_insert">Truncate &amp; Insert</option>
+                                                                                                <option class="select-options" value="replace">Replace table</option>
+                                                                                            </select>
+                                                                                            <small class="text-muted">Controls how data is written into the target table, similar to Informatica Update Strategy.</small>
+                                                                                        </div>
+
+                                                                                        <div class="mb-2" *ngIf="['insert','update','upsert','delete','dd_update'].includes(selectedNode.data.nodeData.properties.updateStrategy)">
+                                                                                            <label class="label-font-weight" for="keyColumns">Key Columns</label><br>
+                                                                                            <ng-select id="keyColumns" [items]="selectedNode.data.nodeData.columnsDropdown || selectedNode.data.nodeData.dataObject"
+                                                                                                bindLabel="label" [multiple]="true" appendTo="body"
+                                                                                                placeholder="Select key columns"
+                                                                                                [(ngModel)]="selectedNode.data.nodeData.properties.keyColumns"
+                                                                                                (change)="updateNode('properties')"
+                                                                                                [searchable]="true" [dropdownPosition]="'bottom'">
+                                                                                            </ng-select>
+                                                                                            <small class="text-muted">Used to match source and target rows for Insert/Update/Upsert/Delete.</small>
+                                                                                        </div>
                                                                                     </div>
                                                                                     <div *ngIf="selectedNode.data.type === 'Rank'" class="col-6">
                                                                                         <label class="label-font-weight" for="rankType"> Rank Type </label><br>
@@ -310,6 +327,43 @@
                                                                                         <label class="label-font-weight"> Sort </label><br>
                                                                                         <input type="radio" name="sort" id="top" [(ngModel)]="selectedNode.data.nodeData.properties.rank.sortType" value="top" (change)="updateNode('')"> <label for="top"> Top </label><br>
                                                                                         <input type="radio" name="sort" id="bottom" [(ngModel)]="selectedNode.data.nodeData.properties.rank.sortType" value="bottom" (change)="updateNode('')"> <label for="bottom"> Bottom </label>
+                                                                                    </div>
+                                                                                    <div *ngIf="selectedNode.data.type === 'UpdateStrategy'">
+                                                                                        <div class="mb-2">
+                                                                                            <input type="checkbox" id="truncate" name="truncate"
+                                                                                                [(ngModel)]="selectedNode.data.nodeData.properties.truncate"
+                                                                                                (change)="updateNode('properties')" />
+                                                                                            <label for="truncate" class="ms-1"> Truncate Before Load</label>
+                                                                                        </div>
+
+                                                                                        <div class="mb-2">
+                                                                                            <label class="label-font-weight" for="updateStrategy">Update Strategy</label><br>
+                                                                                            <select id="updateStrategy" class="form-select form-select-sm"
+                                                                                                [(ngModel)]="selectedNode.data.nodeData.properties.updateStrategy"
+                                                                                                (change)="updateNode('properties')">
+                                                                                                <option class="select-options" value="append">Append (default)</option>
+                                                                                                <option class="select-options" value="insert">Insert (new rows only)</option>
+                                                                                                <option class="select-options" value="update">Update only</option>
+                                                                                                <option class="select-options" value="upsert">Upsert (insert or update)</option>
+                                                                                                <option class="select-options" value="delete">Delete matching</option>
+                                                                                                <option class="select-options" value="dd_update">DD_UPDATE (Delete rows missing in source)</option>
+                                                                                                <option class="select-options" value="truncate_insert">Truncate &amp; Insert</option>
+                                                                                                <option class="select-options" value="replace">Replace table</option>
+                                                                                            </select>
+                                                                                            <small class="text-muted">Controls how data is written into the target table, similar to Informatica Update Strategy.</small>
+                                                                                        </div>
+
+                                                                                        <div class="mb-2" *ngIf="['insert','update','upsert','delete','dd_update'].includes(selectedNode.data.nodeData.properties.updateStrategy)">
+                                                                                            <label class="label-font-weight" for="keyColumns">Key Columns</label><br>
+                                                                                            <ng-select id="keyColumns" [items]="selectedNode.data.nodeData.dataObject"
+                                                                                                bindLabel="label" [multiple]="true" appendTo="body"
+                                                                                                placeholder="Select key columns"
+                                                                                                [(ngModel)]="selectedNode.data.nodeData.properties.keyColumns"
+                                                                                                (change)="updateNode('properties')"
+                                                                                                [searchable]="true" [dropdownPosition]="'bottom'">
+                                                                                            </ng-select>
+                                                                                            <small class="text-muted">Used to match source and target rows for Insert/Update/Upsert/Delete.</small>
+                                                                                        </div>
                                                                                     </div>
                                                                                     <div *ngIf="selectedNode.data.type === 'Pivot'" class="col-6">
                                                                                         <label class="label-font-weight"> Group By Columns </label><br>

@@ -264,10 +264,10 @@ def replace_params_in_json(data, xcom_cache=None, parent_task_name=None, **kwarg
 
 
 
-def task_creator(task_conf,dag_id,user_id,target_hierarchy_id,source_id,task_map,**kwargs):
+def task_creator(task_conf,dag_id,user_id,target_hierarchy_id,source_id,task_map,config=None,**kwargs):
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-    from FlowBoard.utils import (Extraction,Loading,ETL_Filter,Remove_duplicates,Expressions,Join,Rank,Union,Router,Pivot)
+    from FlowBoard.utils import (Extraction,Loading,ETL_Filter,Remove_duplicates,Expressions,Join,Rank,Union,Router,Pivot,UpdateStrategy)
 
     """
     It Intializes The tasks Based on those Type for Execution of Pipelines
@@ -277,21 +277,35 @@ def task_creator(task_conf,dag_id,user_id,target_hierarchy_id,source_id,task_map
     # overall_task_list.append(task_id)
     match task_type:
         case 'source_data_object':
+            # Try to find the target table name from the config for MongoDB to MongoDB transfers
+            target_table_name = None
+            if config:
+                for task in config.get('tasks', []):
+                    if task.get('type') == 'target_data_object':
+                        target_table_name = task.get('target_table_name')
+                        break
+            
+            op_kwargs = {
+                'dag_id': dag_id,
+                'task_id': task_id,
+                'source_type': task_conf['format'],
+                'path': task_conf['path'],
+                'hierarchy_id': task_conf['hierarchy_id'],
+                'user_id': user_id,
+                'source_table_name': task_conf['source_table_name'],
+                'source_attributes': task_conf.get('source_attributes', ''),
+                "attributes": task_conf.get('attributes', ''),
+                "target_hierarchy_id": target_hierarchy_id
+            }
+            
+            # Add target table name if found
+            if target_table_name:
+                op_kwargs['target_table_name'] = target_table_name
+            
             task = PythonOperator(
                 task_id=task_id,
                 python_callable=Extraction,
-                op_kwargs={
-                    'dag_id': dag_id,
-                    'task_id': task_id,
-                    'source_type': task_conf['format'],
-                    'path': task_conf['path'],
-                    'hierarchy_id': task_conf['hierarchy_id'],
-                    'user_id': user_id,
-                    'source_table_name': task_conf['source_table_name'],
-                    'source_attributes': task_conf.get('source_attributes', ''),
-                    "attributes": task_conf.get('attributes', ''),
-                    "target_hierarchy_id": target_hierarchy_id
-                }
+                op_kwargs=op_kwargs
             )
         case "target_data_object":
             task = PythonOperator(
@@ -308,7 +322,9 @@ def task_creator(task_conf,dag_id,user_id,target_hierarchy_id,source_id,task_map
                     'instance_id':task_conf.get('previous_instance_id',None),
                     'target_table_name': task_conf['target_table_name'],
                     'attribute_mapper': task_conf.get('attribute_mapper', ''),
-                    'sources': source_id
+                    'sources': source_id,
+                    'update_strategy': task_conf.get('update_strategy', 'append'),
+                    'key_columns': task_conf.get('key_columns', None)
                 }
             )
         case "Filter":
@@ -431,17 +447,31 @@ def task_creator(task_conf,dag_id,user_id,target_hierarchy_id,source_id,task_map
                 task_id=task_id,
                 python_callable=Pivot,
                 op_args=[
-                    task_conf['group_by_cols'],
-                    task_conf['pivot_col'],
-                    task_conf['value_cols'],
-                    task_conf['aggregation'],
-                    task_conf['pivot_values'],  
+                    task_conf.get('pivot_group_by_columns', ''),
+                    task_conf.get('pivot_column', ''),
+                    task_conf.get('pivot_values', ''),
+                    task_conf.get('pivot_value_columns', ''),
+                    task_conf.get('pivot_aggregation', ''),
+                    task_conf.get('previous_instance_id',None),
                     dag_id,
                     task_id,
-                    task_conf['previous_task_id'],
-                    task_conf.get('previous_instance_id',None),
-                    target_hierarchy_id,
                     user_id
+                ]
+            )
+
+        case "UpdateStrategy":
+            task = PythonOperator(
+                task_id=task_id,
+                python_callable=UpdateStrategy,
+                op_args=[
+                    task_conf.get('update_strategy', 'append'),
+                    task_conf.get('key_columns', []),
+                    task_conf.get('previous_instance_id', None),
+                    dag_id,
+                    task_id,
+                    target_hierarchy_id,
+                    user_id,
+                    source_id
                 ]
             )
 

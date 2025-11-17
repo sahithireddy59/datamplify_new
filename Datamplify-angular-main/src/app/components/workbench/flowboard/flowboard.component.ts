@@ -400,13 +400,14 @@ export class FlowboardComponent {
     ],
     transforms: [
       { name: 'Expression', icon: 'fa-calculator', type: 'Expression' },
-      { name: 'Joiner', icon: 'fa-coins', type: 'Joiner' },
-      { name: 'Rollup', icon: 'fa-filter-circle-xmark', type: 'Rollup' },
+      { name: 'Joiner', icon: 'fa-link', type: 'Joiner' },
+      { name: 'Rollup', icon: 'fa-layer-group', type: 'Rollup' },
       { name: 'Filter', icon: 'fa-filter', type: 'Filter' },
-      { name: 'Rank', icon: 'fa-ranking-star', type: 'Rank' },
-      { name: 'Pivot', icon: 'fa-filter', type: 'Pivot' },
-      { name: 'Union', icon: 'fa-filter', type: 'Union' },
-      { name: 'Router', icon: 'fa-filter', type: 'Router' }
+      { name: 'Rank', icon: 'fa-sort-numeric-up', type: 'Rank' },
+      { name: 'Pivot', icon: 'fa-table', type: 'Pivot' },
+      { name: 'Union', icon: 'fa-object-group', type: 'Union' },
+      { name: 'Router', icon: 'fa-route', type: 'Router' },
+      { name: 'Update Strategy', icon: 'fa-sync-alt', type: 'UpdateStrategy' }
     ]
   }
   isFromMonitor: boolean = false;
@@ -772,7 +773,7 @@ export class FlowboardComponent {
       nodeData: { 
         general: { name: '' }, 
         connection: {}, dataObject: {}, 
-        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], 
+        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], updateStrategy: 'append', keyColumns: [],
           rank:{ rankType: '', orderByCols: [], partitionByCols: [], rankColumnName: '', sortType: 'top', records: '' },
           pivot: { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' },
           union: { sourceNodes: [], columnMappings: [], type: 'UNION' },
@@ -784,7 +785,7 @@ export class FlowboardComponent {
               { conditionName: `condition_4`, condition: '', isVisible: false, targetNodes: [] }
             ]
           }
-        }, 
+         }, 
         attributes: [], 
         groupAttributes: [],
         sourceAttributes: [],
@@ -832,7 +833,7 @@ export class FlowboardComponent {
         connection: this.selectedConnection, 
         dataObject: this.selectedDataObject, 
         general: { name: 'SRC_' + this.selectedDataObject?.tables }, 
-        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [],
+        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], updateStrategy: 'append', keyColumns: [],
           rank:{ rankType: '', orderByCols: [], partitionByCols: [], rankColumnName: '', sortType: 'top', records: '' },
           pivot: { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' },
           union: { sourceNodes: [], columnMappings: [], type: 'UNION' },
@@ -878,7 +879,7 @@ export class FlowboardComponent {
         connection: this.selectedConnection, 
         dataObject: this.selectedDataObject, 
         general: { name: 'TGT_' + (this.objectType === 'select' ? this.selectedDataObject?.tables : this.selectedDataObject) }, 
-        properties: { truncate: false, create: this.objectType === 'select' ? false : true, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [],
+        properties: { truncate: false, create: this.objectType === 'select' ? false : true, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], updateStrategy: 'append', keyColumns: [],
           rank:{ rankType: '', orderByCols: [], partitionByCols: [], rankColumnName: '', sortType: 'top', records: '' },
           pivot: { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' },
           union: { sourceNodes: [], columnMappings: [], type: 'UNION' },
@@ -920,7 +921,7 @@ export class FlowboardComponent {
         connection: {}, 
         dataObject: {}, 
         general: { name: `expression_${this.nodeTypeCounts[baseName]}` }, 
-        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [],
+        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], updateStrategy: 'append', keyColumns: [],
           rank:{ rankType: '', orderByCols: [], partitionByCols: [], rankColumnName: '', sortType: 'top', records: '' },
           pivot: { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' },
           union: { sourceNodes: [], columnMappings: [], type: 'UNION' },
@@ -948,7 +949,7 @@ export class FlowboardComponent {
         connection: {}, 
         dataObject: {}, 
         general: { name: `joiner_${this.nodeTypeCounts[baseName]}` }, 
-        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [],
+        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], updateStrategy: 'append', keyColumns: [],
           rank:{ rankType: '', orderByCols: [], partitionByCols: [], rankColumnName: '', sortType: 'top', records: '' },
           pivot: { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' },
           union: { sourceNodes: [], columnMappings: [], type: 'UNION' },
@@ -976,7 +977,7 @@ export class FlowboardComponent {
         connection: {}, 
         dataObject: {}, 
         general: { name: `rollup_${this.nodeTypeCounts[baseName]}` }, 
-        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [],
+        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], updateStrategy: 'append', keyColumns: [],
           rank:{ rankType: '', orderByCols: [], partitionByCols: [], rankColumnName: '', sortType: 'top', records: '' },
           pivot: { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' },
           union: { sourceNodes: [], columnMappings: [], type: 'UNION' },
@@ -1004,7 +1005,7 @@ export class FlowboardComponent {
         connection: {}, 
         dataObject: {}, 
         general: { name: `filter_${this.nodeTypeCounts[baseName]}` }, 
-        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [],
+        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], updateStrategy: 'append', keyColumns: [],
           rank:{ rankType: '', orderByCols: [], partitionByCols: [], rankColumnName: '', sortType: 'top', records: '' },
           pivot: { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' },
           union: { sourceNodes: [], columnMappings: [], type: 'UNION' },
@@ -1032,7 +1033,7 @@ export class FlowboardComponent {
         connection: {}, 
         dataObject: {}, 
         general: { name: `rank_${this.nodeTypeCounts[baseName]}` }, 
-        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [],
+        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], updateStrategy: 'append', keyColumns: [],
           rank:{ rankType: '', orderByCols: [], partitionByCols: [], rankColumnName: '', sortType: 'top', records: '' },
           pivot: { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' },
           union: { sourceNodes: [], columnMappings: [], type: 'UNION' },
@@ -1060,7 +1061,7 @@ export class FlowboardComponent {
         connection: {}, 
         dataObject: {}, 
         general: { name: `pivot${this.nodeTypeCounts[baseName]}` }, 
-        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [],
+        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], updateStrategy: 'append', keyColumns: [],
           rank:{ rankType: '', orderByCols: [], partitionByCols: [], rankColumnName: '', sortType: 'top', records: '' },
           pivot: { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' },
           union: { sourceNodes: [], columnMappings: [], type: 'UNION' },
@@ -1088,7 +1089,7 @@ export class FlowboardComponent {
         connection: {}, 
         dataObject: {}, 
         general: { name: `union_${this.nodeTypeCounts[baseName]}` }, 
-        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [],
+        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], updateStrategy: 'append', keyColumns: [],
           rank:{ rankType: '', orderByCols: [], partitionByCols: [], rankColumnName: '', sortType: 'top', records: '' },
           pivot: { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' },
           union: { sourceNodes: [], columnMappings: [], type: 'UNION' },
@@ -1116,7 +1117,7 @@ export class FlowboardComponent {
         connection: {}, 
         dataObject: {}, 
         general: { name: `router_${this.nodeTypeCounts[baseName]}` }, 
-        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [],
+        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], updateStrategy: 'append', keyColumns: [],
           rank:{ rankType: '', orderByCols: [], partitionByCols: [], rankColumnName: '', sortType: 'top', records: '' },
           pivot: { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' },
           union: { sourceNodes: [], columnMappings: [], type: 'UNION' },
@@ -1135,6 +1136,36 @@ export class FlowboardComponent {
         attributeMapper: []
       }
       outputNodeCount = 4;
+    }
+    else if (baseName === 'UpdateStrategy') {
+      iconPath = './assets/images/etl/filter-etl.svg';
+      altText = 'Update Strategy';
+      data.type = baseName;
+      this.nodeTypeCounts[baseName] = (this.nodeTypeCounts[baseName] || 0) + 1;
+      data.nodeData = { 
+        connection: {}, 
+        dataObject: {}, 
+        general: { name: `update_strategy_${this.nodeTypeCounts[baseName]}` }, 
+        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], updateStrategy: 'append', keyColumns: [],
+          rank:{ rankType: '', orderByCols: [], partitionByCols: [], rankColumnName: '', sortType: 'top', records: '' },
+          pivot: { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' },
+          union: { sourceNodes: [], columnMappings: [], type: 'UNION' },
+          router: {
+            conditions: [
+              { conditionName: `condition_1`, condition: '', isVisible: false, targetNodes: [] },
+              { conditionName: `condition_2`, condition: '', isVisible: false, targetNodes: [] },
+              { conditionName: `condition_3`, condition: '', isVisible: false, targetNodes: [] },
+              { conditionName: `condition_4`, condition: '', isVisible: false, targetNodes: [] }
+            ]
+          }
+         }, 
+        attributes: [], 
+        groupAttributes: [],
+        sourceAttributes: [],
+        attributeMapper: [] as any[]
+      };
+      inputNodeCount = 1;
+      outputNodeCount = 1;
     }
     data.nodeData.general.name = data.nodeData.general.name.replace(/ /g, '_');
     let displayName = data.nodeData.general.name;
@@ -1824,6 +1855,11 @@ export class FlowboardComponent {
         task.target_table_name = nodes[nodeId].data.nodeData.properties.create ? nodes[nodeId].data.nodeData.dataObject : nodes[nodeId].data.nodeData.dataObject.tables;
         task.truncate = nodes[nodeId].data.nodeData.properties.truncate;
         task.create = nodes[nodeId].data.nodeData.properties.create;
+        task.update_strategy = nodes[nodeId].data.nodeData.properties.updateStrategy || 'append';
+        task.key_columns = (nodes[nodeId].data.nodeData.properties.keyColumns || []).map((c: any) => c.label || c);
+      } else if(nodes[nodeId].data.type === 'UpdateStrategy'){
+        task.update_strategy = nodes[nodeId].data.nodeData.properties.updateStrategy || 'append';
+        task.key_columns = (nodes[nodeId].data.nodeData.properties.keyColumns || []).map((c: any) => c.label || c);
       } else if(nodes[nodeId].data.type === 'Rollup'){
         let grp : any[] = [];
         nodes[nodeId].data.nodeData.groupAttributes.forEach((atrr:any)=>{
