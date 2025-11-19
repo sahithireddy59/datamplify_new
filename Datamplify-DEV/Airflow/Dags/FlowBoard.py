@@ -411,7 +411,6 @@ import uuid
 import logging
 from airflow import DAG
 from datetime import datetime
-from functools import lru_cache
 # from airflow.sdk import get_parsing_context  # Not available in this Airflow version
 
 # ---------------------------------------------
@@ -446,14 +445,32 @@ def list_dag_files(limit=None):
         log.error(f"[ERROR] Failed to scan {CONFIG_DIR}: {e}")
 
 
-@lru_cache(maxsize=2048)
+# Cache with file modification time tracking
+_config_cache = {}
+_config_mtime = {}
+
 def load_config(path: str):
-    """Load JSON config from file (cached)."""
+    """Load JSON config from file (cached with mtime check for dynamic updates)."""
     try:
-        log.info(f"Loading config from: {path}")
+        # Get current file modification time
+        current_mtime = os.path.getmtime(path)
+        
+        # Check if we have a cached version and if file hasn't changed
+        if path in _config_cache and path in _config_mtime:
+            if _config_mtime[path] == current_mtime:
+                log.debug(f"Using cached config for: {path}")
+                return _config_cache[path]
+        
+        # File changed or not cached - reload it
+        log.info(f"Loading config from: {path} (mtime: {current_mtime})")
         with open(path, 'r', encoding='utf-8') as f:
             config = json.load(f)
             log.info(f"Config loaded successfully. Keys: {list(config.keys())}")
+            
+            # Update cache
+            _config_cache[path] = config
+            _config_mtime[path] = current_mtime
+            
             return config
     except Exception as e:
         log.error(f"[ERROR] Failed to load JSON {path}: {e}")

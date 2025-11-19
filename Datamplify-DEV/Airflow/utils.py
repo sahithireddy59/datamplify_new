@@ -308,6 +308,11 @@ def task_creator(task_conf,dag_id,user_id,target_hierarchy_id,source_id,task_map
                 op_kwargs=op_kwargs
             )
         case "target_data_object":
+            previous_task_id = task_conf['previous_task_id']
+            print(f"[task_creator] Creating target task {task_id}")
+            print(f"[task_creator] previous_task_id from config: {previous_task_id}")
+            print(f"[task_creator] previous_task_id type: {type(previous_task_id)}")
+            
             task = PythonOperator(
                 task_id=task_id,
                 python_callable=Loading,
@@ -318,7 +323,7 @@ def task_creator(task_conf,dag_id,user_id,target_hierarchy_id,source_id,task_map
                     'truncate': task_conf['truncate'],
                     'create': task_conf['create'],
                     'format': task_conf['format'],
-                    'previous_id': task_conf['previous_task_id'],
+                    'previous_id': previous_task_id,
                     'instance_id':task_conf.get('previous_instance_id',None),
                     'target_table_name': task_conf['target_table_name'],
                     'attribute_mapper': task_conf.get('attribute_mapper', ''),

@@ -1764,10 +1764,44 @@ def Load_into_database(
             elif update_strategy == 'update' and key_columns:
                 # Update only existing records
                 key_columns_list = key_columns if isinstance(key_columns, list) else [key_columns]
-                key_conditions = ' AND '.join([f'target."{key}" = source."{key}"' for key in key_columns_list])
-                update_columns = [col for col in columns if col not in key_columns_list]
+                
+                # Get actual columns from source table
+                source_columns_query = text(f"""
+                    SELECT column_name 
+                    FROM information_schema.columns 
+                    WHERE table_schema = :schema AND table_name = :table
+                    ORDER BY ordinal_position
+                """)
+                result = connection.execute(source_columns_query, {'schema': source_schema, 'table': source_table_name})
+                actual_source_columns = [row[0] for row in result.fetchall()]
+                
+                logger.info(f"Source table columns: {actual_source_columns}")
+                
+                # Filter key columns to only those that exist in source table
+                available_key_columns = [key for key in key_columns_list if key in actual_source_columns]
+                
+                if not available_key_columns:
+                    # If none of the specified key columns exist, try to find a suitable key
+                    # For SCD2, typically customer_sk is the surrogate key
+                    potential_keys = ['customer_sk', 'id', 'sk']
+                    for potential_key in potential_keys:
+                        if potential_key in actual_source_columns:
+                            available_key_columns = [potential_key]
+                            logger.warning(f"Key columns {key_columns_list} not found in source. Using {potential_key} instead.")
+                            break
+                
+                if not available_key_columns:
+                    logger.error(f"No valid key columns found. Specified: {key_columns_list}, Available: {actual_source_columns}")
+                    raise ValueError(f"Cannot perform UPDATE: key columns {key_columns_list} not found in source table")
+                
+                # Only update columns that exist in BOTH source and target
+                # Exclude key columns from updates
+                update_columns = [col for col in actual_source_columns if col not in available_key_columns]
+                
+                logger.info(f"Will update columns: {update_columns} using key columns: {available_key_columns}")
                 
                 if update_columns:
+                    key_conditions = ' AND '.join([f'target."{key}" = source."{key}"' for key in available_key_columns])
                     update_sets = ', '.join([f'"{col}" = source."{col}"' for col in update_columns])
                     update_query = text(f'''
                         UPDATE "{target_schema}"."{target_table_name}" AS target
@@ -1776,8 +1810,10 @@ def Load_into_database(
                         WHERE {key_conditions}
                     ''')
                     connection.execute(update_query)
-                    logger.info(f"Successfully updated records using UPDATE strategy with key columns: {key_columns_list}")
-                
+                    logger.info(f"Successfully updated {len(update_columns)} column(s) using UPDATE strategy with key columns: {available_key_columns}")
+                else:
+                    logger.warning("No columns to update (all columns are key columns)")
+
             elif update_strategy == 'delete' and key_columns:
                 # Delete matching records
                 key_columns_list = key_columns if isinstance(key_columns, list) else [key_columns]
@@ -1857,6 +1893,8 @@ def Loading(
 ):
     """
     Load data into target database from the previous task's output
+    Supports SCD2 with multiple upstream UpdateStrategy tasks (insert and update)
+    When multiple upstream tasks exist, processes each with its own strategy
     """
     try:
         print(f"[Loading] STARTING - Target: {target_table_name}")
@@ -1871,21 +1909,40 @@ def Loading(
             pass
 
         elif format.lower() == 'database':
-            previous_task_result = ti.xcom_pull(task_ids=previous_id, key='return_value')
+            # Handle multiple upstream UpdateStrategy tasks
+            upstream_tasks = []
+            if isinstance(previous_id, list):
+                upstream_tasks = previous_id
+            else:
+                upstream_tasks = [previous_id]
 
-            if not previous_task_result or 'target_table' not in previous_task_result:
-                raise ValueError(f"No valid table information found from previous task {previous_id}")
+            # Auto-detect additional UpdateStrategy tasks from Airflow dependencies
+            # This handles cases where the UI creates separate connections but previous_id is singular
+            try:
+                from airflow.models import TaskInstance
+                dag_run = ti.get_dagrun()
+                current_task = ti.task
+                
+                # Get all upstream task IDs from Airflow DAG structure
+                airflow_upstream_ids = [t.task_id for t in current_task.upstream_list]
+                
+                print(f"[Loading] Airflow upstream tasks: {airflow_upstream_ids}")
+                
+                # Check if any upstream tasks are UpdateStrategy tasks
+                for upstream_id in airflow_upstream_ids:
+                    if upstream_id not in upstream_tasks and 'update_strategy' in upstream_id.lower():
+                        # Check if this task has completed successfully
+                        upstream_ti = dag_run.get_task_instance(upstream_id)
+                        if upstream_ti and upstream_ti.state == 'success':
+                            upstream_tasks.append(upstream_id)
+                            print(f"[Loading] Auto-detected UpdateStrategy task: {upstream_id}")
+                
+            except Exception as e:
+                logger.warning(f"[Loading] Could not auto-detect upstream tasks: {e}")
 
-            source_table_name = previous_task_result['target_table']
-            source_schema = previous_task_result.get('schema', 'public')
-
-            logger.info(
-                f"Loading data from source table: {source_schema}.{source_table_name} "
-                f"to target table: {target_table_name}"
-            )
-            logger.debug(f"Previous task result: {previous_task_result}")
-
-            # Check if target is MongoDB before calling Load_into_database
+            print(f"[Loading] Found {len(upstream_tasks)} upstream task(s) to process: {upstream_tasks}")
+            
+            # Check if target is MongoDB before processing
             try:
                 from Connections.models import Connections, DatabaseConnections
                 conn = Connections.objects.get(id=hierarchy_id, user_id=user_id)
@@ -1902,54 +1959,71 @@ def Loading(
                     }
             except Exception as e:
                 logger.warning(f"[Loading] Could not determine database type: {str(e)}")
-                # Try to detect by engine type
-                try:
-                    from Connections.utils import generate_engine
-                    engine_data = generate_engine(hierarchy_id, user_id=user_id)
-                    engine = engine_data['engine']
-                    
-                    from pymongo import MongoClient
-                    from pymongo.database import Database as MongoDatabase
-                    from pymongo.collection import Collection as MongoCollection
-                    
-                    if isinstance(engine, (MongoClient, MongoDatabase, MongoCollection)):
-                        logger.info("[Loading] Detected MongoDB by engine type - skipping SQL loading")
-                        return {
-                            'status': 200,
-                            'message': f'MongoDB to MongoDB transfer completed for target: {target_table_name}'
-                        }
-                except Exception as e2:
-                    logger.error(f"[Loading] Error detecting MongoDB by engine type: {str(e2)}")
 
-            db_load = Load_into_database(
-                hierarchy_id=hierarchy_id,
-                user_id=user_id,
-                dag_id=dag_id,
-                truncate=truncate,
-                create=create,
-                format=format,
-                previous_id=previous_id,
-                instance_id=instance_id,
-                target_table_name=target_table_name,
-                attribute_mapper=attribute_mapper,
-                sources=sources,
-                update_strategy=update_strategy,
-                key_columns=key_columns,
-                **kwargs
-            )
+            # Process each upstream task with its own update strategy
+            results = []
+            for idx, source_task_id in enumerate(upstream_tasks):
+                print(f"[Loading] Processing upstream task {idx + 1}/{len(upstream_tasks)}: {source_task_id}")
+                
+                # Get the task result
+                previous_task_result = ti.xcom_pull(task_ids=source_task_id, key='return_value')
+                
+                if not previous_task_result or 'target_table' not in previous_task_result:
+                    logger.warning(f"No valid table information found from task {source_task_id}, skipping")
+                    continue
 
-            if db_load.get('status') == 200:
-                logger.info('✅ Data successfully loaded into target database')
+                source_table_name = previous_task_result['target_table']
+                source_schema = previous_task_result.get('schema', 'public')
+                
+                # Get the update strategy from the upstream task (if it's an UpdateStrategy task)
+                task_update_strategy = previous_task_result.get('update_strategy', update_strategy)
+                task_key_columns = previous_task_result.get('key_columns', key_columns)
+                
+                logger.info(
+                    f"Loading data from source table: {source_schema}.{source_table_name} "
+                    f"to target table: {target_table_name} using strategy: {task_update_strategy}"
+                )
+
+                # Load data with the appropriate strategy
+                db_load = Load_into_database(
+                    hierarchy_id=hierarchy_id,
+                    user_id=user_id,
+                    dag_id=dag_id,
+                    truncate=truncate if idx == 0 else False,  # Only truncate on first load
+                    create=create if idx == 0 else False,      # Only create on first load
+                    format=format,
+                    previous_id=source_task_id,
+                    instance_id=instance_id,
+                    target_table_name=target_table_name,
+                    attribute_mapper=attribute_mapper,
+                    sources=sources,
+                    update_strategy=task_update_strategy,
+                    key_columns=task_key_columns,
+                    **kwargs
+                )
+                
+                results.append(db_load)
+                
+                if db_load.get('status') != 200:
+                    error_msg = db_load.get('message', 'Unknown error during database load')
+                    logger.error(f"❌ Failed to load data from {source_task_id}: {error_msg}")
+                else:
+                    logger.info(f'✅ Successfully loaded data from {source_task_id} using {task_update_strategy} strategy')
+
+            # Check if all loads were successful
+            all_success = all(r.get('status') == 200 for r in results)
+            
+            if all_success:
+                logger.info(f'✅ All {len(results)} data loads completed successfully')
                 if sources:
                     deletion_confirmation = Delete_temp_tables(
                         sources, hierarchy_id, user_id, **kwargs
                     )
                     logger.info(f"Cleanup status: {deletion_confirmation}")
-                return {'status': 200, 'message': 'Data loaded successfully'}
+                return {'status': 200, 'message': f'Data loaded successfully from {len(results)} source(s)'}
             else:
-                error_msg = db_load.get('message', 'Unknown error during database load')
-                logger.error(f"❌ Failed to load data: {error_msg}")
-                return {'status': 500, 'message': error_msg}
+                failed_count = sum(1 for r in results if r.get('status') != 200)
+                return {'status': 500, 'message': f'{failed_count} out of {len(results)} loads failed'}
 
         return {'status': 400, 'message': f'Unsupported format: {format}'}
 
@@ -2031,6 +2105,11 @@ def ETL_Filter(
 
         result = {
             'status': 200,
+            'node_type': 'ETL_Filter',
+            'dag_id': dag_id,
+            'task_id': task_id,
+            'source_table': table_name,
+            'schema': schema,
             'target_table': target_table_name,
             'query': cte,
             'row_count': row_count
@@ -2080,19 +2159,36 @@ def Expressions(Expression_list, dag_id, task_id, previous_id, instance_id, targ
 
     from_clause = (table_name, previous_id)
     generated_query = Query_generator(attributes=Expression_list, from_clause=from_clause, schema=schema)
+    if instance_id and previous_id and instance_id != previous_id:
+        pattern = rf'\b{re.escape(instance_id)}\b'
+        generated_query = re.sub(pattern, previous_id, generated_query)
     new_cte_query = f""" "{task_id}"  AS (\n{generated_query}\n) """
 
     result = conn.sql(
         f"""SELECT * FROM postgres_query('pg_db', $$WITH {new_cte_query} SELECT count(*) FROM "{task_id}" $$);"""
     )
+    row_count = result.fetchone()[0]
     logger.info(f""" [Expressions Query]\n WITH {new_cte_query} SELECT * FROM "{task_id}" """)
-    logger.info(f"Total Records: {result.fetchone()[0]}")
+    logger.info(f"Total Records: {row_count}")
     with engine.begin() as conn1:
         conn1.execute(text(f""" 
             CREATE TABLE "{schema}"."{target_table_name}" AS
             WITH {new_cte_query} SELECT * FROM "{task_id}";
         """))
 
+    result_meta = {
+        'status': 200,
+        'node_type': 'Expressions',
+        'dag_id': dag_id,
+        'task_id': task_id,
+        'source_table': table_name,
+        'schema': schema,
+        'target_table': target_table_name,
+        'query': new_cte_query,
+        'row_count': row_count
+    }
+
+    ti.xcom_push(key='return_value', value=result_meta)
     ti.xcom_push(key=task_id, value=target_table_name)
     conn.sql("DETACH pg_db")
 
@@ -2140,6 +2236,13 @@ def Join(
     logger.info(f" generated _query {generated_query}")
     for pid, instance in zip(previous_id, instance_id):
         table_name = xcom_pull(ti, instance, pid)
+        if not table_name:
+            prev_result = ti.xcom_pull(task_ids=pid, key='return_value')
+            if isinstance(prev_result, dict):
+                table_name = prev_result.get('target_table')
+        if not table_name:
+            continue
+        table_name = str(table_name)
         pattern = rf'\b{re.escape(pid)}\b'
         if re.search(pattern, generated_query):
             generated_query = re.sub(pattern, table_name, generated_query)
@@ -2152,7 +2255,8 @@ def Join(
         """))
 
     logger.info(f""" [Join Query]\n WITH {new_cte_query} SELECT * FROM "{task_id}" """)
-    logger.info(f"Total Records: {result.fetchone()[0]}")
+    row_count = result.fetchone()[0]
+    logger.info(f"Total Records: {row_count}")
     with engine.begin() as conn1:
         conn1.execute(text(f""" 
             CREATE TABLE "{schema}"."{target_table_name}" AS
@@ -2211,6 +2315,7 @@ def Remove_duplicates(
     result = conn.sql(
         f""" SELECT * FROM postgres_query('pg_db', $$WITH  {cte} SELECT count(*) FROM "{task_id}" $$);"""
     )
+    row_count = result.fetchone()[0]
     with engine.begin() as conn1:
         conn1.execute(text(f""" 
             CREATE TABLE "{schema}"."{target_table_name}" AS
@@ -2218,8 +2323,23 @@ def Remove_duplicates(
         """))
 
     logger.info(f""" [Remove Duplicates Query]\n WITH  {cte} SELECT * FROM "{task_id}" """)
-    logger.info(f"Total Records: {result.fetchone()[0]}")
-    kwargs['ti'].xcom_push(key=task_id, value=target_table_name)
+    logger.info(f"Total Records: {row_count}")
+
+    result_meta = {
+        'status': 200,
+        'node_type': 'Remove_duplicates',
+        'dag_id': dag_id,
+        'task_id': task_id,
+        'source_table': table_name,
+        'schema': schema,
+        'target_table': target_table_name,
+        'query': cte,
+        'row_count': row_count
+    }
+
+    ti = kwargs['ti']
+    ti.xcom_push(key='return_value', value=result_meta)
+    ti.xcom_push(key=task_id, value=target_table_name)
     conn.sql("DETACH pg_db")
 
     return cte
@@ -2308,6 +2428,19 @@ def Rank(
 
     logger.info(f"Rank transformation created table with {total_count} total records")
 
+    result_meta = {
+        'status': 200,
+        'node_type': 'Rank',
+        'dag_id': dag_id,
+        'task_id': task_id,
+        'source_table': source_table_name,
+        'schema': schema,
+        'target_table': target_table_name,
+        'query': cte,
+        'row_count': total_count
+    }
+
+    ti.xcom_push(key='return_value', value=result_meta)
     ti.xcom_push(key=task_id, value=target_table_name)
     conn.sql("DETACH pg_db")
 
@@ -2389,6 +2522,19 @@ def Normalizer(
 
     logger.info(f"Normalizer transformation created table with {total_count} total records")
 
+    result_meta = {
+        'status': 200,
+        'node_type': 'Normalizer',
+        'dag_id': dag_id,
+        'task_id': task_id,
+        'source_table': source_table_name,
+        'schema': schema,
+        'target_table': target_table_name,
+        'query': cte,
+        'row_count': total_count
+    }
+
+    ti.xcom_push(key='return_value', value=result_meta)
     ti.xcom_push(key=task_id, value=target_table_name)
     conn.sql("DETACH pg_db")
 
@@ -2416,16 +2562,44 @@ def UpdateStrategy(update_strategy, key_columns, previous_instance_id, dag_id, t
 
         # Get the previous task result (source data table)
         previous_task_result = ti.xcom_pull(task_ids=previous_instance_id, key='return_value')
-        if not previous_task_result:
-            print(f"[UpdateStrategy] ERROR: No data received from previous task: {previous_instance_id}")
-            raise ValueError(f"No data received from previous task: {previous_instance_id}")
+        print(f"[UpdateStrategy] raw previous_task_result = {previous_task_result} (type={type(previous_task_result)})")
+        logger.debug(
+            f"[UpdateStrategy] raw previous_task_result type: {type(previous_task_result)} value: {previous_task_result}"
+        )
 
-        source_table = previous_task_result.get('target_table')
-        source_schema = previous_task_result.get('schema', 'public')
+        source_table = None
+        source_schema = 'public'
+
+        # Case 1: dict returned (normal Datamplify contract)
+        if isinstance(previous_task_result, dict):
+            source_table = previous_task_result.get('target_table')
+            source_schema = previous_task_result.get('schema', 'public')
+
+        # Case 2: string returned (task pushed only table name)
+        elif isinstance(previous_task_result, str):
+            source_table = previous_task_result
+
+        # Case 3: None or unexpected type  try common fallback key
+        else:
+            fallback = ti.xcom_pull(task_ids=previous_instance_id, key=previous_instance_id)
+            print(
+                f"[UpdateStrategy] fallback XCom for key '{previous_instance_id}' = {fallback} "
+                f"(type={type(fallback)})"
+            )
+            logger.debug(f"[UpdateStrategy] fallback XCom type: {type(fallback)} value: {fallback}")
+
+            if isinstance(fallback, dict):
+                source_table = fallback.get('target_table')
+                source_schema = fallback.get('schema', 'public')
+            elif isinstance(fallback, str):
+                source_table = fallback
 
         if not source_table:
-            print("[UpdateStrategy] ERROR: No source table found in previous task result")
-            raise ValueError("No source table found in previous task result")
+            print(
+                f"[UpdateStrategy] ERROR: Could not resolve source table from previous task: "
+                f"{previous_instance_id}"
+            )
+            raise ValueError(f"Could not resolve source table from previous task: {previous_instance_id}")
 
         print(f"[UpdateStrategy] Source table: {source_schema}.{source_table}")
         logger.info(f"[UpdateStrategy] Source table: {source_schema}.{source_table}")
@@ -2433,8 +2607,12 @@ def UpdateStrategy(update_strategy, key_columns, previous_instance_id, dag_id, t
         # Create a result that includes the update strategy metadata
         result = {
             'status': 200,
-            'target_table': source_table,  # Pass through the table name
-            'schema': source_schema,       # Pass through the schema
+            'node_type': 'UpdateStrategy',
+            'dag_id': dag_id,
+            'task_id': task_id,
+            'previous_instance_id': previous_instance_id,
+            'target_table': source_table,
+            'schema': source_schema,
             'update_strategy': update_strategy,
             'key_columns': key_columns,
             'query': f'-- UpdateStrategy: {update_strategy}, Key Columns: {key_columns}'
@@ -2891,6 +3069,15 @@ def Router(
     table_name = xcom_pull(ti, instance_id, previous_id)
 
     result_tables = {}
+    router_meta = {
+        'status': 200,
+        'node_type': 'Router',
+        'dag_id': dag_id,
+        'task_id': task_id,
+        'source_table': table_name,
+        'schema': schema,
+        'outputs': {}
+    }
 
     for condition, output_name in conditions:
         output_table_name = f"extracted_{task_id}_{output_name}_{unix_suffix}"
@@ -2907,10 +3094,11 @@ def Router(
         result = conn.sql(
             f"""SELECT * FROM postgres_query('pg_db', $$WITH {cte} SELECT count(*) FROM "{output_name}" $$);"""
         )
+        row_count = result.fetchone()[0]
         logger.info(
             f""" [Router Query for {output_name}]\n WITH {cte} SELECT * FROM "{output_name}" """
         )
-        logger.info(f"Total Records for {output_name}: {result.fetchone()[0]}")
+        logger.info(f"Total Records for {output_name}: {row_count}")
 
         with engine.begin() as conn1:
             conn1.execute(text(f"""
@@ -2920,7 +3108,15 @@ def Router(
 
         result_tables[output_name] = output_table_name
 
+        router_meta['outputs'][output_name] = {
+            'condition': condition,
+            'target_table': output_table_name,
+            'row_count': row_count
+        }
+
         ti.xcom_push(key=output_name, value=output_table_name)
+
+    ti.xcom_push(key='return_value', value=router_meta)
 
     conn.sql("DETACH pg_db")
 

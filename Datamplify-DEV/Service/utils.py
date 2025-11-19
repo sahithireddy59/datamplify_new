@@ -43,6 +43,21 @@ def encode_value(input_string):
     return encoded_string
 
 def decode_value(encoded_string):
+    """Decode a base64-encoded string, tolerating None/bytes inputs.
+
+    This avoids errors like "decoding to str: need a bytes-like object, NoneType found"
+    when a password or token is missing (None) or already bytes.
+    """
+    # Handle completely missing values gracefully
+    if encoded_string is None:
+        return ''
+
+    # Normalise to str before decoding
+    if isinstance(encoded_string, bytes):
+        encoded_string = encoded_string.decode('utf-8', errors='ignore')
+    else:
+        encoded_string = str(encoded_string)
+
     decoded_bytes = base64.b64decode(encoded_string.encode('utf-8'))
     decoded_string = decoded_bytes.decode('utf-8')
     return decoded_string
