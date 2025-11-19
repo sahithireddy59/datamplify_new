@@ -229,24 +229,14 @@
                     "router_1.customer_sk"
                 ],
                 [
-                    "new_end_date",
+                    "end_date",
                     "date",
                     "CURRENT_DATE - INTERVAL '1 day'"
                 ],
                 [
-                    "name",
-                    "text",
-                    "router_1.name"
-                ],
-                [
-                    "city",
-                    "text",
-                    "router_1.city"
-                ],
-                [
-                    "start_date",
-                    "date",
-                    "router_1.start_date"
+                    "is_current",
+                    "varchar",
+                    "'N'"
                 ]
             ],
             "previous_instance_id": "router_1",

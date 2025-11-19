@@ -1762,7 +1762,7 @@ def Load_into_database(
                 logger.info(f"Successfully synchronized target using DD_UPDATE strategy with key columns: {key_columns_list}")
                 
             elif update_strategy == 'update' and key_columns:
-                # Update only existing records
+                # Update only existing records - DYNAMIC column mapping support
                 key_columns_list = key_columns if isinstance(key_columns, list) else [key_columns]
                 
                 # Get actual columns from source table
@@ -1775,44 +1775,77 @@ def Load_into_database(
                 result = connection.execute(source_columns_query, {'schema': source_schema, 'table': source_table_name})
                 actual_source_columns = [row[0] for row in result.fetchall()]
                 
-                logger.info(f"Source table columns: {actual_source_columns}")
+                logger.info(f"[UPDATE] Source table columns: {actual_source_columns}")
+                logger.info(f"[UPDATE] Attribute mapper: {attribute_mapper}")
                 
-                # Filter key columns to only those that exist in source table
-                available_key_columns = [key for key in key_columns_list if key in actual_source_columns]
+                # Build column mapping: source_col_name -> target_col_name
+                col_map = {}
+                if attribute_mapper:
+                    for attr in attribute_mapper:
+                        tgt_col = attr[0]  # target column
+                        src_col = attr[2]  # source column (may have prefix like "table.column")
+                        # Remove table prefix
+                        src_col_clean = src_col.split('.')[-1] if '.' in src_col else src_col
+                        col_map[src_col_clean] = tgt_col
+                    logger.info(f"[UPDATE] Column mapping: {col_map}")
                 
-                if not available_key_columns:
-                    # If none of the specified key columns exist, try to find a suitable key
-                    # For SCD2, typically customer_sk is the surrogate key
-                    potential_keys = ['customer_sk', 'id', 'sk']
-                    for potential_key in potential_keys:
-                        if potential_key in actual_source_columns:
-                            available_key_columns = [potential_key]
-                            logger.warning(f"Key columns {key_columns_list} not found in source. Using {potential_key} instead.")
+                # Find key columns that exist in source
+                key_src_to_tgt = {}  # source key col -> target key col
+                for key in key_columns_list:
+                    # Check if key exists directly in source
+                    if key in actual_source_columns:
+                        key_src_to_tgt[key] = key
+                    # Check if any source column maps to this target key
+                    elif col_map:
+                        for src, tgt in col_map.items():
+                            if tgt == key and src in actual_source_columns:
+                                key_src_to_tgt[src] = tgt
+                                break
+                
+                # Fallback: try common key columns
+                if not key_src_to_tgt:
+                    for potential in ['customer_sk', 'id', 'sk']:
+                        if potential in actual_source_columns:
+                            key_src_to_tgt[potential] = potential
+                            logger.warning(f"[UPDATE] Using fallback key: {potential}")
                             break
                 
-                if not available_key_columns:
-                    logger.error(f"No valid key columns found. Specified: {key_columns_list}, Available: {actual_source_columns}")
-                    raise ValueError(f"Cannot perform UPDATE: key columns {key_columns_list} not found in source table")
+                if not key_src_to_tgt:
+                    raise ValueError(f"No valid key columns found. Specified: {key_columns_list}, Available: {actual_source_columns}")
                 
-                # Only update columns that exist in BOTH source and target
-                # Exclude key columns from updates
-                update_columns = [col for col in actual_source_columns if col not in available_key_columns]
+                # Build update columns (exclude keys)
+                update_src_to_tgt = {}  # source col -> target col for updates
+                for src_col in actual_source_columns:
+                    if src_col not in key_src_to_tgt:
+                        tgt_col = col_map.get(src_col, src_col)  # use mapping or same name
+                        update_src_to_tgt[src_col] = tgt_col
                 
-                logger.info(f"Will update columns: {update_columns} using key columns: {available_key_columns}")
+                logger.info(f"[UPDATE] Key mappings: {key_src_to_tgt}")
+                logger.info(f"[UPDATE] Update mappings: {update_src_to_tgt}")
                 
-                if update_columns:
-                    key_conditions = ' AND '.join([f'target."{key}" = source."{key}"' for key in available_key_columns])
-                    update_sets = ', '.join([f'"{col}" = source."{col}"' for col in update_columns])
+                if update_src_to_tgt:
+                    # Build WHERE: target.tgt_key = source.src_key
+                    key_conditions = ' AND '.join([
+                        f'target."{tgt}" = source."{src}"'
+                        for src, tgt in key_src_to_tgt.items()
+                    ])
+                    # Build SET: tgt_col = source.src_col
+                    update_sets = ', '.join([
+                        f'"{tgt}" = source."{src}"'
+                        for src, tgt in update_src_to_tgt.items()
+                    ])
+                    
                     update_query = text(f'''
                         UPDATE "{target_schema}"."{target_table_name}" AS target
                         SET {update_sets}
                         FROM "{source_schema}"."{source_table_name}" AS source
                         WHERE {key_conditions}
                     ''')
+                    logger.info(f"[UPDATE] Executing: {update_query}")
                     connection.execute(update_query)
-                    logger.info(f"Successfully updated {len(update_columns)} column(s) using UPDATE strategy with key columns: {available_key_columns}")
+                    logger.info(f"[UPDATE] ✅ Updated {len(update_src_to_tgt)} columns")
                 else:
-                    logger.warning("No columns to update (all columns are key columns)")
+                    logger.warning("[UPDATE] No columns to update")
 
             elif update_strategy == 'delete' and key_columns:
                 # Delete matching records
