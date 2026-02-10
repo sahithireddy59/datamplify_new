@@ -298,10 +298,11 @@ export class NavService implements OnDestroy {
     //Widgets
     {
       title: 'Home',
-      icon: `<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000">
-      <path d="M0 0h24v24H0V0z" fill="none"></path>
-      <path d="M12 5.69l5 4.5V18h-2v-6H9v6H7v-7.81l5-4.5M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3z"></path>
-  </svg>`,
+  //     icon: `<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000">
+  //     <path d="M0 0h24v24H0V0z" fill="none"></path>
+  //     <path d="M12 5.69l5 4.5V18h-2v-6H9v6H7v-7.81l5-4.5M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3z"></path>
+  // </svg>`,
+      icon: `<i class="fe fe-home side-menu__icon"></i>`,
       active: false,
       badgeClass: 'badge badge-sm bg-secondary badge-hide',
       badgeValue: 'new',
@@ -311,7 +312,8 @@ export class NavService implements OnDestroy {
     },
     {
       title: 'EasyConnect',
-      icon: `<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link-2"><path fill="none" d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3"></path><line fill="none" x1="8" y1="12" x2="16" y2="12"></line></svg>`,
+      // icon: `<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link-2"><path fill="none" d="M15 7h3a5 5 0 0 1 5 5 5 5 0 0 1-5 5h-3m-6 0H6a5 5 0 0 1-5-5 5 5 0 0 1 5-5h3"></path><line fill="none" x1="8" y1="12" x2="16" y2="12"></line></svg>`,
+      icon: `<i class="fe fe-link-2 side-menu__icon"></i>`,
       active: false,
       badgeClass: 'badge badge-sm bg-secondary badge-hide',
       badgeValue: 'new',
@@ -320,22 +322,23 @@ export class NavService implements OnDestroy {
       nochild: true, 
     },
     {
-      title: 'FlowBoard',
-      icon: `<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-git-branch"><line fill="none" x1="6" y1="3" x2="6" y2="15"></line><circle fill="none" cx="18" cy="6" r="3"></circle><circle fill="none" cx="6" cy="18" r="3"></circle><path fill="none" d="M18 9a9 9 0 0 1-9 9"></path></svg>`,
+      title: 'DagBoard',
+      // icon: `<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-git-branch"><line fill="none" x1="6" y1="3" x2="6" y2="15"></line><circle fill="none" cx="18" cy="6" r="3"></circle><circle fill="none" cx="6" cy="18" r="3"></circle><path fill="none" d="M18 9a9 9 0 0 1-9 9"></path></svg>`,
+      icon: `<i class="fe fe-git-branch side-menu__icon"></i>`,
       active: false,
       badgeClass: 'badge badge-sm bg-secondary badge-hide',
       badgeValue: 'new',
-      path: 'datamplify/flowboardList',
+      path: 'datamplify/DagBoardList',
       type: 'link',
       nochild: true,
     },
     {
-      title: 'TaskPlan',
+      title: 'TaskRunPlan',
       icon: `<i class="fa-solid fa-chart-diagram side-menu__icon"></i>`,
       active: false,
       badgeClass: 'badge badge-sm bg-secondary badge-hide',
       badgeValue: 'new',
-      path: 'datamplify/taskplanList',
+      path: 'datamplify/TaskRunPlanList',
       type: 'link',
       nochild: true,
     },

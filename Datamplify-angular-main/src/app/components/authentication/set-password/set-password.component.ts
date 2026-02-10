@@ -78,13 +78,17 @@ export class SetPasswordComponent {
     this.token = this.activatedRoute.snapshot.params['token'];
     this.authService.setPassword(this.token, this.setPasswordForm.value).subscribe({
       next: (data: any) => {
-        Swal.fire({
-          icon: 'success',
-          title: 'Password Set Successfully!',
-          text: 'Your account is now active. Please sign in.',
-          width: '400px'
+        localStorage.removeItem('username');
+        localStorage.removeItem('currentUser');
+        localStorage.clear();
+        this.router.navigate(['/authentication/login']).then(() => {
+          Swal.fire({
+            icon: 'success',
+            title: 'Password Set Successfully!',
+            text: 'Your account is now active. Please sign in.',
+            width: '400px'
+          });
         });
-        this.router.navigate(['authentication/login']);
       },
       error: (error) => {
         this.toastr.error(error.error.message, 'Error');

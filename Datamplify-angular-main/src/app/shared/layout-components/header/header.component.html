@@ -143,7 +143,7 @@
          
                 <!-- header search -->
 
-                <div class="mt-2">
+                <div class="mt-2 ms-4">
                     <h4 class="gradient-text">Welcome back, {{userName}}</h4>
                 </div>
             </div>
@@ -897,8 +897,10 @@
                         <li *ngIf="viewRoles"><a ngbDropdownItem class="dropdown-item" (click)="routeToRolesDashboard()"><i
                                     class="ti ti-clipboard-check fs-18 me-2 op-7"></i>List Roles</a></li>
                     
-                        <li><a ngbDropdownItem class="dropdown-item" (click)="routeToConfigurePage()"><i
+                        <li><a ngbDropdownItem class="dropdown-item" *appHasPermission="{ id: 1, mode: 'disable' }" (click)="routeToConfigurePage()"><i
                                     class="ti ti-settings fs-18 me-2 op-7"></i>Configure</a></li>
+                        <li><a ngbDropdownItem class="dropdown-item" (click)="routeToEmbedApplication()"><i
+                                    class="ti ti-settings fs-18 me-2 op-7"></i>Embed Application</a></li>
                         <!-- <li><a ngbDropdownItem class="dropdown-item" (click)="routeToUpdatePasswordPage()"><i
                                     class="ti ti-lock fs-18 me-2 op-7"></i>Update password</a></li> -->
                         <li><a ngbDropdownItem class="dropdown-item" (click)="logOut()"><i class="ti ti-power fs-18 me-2 op-7"></i>Sign

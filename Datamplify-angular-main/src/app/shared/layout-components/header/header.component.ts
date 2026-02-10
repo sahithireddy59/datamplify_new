@@ -5,6 +5,7 @@ import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
 import { ViewTemplateDrivenService } from '../../../components/workbench/view-template-driven.service';
 import { SharedService } from '../../services/shared.service';
+import { NavigationService } from '../../services/navigation.service';
 interface Item {
   id: number;
   name: string;
@@ -27,7 +28,7 @@ export class HeaderComponent implements OnInit {
   viewUsers = false;
   @Input() isPublicUrl!:boolean; 
   constructor(public navServices: NavService,public modalService:NgbModal,private cdr: ChangeDetectorRef,private authService:AuthService,private router:Router,
-    private elementRef: ElementRef,public renderer:Renderer2,private viewTemplateService:ViewTemplateDrivenService,private sharedService: SharedService) {
+    private elementRef: ElementRef,public renderer:Renderer2,private viewTemplateService:ViewTemplateDrivenService,private sharedService: SharedService, private navigationService: NavigationService) {
 
 
   }  SwicherOpen(){
@@ -255,11 +256,7 @@ export class HeaderComponent implements OnInit {
     this.sharedService.download();
   }
   logOut() {
-    this.authService.logOut().subscribe((res) => {
-      if (!res.success) {
-        this.router.navigate(['/authentication/signin']);
-      }
-    });
+    this.authService.logOut();
   }
   routehelpGuide(){
     this.router.navigate(['/datamplify/help-guide']);
@@ -356,10 +353,13 @@ export class HeaderComponent implements OnInit {
   }
 
   routeToConfigurePage() {
-    this.router.navigate(['/datamplify/configure-page/configure']);
+    this.navigationService.navigate(['datamplify','configure-page','configure']);
   }
   routeToUpdatePasswordPage(){
     this.router.navigate(['/datamplify/update-password']);
+  }
+  routeToEmbedApplication(){
+    this.navigationService.navigate(['datamplify','embed-sdk']);
   }
 }
 

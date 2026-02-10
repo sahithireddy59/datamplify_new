@@ -82,6 +82,8 @@ def run_sql_commands(queries,hierarchy_id,user_id):
         except Exception as e:
             logger.error(f'Error: {str(e)}')
             trans.rollback()
+        finally:
+            trans.commit()
     return results if results else None
     
 

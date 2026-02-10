@@ -27,13 +27,6 @@ export class WorkbenchService {
     return this.http.post<any>(`${environment.apiUrl}/usercustomtheme/` + this.accessToken, obj);
   }
 
-  // API Key verification
-  openApiKey(obj: any) {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
-    return this.http.post<any>(`${environment.apiUrl}/ai/validate-api-key/` + this.accessToken, obj);
-  }
-
   //roles
   getSavedRolesList(obj: any) {
     const currentUser = localStorage.getItem('currentUser');
@@ -111,292 +104,240 @@ export class WorkbenchService {
   }
 
   // easy connection
-  getDataSources() {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
-    console.log('🔑 Making API call with token:', this.accessToken ? 'Token exists' : 'No token');
-    console.log('🌐 API URL:', `${environment.apiUrl}/connections/datasources/`);
-    
-    return this.http.get<any>(`${environment.apiUrl}/connections/datasources/`, {headers: this.buildHeaders(this.accessToken)});
-  }
-
   getSchemaList(object:any){
-    const currentUser = localStorage.getItem( 'currentUser' );
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.post<any>(`${environment.apiUrl}/connections/get_schema/`, object, {headers: this.buildHeaders(this.accessToken)});
   }
   databaseConnection(object: any) {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.post<any>(`${environment.apiUrl}/connections/Database_connection/`, object, {headers: this.buildHeaders(this.accessToken)});
   }
 
   updateDatabaseConnection(hierarchyId: any, object: any) {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.put<any>(`${environment.apiUrl}/connections/Database_connection/${hierarchyId}`, object, {headers: this.buildHeaders(this.accessToken)});
   }
 
   fileConnection(formData: FormData) {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.post<any>(`${environment.apiUrl}/connections/File_connection/`, formData, { headers: this.buildHeaders(this.accessToken) });
   }
 
   updateFileConnection(formData: FormData, hierarchyId: any) {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.put<any>(`${environment.apiUrl}/connections/File_connection/${hierarchyId}`, formData, { headers: this.buildHeaders(this.accessToken) });
   }
 
   remoteServerConnection(object:any){
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.post<any>(`${environment.apiUrl}/connections/remote_file/`, object, {headers: this.buildHeaders(this.accessToken)});
   }
 
-  getConnectionsList(page:any, pageSize:any, search:any, connectionType?: number) {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
-    
-    let url = `${environment.apiUrl}/connections/Connection_list/?page=${page}&page_size=${pageSize}`;
-    if (search) url += `&search=${search}`;
-    if (connectionType) url += `&type=${connectionType}`;
-    
-    console.log('📋 Fetching connections from:', url);
-    return this.http.get<any>(url, { headers: this.buildHeaders(this.accessToken) });
+  updateremoteServerConnection(hierarchyId: any, object: any) {
+    return this.http.put<any>(`${environment.apiUrl}/connections/remote_connection/${hierarchyId}`, object, {headers: this.buildHeaders(this.accessToken)});
+  }
+
+  getConnectionsList(page:any, pageSize:any, search:any) {
+    return this.http.get<any>(`${environment.apiUrl}/connections/Connection_list/?page=${page}&page_size=${pageSize}` + (search ? `&search=${search}` : ``), { headers: this.buildHeaders(this.accessToken) });
   }
 
   getDatabaseConnection(hierarchyId:any){
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.get<any>(`${environment.apiUrl}/connections/Database_connection/${hierarchyId}`, { headers: this.buildHeaders(this.accessToken) });
   }
 
   getFileConnection(hierarchyId:any){
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.get<any>(`${environment.apiUrl}/connections/File_connection/${hierarchyId}`, { headers: this.buildHeaders(this.accessToken) });
   }
 
+  getRemoteServerConnection(hierarchyId:any){
+    return this.http.get<any>(`${environment.apiUrl}/connections/remote_connection/${hierarchyId}`, { headers: this.buildHeaders(this.accessToken) });
+  }
+
   deleteDatabseConnection(hierarchyId:any){
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.delete<any>(`${environment.apiUrl}/connections/Database_connection/${hierarchyId}`, { headers: this.buildHeaders(this.accessToken) });
   }
 
   deleteFileConnection(hierarchyId:any){
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.delete<any>(`${environment.apiUrl}/connections/File_connection/${hierarchyId}`, { headers: this.buildHeaders(this.accessToken) });
+  }
+
+  getExcelSheets(hierarchyId: string) {
+    return this.http.get<any>(`${environment.apiUrl}/connections/excel_sheets/${hierarchyId}/`, { headers: this.buildHeaders(this.accessToken) });
+  }
+
+  updateExcelSheets(hierarchyId: string, selectedSheets: string[]) {
+    return this.http.put<any>(`${environment.apiUrl}/connections/excel_sheets/${hierarchyId}/`, 
+      { selected_sheets: selectedSheets }, 
+      { headers: this.buildHeaders(this.accessToken) }
+    );
+  }
+
+  getFileSchema(hierarchyId: string) {
+    return this.http.get<any>(`${environment.apiUrl}/connections/file_schema/${hierarchyId}/`, { headers: this.buildHeaders(this.accessToken) });
+  }
+
+  deleteRemoteServerConnection(hierarchyId:any){
+    return this.http.delete<any>(`${environment.apiUrl}/connections/remote_connection/${hierarchyId}`, { headers: this.buildHeaders(this.accessToken) });
+  }
+
+  getIntegrationsUrl(type: any, country?: any) {
+    return this.http.post<any>(`${environment.apiUrl}/connections/integration_url/${type}${type.includes('zoho') ? `?country=${country}` : ''}`, {headers: this.buildHeaders(this.accessToken)});
+  }
+
+  integrationConnection(object: any, type: any) {
+    return this.http.post<any>(`${environment.apiUrl}/connections/Integration/${type}`, object, {headers: this.buildHeaders(this.accessToken)});
+  }
+
+  updateIntegrationConnection(object: any, hierarchyId: any) {
+    return this.http.put<any>(`${environment.apiUrl}/connections/Integrations/${hierarchyId}`, object, {headers: this.buildHeaders(this.accessToken)});
+  }
+
+  getIntegrationConnection(hierarchyId: any) {
+    return this.http.get<any>(`${environment.apiUrl}/connections/Integrations/${hierarchyId}`, { headers: this.buildHeaders(this.accessToken) });
+  }
+
+  deleteIntegrationConnection(hierarchyId: any) {
+    return this.http.delete<any>(`${environment.apiUrl}/connections/Integrations/${hierarchyId}`, { headers: this.buildHeaders(this.accessToken) });
+  }
+
+  getIntegrationEndpoints(hierarchyId:any){
+    return this.http.get<any>(`${environment.apiUrl}/connections/Integration_tables/${hierarchyId}`, {headers: this.buildHeaders(this.accessToken)});
+  }
+
+  getIntegrationSchemaList(object:any){
+    return this.http.post<any>(`${environment.apiUrl}/connections/Integration_schema/`, object, {headers: this.buildHeaders(this.accessToken)});
   }
 
   //etl
   saveEtl(object: any) {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.post<any>(`${environment.apiUrl}/flowboard/flow/`, object, { headers: this.buildHeaders(this.accessToken) });
-    // return this.http.post<any>(`${environment.apiUrl}/etl/` + this.accessToken, object);
   }
 
   updateEtl(object: any) {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.put<any>(`${environment.apiUrl}/flowboard/flow/`, object, { headers: this.buildHeaders(this.accessToken) });
-    // return this.http.put<any>(`${environment.apiUrl}/etl_update/` + this.accessToken, object);
   }
 
   getEtlDataFlow(id: any, type: any) {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.get<any>(`${environment.apiUrl}/flowboard/flow/` + id, { headers: this.buildHeaders(this.accessToken) });
-    // return this.http.get<any>(`${environment.apiUrl}/etl_data/` + this.accessToken + '/' + id + `?flow=${type}`);
   }
 
   deleteFlowboard(id: any) {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.delete<any>(`${environment.apiUrl}/flowboard/flow/` + id, { headers: this.buildHeaders(this.accessToken) });
-    // return this.http.delete<any>(`${environment.apiUrl}/dag_delete/` + this.accessToken + '/' + id);
   }
 
   saveTaskPlan(object: any) {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.post<any>(`${environment.apiUrl}/taskplan/task/`, object, { headers: this.buildHeaders(this.accessToken) });
-    // return this.http.post<any>(`${environment.apiUrl}/etl/` + this.accessToken, object);
   }
 
   updateTaskPlan(object: any) {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.put<any>(`${environment.apiUrl}/taskplan/task/`, object, { headers: this.buildHeaders(this.accessToken) });
-    // return this.http.put<any>(`${environment.apiUrl}/etl_update/` + this.accessToken, object);
   }
 
   getTaskPlan(id: any, type: any) {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.get<any>(`${environment.apiUrl}/taskplan/task/` + id, { headers: this.buildHeaders(this.accessToken) });
-    // return this.http.get<any>(`${environment.apiUrl}/etl_data/` + this.accessToken + '/' + id + `?flow=${type}`);
   }
 
   deleteTaskPlan(id: any) {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.delete<any>(`${environment.apiUrl}/taskplan/task/` + id, { headers: this.buildHeaders(this.accessToken) });
-    // return this.http.delete<any>(`${environment.apiUrl}/dag_delete/` + this.accessToken + '/' + id);
   }
 
   getFlowboardList(page: any, pageSize: any, search: any) {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.get<any>(`${environment.apiUrl}/flowboard/list/` + `?page=${page}&page_size=${pageSize}` + (search ? `&search=${search}` : ``), { headers: this.buildHeaders(this.accessToken) });
-    // return this.http.get<any>(`${environment.apiUrl}/dags_list/` + this.accessToken + `?page=${page}&page_size=${pageSize}` + (search ? `&search=${search}` : ``) + `&flow=${type}`);
   }
 
   getTaskPlanList(page: any, pageSize: any, search: any) {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.get<any>(`${environment.apiUrl}/taskplan/list/` + `?page=${page}&page_size=${pageSize}` + (search ? `&search=${search}` : ``), { headers: this.buildHeaders(this.accessToken) });
-    // return this.http.get<any>(`${environment.apiUrl}/dags_list/` + this.accessToken + `?page=${page}&page_size=${pageSize}` + (search ? `&search=${search}` : ``) + `&flow=${type}`);
   }
 
   runEtl(dagId: any, type:string) {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
-    return this.http.post<any>(`${environment.apiUrl}/monitor/Trigger/${dagId}/?type=${type}`, {}, { headers: this.buildHeaders(this.accessToken) });
-    // return this.http.post<any>(`${environment.apiUrl}/trigger/` + dagId + '/' + this.accessToken, {});
+    return this.http.post<any>(`${environment.apiUrl}/monitor/Trigger/${dagId}?type=${type}`, {}, { headers: this.buildHeaders(this.accessToken) });
   }
 
   getDataFlowStatus(object: any) {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.post<any>(`${environment.apiUrl}/monitor/status/`, object, { headers: this.buildHeaders(this.accessToken) });
-    // return this.http.post<any>(`${environment.apiUrl}/dataflow_status/` + this.accessToken, object);
   }
 
   getDataFlowLogs(object: any) {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.post<any>(`${environment.apiUrl}/monitor/task_status/`, object, { headers: this.buildHeaders(this.accessToken) });
-    // return this.http.post<any>(`${environment.apiUrl}/Dataflow_Task_status/` + this.accessToken, object);
   }
   getConnectionsForEtl(type: any) {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
-    
-    // If type is null, don't include the type parameter to get all connections
-    const url = type ? 
-      `${environment.apiUrl}/connections/ETL_connection_list/?type=${type}` : 
-      `${environment.apiUrl}/connections/ETL_connection_list/`;
-    
-    console.log('🔗 FlowBoard API call:', url);
-    return this.http.get<any>(url, { headers: this.buildHeaders(this.accessToken) });
+    return this.http.get<any>(`${environment.apiUrl}/connections/ETL_connection_list/` + `?type=${type}`, { headers: this.buildHeaders(this.accessToken) });
   }
 
   getTablesForDataTransformation(hierarchyId: any) {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.get<any>(`${environment.apiUrl}/connections/Server_tables/${hierarchyId}/`, { headers: this.buildHeaders(this.accessToken) });
-    // return this.http.get<any>(`${environment.apiUrl}/Database_tables/` + this.accessToken + `/${hierarchyId}`);
   }
 
   getDataObjectsForFile(id: any) {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.get<any>(`${environment.apiUrl}/connections/file_schema/${id}/`, { headers: this.buildHeaders(this.accessToken) });
-    // return this.http.get<any>(`${environment.apiUrl}/get_file_detials/` + this.accessToken + '/' + id);
   }
   getFilesForServer(from: any) {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.get<any>(`${environment.apiUrl}/connections/ListFiles/?path=${from}`,{ headers: this.buildHeaders(this.accessToken) });
-    // return this.http.get<any>(`${environment.apiUrl}/list-files/` + this.accessToken + `?path=${from}`);
   }
   getDataObjectsFromServer(object: any) {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.post<any>(`${environment.apiUrl}/connections/server_files/`, object, { headers: this.buildHeaders(this.accessToken) });
-    // return this.http.post<any>(`${environment.apiUrl}/server_files/` + this.accessToken, object);
   }
 
   getDashboardData() {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.get<any>(`${environment.apiUrl}/monitor/Home`, { headers: this.buildHeaders(this.accessToken) });
   }
 
   getMonitorKpiData(){
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.get<any>(`${environment.apiUrl}/monitor/kpi_values/`, { headers: this.buildHeaders(this.accessToken) });
   }
 
   getMonitorList(page: any, pageSize: any, search: any){
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.get<any>(`${environment.apiUrl}/monitor/rescent_runs/` + `?page=${page}&page_size=${pageSize}` + (search ? `&search=${search}` : ``), { headers: this.buildHeaders(this.accessToken) });
   }
 
   getSchedulerList(page: any, pageSize: any, search: any, status: any){
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.get<any>(`${environment.apiUrl}/schedule/schedule` + `?page=${page}&page_size=${pageSize}` + (search ? `&search=${search}` : ``) + (status ? `&status=${status}` : ``), { headers: this.buildHeaders(this.accessToken) });
   }
 
   saveScheduler(object: any){
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.post<any>(`${environment.apiUrl}/schedule/schedule`, object, { headers: this.buildHeaders(this.accessToken) });
   }
 
   updateScheduler(id:any, object: any){
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.put<any>(`${environment.apiUrl}/schedule/schedule_update/${id}`, object, { headers: this.buildHeaders(this.accessToken) });
   }
 
   deleteScheduler(id: any){
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.delete<any>(`${environment.apiUrl}/schedule/schedule_update/${id}`, { headers: this.buildHeaders(this.accessToken) });
   }
 
   getSchedukerKpisData(){
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.get<any>(`${environment.apiUrl}/schedule/kpis/`, { headers: this.buildHeaders(this.accessToken) });
   }
 
   getScheduler(id: any){
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.get<any>(`${environment.apiUrl}/schedule/ScheduleDetail/${id}`, { headers: this.buildHeaders(this.accessToken) });
   }
 
   getUpcommingRuns(page: any, pageSize: any, search: any){
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.get<any>(`${environment.apiUrl}/schedule/upcoming_runs/` + `?page=${page}&page_size=${pageSize}` + (search ? `&search=${search}` : ``), { headers: this.buildHeaders(this.accessToken) });
   }
 
   changeSchedulerStatus(object: any){
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.patch<any>(`${environment.apiUrl}/schedule/status_Update/`, object, { headers: this.buildHeaders(this.accessToken) });
   }
 
   getRemoteServerFiles(object:any){
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.post<any>(`${environment.apiUrl}/flowboard/server_files/`, object, { headers: this.buildHeaders(this.accessToken) });
   }
 
   getRemoteServerFileData(object:any){
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.post<any>(`${environment.apiUrl}/flowboard/file_schema/`, object, { headers: this.buildHeaders(this.accessToken) });
+  }
+
+  setEmbeddedScriptData(object:any){
+    return this.http.post<any>(`${environment.apiUrl}/authentication/oauth2/application`, object, { headers: this.buildHeaders(this.accessToken) });
+  }
+
+  getEmbeddedScriptData() {
+    return this.http.get<any>(`${environment.apiUrl}/authentication/oauth2/application`, { headers: this.buildHeaders(this.accessToken) });
+  }
+
+  validateEmbeddedScriptData(object:any) {
+    return this.http.post<any>(`${environment.apiUrl}/authentication/validate/client`, object, { headers: this.buildHeaders(this.accessToken) });
+  }
+
+  getPermissionsList(){
+    return this.http.get<any>(`${environment.apiUrl}/authentication/user`, { headers: this.buildHeaders(this.accessToken) });
   }
 
   // Airflow API
@@ -432,8 +373,6 @@ export class WorkbenchService {
   }
 
   getAirFlowApiToken() {
-    const currentUser = localStorage.getItem('currentUser');
-    this.accessToken = JSON.parse(currentUser!)['Token'];
     return this.http.get<any>(`${environment.apiUrl}/monitor/airflow_token/`);
   }
 
@@ -470,119 +409,47 @@ export class WorkbenchService {
   getDags(limit: number, pageNo: number, searchTerm: string) {
     const offset = (pageNo - 1) * limit;
     this.getUserName();
-    return this.getHeaders().pipe(
-      switchMap(headers =>
-        this.retryWithTokenRefresh(() =>
-          this.http.get(`${environment.airflowApiUrl}/api/v2/dags?limit=${limit}&offset=${offset}&dag_id_pattern=${searchTerm}&tags=${this.username}&order_by=last_run_start_date`, {
-            headers: headers,
-          })
-        )
-      )
-    );
+    return this.retryWithTokenRefresh(() => this.http.get(`${environment.airflowApiUrl}/api/v2/dags?limit=${limit}&offset=${offset}&dag_id_pattern=${searchTerm}&tags=${this.username}&order_by=last_run_start_date`))
   }
 
   //sidebar tasks runs data
   getRunAndTaskStatus(dagId: any, limit: number) {
-    return this.getHeaders().pipe(
-      switchMap(headers =>
-        this.retryWithTokenRefresh(() =>
-          this.http.get(`${environment.airflowApiUrl}/ui/grid/${dagId}?limit=${limit}&order_by=-run_after`, {
-            headers: headers,
-          })
-        )
-      )
-    );
+    return this.retryWithTokenRefresh(() => this.http.get(`${environment.airflowApiUrl}/ui/grid/${dagId}?limit=${limit}&order_by=-run_after`))
   }
 
   //overview header data
   getRecentDagRuns(dagId: any) {
-    return this.getHeaders().pipe(
-      switchMap(headers =>
-        this.retryWithTokenRefresh(() =>
-          this.http.get(`${environment.airflowApiUrl}/ui/dags/recent_dag_runs?dag_ids=${dagId}`, {
-            headers: headers,
-          })
-        )
-      )
-    );
+    return this.retryWithTokenRefresh(() => this.http.get(`${environment.airflowApiUrl}/ui/dags/recent_dag_runs?dag_ids=${dagId}`))
   }
 
   //dag runs data
   getDagRuns(dagId: string, limit: number, cuurentPage: number, state: string, runType: string, orderBy: string) {
     const offset = (cuurentPage - 1) * limit;
-    return this.getHeaders().pipe(
-      switchMap(headers =>
-        this.retryWithTokenRefresh(() =>
-          this.http.get(`${environment.airflowApiUrl}/api/v2/dags/${dagId}/dagRuns?limit=${limit}&offset=${offset}&order_by=${orderBy}` + (state ? `&state=${state}` : ``) + (runType ? `&run_type=${runType}` : ``), {
-            headers: headers,
-          })
-        )
-      )
-    );
+    return this.retryWithTokenRefresh(() => this.http.get(`${environment.airflowApiUrl}/api/v2/dags/${dagId}/dagRuns?limit=${limit}&offset=${offset}&order_by=${orderBy}` + (state ? `&state=${state}` : ``) + (runType ? `&run_type=${runType}` : ``)))
   }
 
   //tasks data
   getDagTasks(dagId: string) {
-    return this.getHeaders().pipe(
-      switchMap(headers =>
-        this.retryWithTokenRefresh(() =>
-          this.http.get(`${environment.airflowApiUrl}/api/v2/dags/${dagId}/tasks`, {
-            headers: headers,
-          })
-        )
-      )
-    );
+    return this.retryWithTokenRefresh(() => this.http.get(`${environment.airflowApiUrl}/api/v2/dags/${dagId}/tasks`))
   }
 
   //task List data
   getTaskInstancesList(dagId: string, runId: string, taskId: string) {
-    return this.getHeaders().pipe(
-      switchMap(headers =>
-        this.retryWithTokenRefresh(() =>
-          this.http.get(`${environment.airflowApiUrl}/api/v2/dags/${dagId}/dagRuns/${runId}/taskInstances?task_id=${taskId}&order_by=-run_after&limit=14`, {
-            headers: headers
-          })
-        )
-      )
-    );
+    return this.retryWithTokenRefresh(() => this.http.get(`${environment.airflowApiUrl}/api/v2/dags/${dagId}/dagRuns/${runId}/taskInstances?task_id=${taskId}&order_by=-run_after&limit=14`))
   }
 
   //task runs status and duration data
   getTaskInstances(dagId: string, runId: string) {
-    return this.getHeaders().pipe(
-      switchMap(headers =>
-        this.retryWithTokenRefresh(() =>
-          this.http.get(`${environment.airflowApiUrl}/api/v2/dags/${dagId}/dagRuns/${runId}/taskInstances`, {
-            headers: headers
-          })
-        )
-      )
-    );
+    return this.retryWithTokenRefresh(() => this.http.get(`${environment.airflowApiUrl}/api/v2/dags/${dagId}/dagRuns/${runId}/taskInstances`))
   }
 
   //task and logs headers data
   getTasksHeadersData(dagId: string, runId: string) {
-    return this.getHeaders().pipe(
-      switchMap(headers =>
-        this.retryWithTokenRefresh(() =>
-          this.http.get(`${environment.airflowApiUrl}/api/v2/dags/${dagId}/dagRuns/${runId}`, {
-            headers: headers
-          })
-        )
-      )
-    );
+    return this.retryWithTokenRefresh(() => this.http.get(`${environment.airflowApiUrl}/api/v2/dags/${dagId}/dagRuns/${runId}`))
   }
 
   //task logs data
   getLogsOfTaskInstance(dagId: string, runId: string, taskId: string) {
-    return this.getHeaders().pipe(
-      switchMap(headers =>
-        this.retryWithTokenRefresh(() =>
-          this.http.get(`${environment.airflowApiUrl}/api/v2/dags/${dagId}/dagRuns/${runId}/taskInstances/${taskId}/logs/1?map_index=-1`, {
-            headers: headers
-          })
-        )
-      )
-    );
+    return this.retryWithTokenRefresh(() => this.http.get(`${environment.airflowApiUrl}/api/v2/dags/${dagId}/dagRuns/${runId}/taskInstances/${taskId}/logs/1?map_index=-1`))
   }
 }

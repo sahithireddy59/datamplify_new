@@ -10,9 +10,9 @@ from rest_framework import status
 from django.core.mail import send_mail
 from django.contrib.auth import authenticate, login
 from authentication import serializers
-from oauth2_provider.models import AccessToken
+from oauth2_provider.models import AccessToken,RefreshToken
 from django.contrib.auth.hashers import make_password,check_password
-from authentication.utils import get_access_token,token_function
+from authentication.utils import get_access_token,token_function,app_login_check,app_create
 from pytz import utc
 import random,datetime
 from drf_yasg.utils import swagger_auto_schema
@@ -140,53 +140,93 @@ class Login(APIView):
     @swagger_auto_schema(request_body=serializers.LoginSerializer)
     @csrf_exempt
     def post(self,request):
+        import time
+        start = time.time()
         serializer = self.serializer_class(data = request.data)
         if serializer.is_valid(raise_exception=True):
-            email  = serializer.data['email']
-            password = serializer.data['password']
+            email = serializer.validated_data['email']
+            password = serializer.validated_data['password']
 
-            if (auth_models.UserProfile.objects.filter(email__iexact=email).exists()):
-                if (auth_models.UserProfile.objects.filter(email__iexact=email,is_active=True).exists()):
-                    data = auth_models.UserProfile.objects.get(email__iexact=email)
-                    try:
-                        user = authenticate(email=data, password=password)
-                    except Exception as e:
-                        return Response({"message":"Incorrect Password"}, status=status.HTTP_401_UNAUTHORIZED) 
-                    AccessToken.objects.filter(expires__lte=datetime.datetime.now(utc)).delete()
-                    if user is not None:
-                        access_token=get_access_token(data.email,password)
-                        if access_token['status']==200:
-                            # AccessToken.objects.filter(token=access_token['data']['access_token']).update(is_allowed=False)
-                            login(request, user)
+            try:
+                import time
+                data = auth_models.UserProfile.objects.get(email__iexact=email)
+            except Exception as e:
+                return Response({"message" :"You do not have an account, Please SIGNUP with Datamplify"}, status=status.HTTP_401_UNAUTHORIZED)
+            if data.is_active is False:
+                return Response({"message":'Account is in In-Active, please Activate your account'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+            try:
+                user = authenticate(email=data, password=password)
+            except Exception as e:
+                return Response({"message":"Incorrect Password"}, status=status.HTTP_401_UNAUTHORIZED)
+            # AccessToken.objects.filter(expires__lte=datetime.datetime.now(utc)).delete()
+            if user is not None:
+                access_token=get_access_token(data)
+                permissions = list(
+                    auth_models.Permission.objects.filter(
+                        roles__users=user.id
+                    ).distinct().values_list('id', flat=True)
+                )
 
-                            # ✅ Permissions (through roles)
-                            permissions = list(
-                                auth_models.Permission.objects.filter(roles__users=user.id)
-                                .distinct()
-                                .values_list("id",flat=True)
-                            )
-                            data = ({
-                                "accessToken":access_token['data']['access_token'],
+                if access_token['status']==200:
+                    data = ({
+                                "accessToken":access_token['access_token'],
                                 "username":data.username,
                                 "email":data.email,
                                 "first_name":data.first_name,
                                 "last_name":data.last_name,
-                                "user_id":data.id,
                                 "is_active":data.is_active,
                                 "created_at":data.created_at,
                                 "is Super user":data.is_superuser,
                                 "created_by":data.created_by.id if data.created_by else None,
-                                "permissions":permissions
+                                "permissions":list(permissions)
                             })
-                            return Response(data, status=status.HTTP_200_OK)
-                        else:
-                            return Response(access_token,status=access_token['status'])
-                    else:
-                        return Response({"message" : "Incorrect password"},status=status.HTTP_400_BAD_REQUEST)
+                    return Response(data, status=status.HTTP_200_OK)
                 else:
-                    return Response({"message":'Account is in In-Active, please Activate your account'}, status=status.HTTP_406_NOT_ACCEPTABLE)
-            else:
-                return Response({"message" :"You do not have an account, Please SIGNUP with Datamplify"}, status=status.HTTP_401_UNAUTHORIZED)
+                    return Response(access_token,status=access_token['status'])
+                    
+            # if (auth_models.UserProfile.objects.filter(email__iexact=email).exists()):
+            #     if (auth_models.UserProfile.objects.filter(email__iexact=email,is_active=True).exists()):
+            #         data = auth_models.UserProfile.objects.get(email__iexact=email)
+            #         try:
+            #             user = authenticate(email=data, password=password)
+            #         except Exception as e:
+            #             return Response({"message":"Incorrect Password"}, status=status.HTTP_401_UNAUTHORIZED) 
+            #         AccessToken.objects.filter(expires__lte=datetime.datetime.now(utc)).delete()
+            #         if user is not None:
+            #             access_token=get_access_token(data.email,password)
+            #             if access_token['status']==200:
+                            
+                            # AccessToken.objects.filter(token=access_token['data']['access_token']).update(is_allowed=False)
+                            # login(request, user)
+
+                            # ✅ Permissions (through roles)
+            #                 permissions = list(
+            #                     auth_models.Permission.objects.filter(roles__users=user.id)
+            #                     .distinct()
+            #                     .values_list("id",flat=True)
+            #                 )
+            #                 data = ({
+            #                     "accessToken":access_token['data']['access_token'],
+            #                     "username":data.username,
+            #                     "email":data.email,
+            #                     "first_name":data.first_name,
+            #                     "last_name":data.last_name,
+            #                     "user_id":data.id,
+            #                     "is_active":data.is_active,
+            #                     "created_at":data.created_at,
+            #                     "is Super user":data.is_superuser,
+            #                     "created_by":data.created_by.id if data.created_by else None,
+            #                     "permissions":permissions
+            #                 })
+            #                 return Response(data, status=status.HTTP_200_OK)
+            #             else:
+            #                 return Response(access_token,status=access_token['status'])
+            #         else:
+            #             return Response({"message" : "Incorrect password"},status=status.HTTP_400_BAD_REQUEST)
+            #     else:
+            #         return Response({"message":'Account is in In-Active, please Activate your account'}, status=status.HTTP_406_NOT_ACCEPTABLE)
+            # else:
+            #     return Response({"message" :"You do not have an account, Please SIGNUP with Datamplify"}, status=status.HTTP_401_UNAUTHORIZED)
         else:
             return Response({"message" : "Enter Email and Password"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -483,9 +523,10 @@ class UsersList(APIView):
         page_number = int(request.query_params.get(paginator.page_query_param, 1))
         page_size = int(request.query_params.get(paginator.page_size_query_param, paginator.page_size))
         page_size = min(page_size, paginator.max_page_size)
+        search = request.query_params.get('search','')
 
         admin_user = auth_models.UserProfile.objects.get(id=user_id)
-        invites_qs = auth_models.UserInvite.objects.filter(invited_by=admin_user)
+        invites_qs = auth_models.UserInvite.objects.filter(invited_by=admin_user,username__icontains=search)
 
         total_records = invites_qs.count()
         total_pages = ceil(total_records / page_size)
@@ -573,81 +614,61 @@ class EditUser(APIView):
 class DeleteInviteUser(APIView):
     authentication_classes = [OAuth2Authentication]
     permission_classes = [CustomIsAuthenticated]
-    serializer_class = serializers.UserEditSerializer
     @method_decorator(require_permission('user.delete'))
     @swagger_auto_schema(request_body=serializers.UserEditSerializer)
     @csrf_exempt
     @transaction.atomic()
     def delete(self, request,id):
-        user_id = request.user_id
-        admin_user = auth_models.UserProfile.objects.get(id=user_id)
+        user= request.user
+        user_id = user.id
+        accessible_user_ids = [user_id]
+        if hasattr(user, 'created_by') and user.created_by:
+            accessible_user_ids.append(user.created_by.id)
+        try:
+            user_invite = auth_models.UserInvite.objects.get(id=id)
+        except Exception as e:
+            return Response({"message":"User Not Found"},status=status.HTTP_404_NOT_FOUND)
+        if user_invite.is_used:
+            user_data = auth_models.UserProfile.objects.get(email = user_invite.email).delete()
+            user_invite.delete()
+            return Response({'message':'User Deleted sucessfully'},status=status.HTTP_200_OK)
 
-        # Admin-only access
-        if not admin_user.is_superuser and not admin_user.roles.filter(name="Admin").exists():
-            return Response({"message": "Only Admins can delete users"}, status=status.HTTP_403_FORBIDDEN)
-
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            id = serializer.validated_data["id"]
-
-            if str(user_id) == str(admin_user.id):
-                return Response({"message": "You cannot delete yourself"}, status=status.HTTP_400_BAD_REQUEST)
-            
-            user_data = auth_models.UserInvite.objects.get(id = id)
+        else:
+            user_invite.delete()
+            return Response({'message':'User Deleted sucessfully'},status=status.HTTP_200_OK)
 
 
-            if  user_data.is_used == False:
-                user_data.delete()
-                return Response({'message':"user Delete Sucessfully"},status=status.HTTP_200_OK)
-            try:
-                user = auth_models.UserProfile.objects.get(email = user_data.email)
-            except auth_models.UserProfile.DoesNotExist:
-                return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-            
-            if user.is_superuser:
-                return Response({"message": "Super  Admins can not delete "}, status=status.HTTP_403_FORBIDDEN)
+        
 
-            # Check if this user was invited by current admin
-            if not auth_models.UserInvite.objects.filter(email=user.email, invited_by=admin_user).exists() and not admin_user.is_superuser:
-                return Response({"message": "You can only delete users you invited"}, status=status.HTTP_403_FORBIDDEN)
-
-            user.delete()
-
-            # Optional: clean related invites
-            auth_models.UserInvite.objects.filter(email=user.email).delete()
-
-            return Response({"message": "User deleted successfully"}, status=status.HTTP_200_OK)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
         
         # tok = token_function(request)
-        user_id = request.user.id
+        # user_id = request.user.id
         # if tok["status"] != 200:
         #     return Response({'message': tok['message']}, status=status.HTTP_401_UNAUTHORIZED)
 
-        from math import ceil
-        paginator = CustomPaginator()
-        page_number = int(request.query_params.get(paginator.page_query_param, 1))
-        page_size = int(request.query_params.get(paginator.page_size_query_param, paginator.page_size))
-        page_size = min(page_size, paginator.max_page_size)
+        # from math import ceil
+        # paginator = CustomPaginator()
+        # page_number = int(request.query_params.get(paginator.page_query_param, 1))
+        # page_size = int(request.query_params.get(paginator.page_size_query_param, paginator.page_size))
+        # page_size = min(page_size, paginator.max_page_size)
 
-        admin_user = auth_models.UserProfile.objects.get(id=user_id)
-        invites_qs = auth_models.UserInvite.objects.filter(id=id).values('')
+        # admin_user = auth_models.UserProfile.objects.get(id=user_id)
+        # invites_qs = auth_models.UserInvite.objects.filter(id=id).values('')
 
         
 
         # ⚡ Prefetch user profiles in one go
         
 
-        return Response({
-            'data': invites_qs,
-            'total_pages': total_pages,
-            'total_records': total_records,
-            'page_number': page_number,
-            'page_size': page_size
-        }, status=status.HTTP_200_OK)
+        # return Response({
+        #     'data': invites_qs,
+        #     'total_pages': total_pages,
+        #     'total_records': total_records,
+        #     'page_number': page_number,
+        #     'page_size': page_size
+        # }, status=status.HTTP_200_OK)
 
 class Get_previlages(APIView):
     authentication_classes = [OAuth2Authentication]
@@ -806,4 +827,195 @@ class Activateoldusers(APIView):
 
 
 
-            
+import secrets,os,requests
+from oauth2_provider.models import Application
+class RegisterApplication(APIView):
+    authentication_classes = [OAuth2Authentication]
+    permission_classes = []
+
+    def post(self, request):
+        user = request.user
+        name = request.data.get("name")
+        redirect_uris = request.data.get("redirect_uris", [])
+        type = request.data.get('type','client-credentials')
+
+        if Application.objects.filter(user_id = user).exists():
+            return Response({'message':'Client Details Created'},status=status.HTTP_406_NOT_ACCEPTABLE)
+        if not name :
+            return Response({"error": "Invalid data"}, status=400)
+        if type.lower() == 'authorization-code':
+            type = Application.GRANT_AUTHORIZATION_CODE
+        else:
+            type = Application.GRANT_CLIENT_CREDENTIALS
+        MAX_RETRIES = 3
+        attempts=0
+        while attempts < MAX_RETRIES:
+                client_id,client_secret = app_create(name,redirect_uris,user.id,type)
+                if type!=Application.GRANT_AUTHORIZATION_CODE:
+                    app_status = app_login_check(client_id, client_secret)
+                else:
+                    app_status =200
+                if app_status == 200:
+                    break
+                # Application.objects.filter(client_id=client_id, user_id=user.id).delete()
+                attempts += 1
+        if app_status != 200:
+            return Response({"message":"Failed to create an app"}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            return Response({
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "redirect_uris": redirect_uris,
+                "grant_types": type,
+                "scopes": ["read", "write"]
+            })
+
+    def get(self,request):
+        user_id = request.user.id
+        if Application.objects.filter(user_id=user_id).exists():
+            app = Application.objects.get(user_id=user_id)
+            return Response({'client_id':app.client_id,'name':app.name,'redirect_uris':app.redirect_uris,'type':app.authorization_grant_type},status=status.HTTP_200_OK)
+        else:
+            return Response({'message':'No Details'})
+        
+
+from rest_framework.decorators import api_view
+from django.utils.timezone import now
+from datetime import timedelta
+
+from rest_framework.decorators import api_view,authentication_classes,permission_classes
+
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([])
+def refresh_access_token(request):
+    """
+    Exchange refresh_token for a new access_token
+    """
+
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+
+    refresh_token = request.data.get('refresh_token')
+    client_id = request.data.get('client_id')
+    client_secret = request.data.get('client_secret')
+    if not refresh_token:
+        return Response(
+            {"error": "refresh_token is required"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    token_url = "http://127.0.0.1:8000/v1/authentication/oauth2/token/"
+
+    data = {
+        "grant_type": "refresh_token",
+        "refresh_token": refresh_token,
+    }
+
+    response = requests.post(
+        token_url,
+        data=data,
+        auth=(
+            client_id,
+            client_secret
+        ),
+        headers={
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        timeout=30
+    )
+
+    try:
+        token_response = response.json()
+    except Exception:
+        return Response(
+            {"message": "Invalid token response", "raw": response.text},
+            status=status.HTTP_502_BAD_GATEWAY
+        )
+
+    if response.status_code != 200:
+        return Response(
+            {"message": "Token refresh failed", "details": token_response},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # ---- Persist updated tokens ----
+    expires_at = now() + timedelta(seconds=token_response["expires_in"])
+
+
+    return Response(
+        {
+            "access_token": token_response["access_token"],
+            "refresh_token": token_response.get("refresh_token", refresh_token),
+            "expires_in": token_response["expires_in"],
+            "token_type": token_response["token_type"],
+            "scope": token_response.get("scope"),
+        },
+        status=status.HTTP_200_OK
+    )
+
+
+
+
+
+
+class validate_oauth_client(APIView):
+    authentication_classes = [OAuth2Authentication]
+    permission_classes =[]
+
+    def post(self,request):
+        """
+    Validates client_id, client_secret and app_name
+    Returns app_name and authorization_type if valid
+    """
+
+        client_id = request.data.get("client_id")
+        client_secret = request.data.get("client_secret")
+        app_name = request.data.get("app_name")
+
+        if not all([client_id, client_secret, app_name]):
+            return Response(
+                {"message": "client_id, client_secret and app_name are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            app = Application.objects.get(
+                client_id=client_id,
+                name=app_name,
+                user_id = request.user.id
+            )
+        except Application.DoesNotExist:
+            return Response(
+                {"message": "Invalid client or app name"},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        # If client_secret is hashed (recommended)
+        if not check_password(client_secret, app.client_secret):
+            return Response(
+                {"message": "Invalid client secret"},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        return Response(
+            {
+                "app_name": app.name,
+                "type": app.authorization_grant_type
+            },
+            status=status.HTTP_200_OK
+        )
+    
+
+
+class User_details(APIView):
+    authentication_classes = [OAuth2Authentication]
+    permission_classes= [CustomIsAuthenticated]
+
+    def get(self,request):
+        user_id = request.user.id
+        permissions = list(
+                                auth_models.Permission.objects.filter(roles__users=user_id)
+                                .distinct()
+                                .values_list("id",flat=True)
+                            )
+        return Response({'privileges':permissions},status=status.HTTP_200_OK)

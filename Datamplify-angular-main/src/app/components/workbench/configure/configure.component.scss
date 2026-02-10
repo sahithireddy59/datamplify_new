@@ -20,7 +20,8 @@
 
 .glass-card:hover {
     transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+    // box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 6px 20px rgba(var(--primary-rgb, 13, 110, 253), 0.25);
 }
 
 /* Avatar circle for user initials */
@@ -96,18 +97,32 @@ select.form-select {
   color: #000 !important;
 }
 
-.mode-btn {
-    border-radius: 1rem;
-    background: linear-gradient(90deg, #3b82f6 0%, #9b25f2 70%);
-    color: #fff;
-    transition: transform .18s ease, box-shadow .18s ease;
+// .mode-btn {
+//     border-radius: 1rem;
+//     background: linear-gradient(90deg, #3b82f6 0%, #9b25f2 70%);
+//     color: #fff;
+//     transition: transform .18s ease, box-shadow .18s ease;
 
-    &:hover {
-        transform: translateY(-2px) scale(1.02);
-        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08),
-            0 6px 12px rgba(14, 165, 233, 0.15);
-        border: 1px solid #7c5cff !important;
-    }
+//     &:hover {
+//         transform: translateY(-2px) scale(1.02);
+//         box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08),
+//             0 6px 12px rgba(14, 165, 233, 0.15);
+//         border: 1px solid #7c5cff !important;
+//     }
+// }
+
+.mode-btn {
+  background: linear-gradient(90deg, #3b82f6 0%, #9b25f2 70%);
+  color: #fff;
+  border: none !important;
+  transition: transform .18s ease, box-shadow .18s ease;
+
+  &:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08),
+      0 6px 12px rgba(14, 165, 233, 0.15);
+    border: 1px solid #7c5cff !important;
+  }
 }
 
 .dropdown-menu{
@@ -180,23 +195,6 @@ select.form-select {
   color: rgba(255, 255, 255, 0.7);
 }
 
-/* Input Fields */
-.form-control, select, textarea {
-  width: 100%;
-  border: none;
-  outline: none;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  padding: 10px 12px;
-  margin-top: 4px;
-  transition: all 0.3s ease;
-}
-
-.form-control:focus {
-  background: rgba(255, 255, 255, 0.15);
-}
-
 /* Permission Cards */
 .permission-card {
   background: rgba(255, 255, 255, 0.08);
@@ -237,7 +235,7 @@ select.form-select {
   position: absolute;
   cursor: pointer;
   top: 0; left: 0; right: 0; bottom: 0;
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: var(--glass-bar-bg-color);
   border-radius: 20px;
   transition: 0.3s;
 }
@@ -255,7 +253,7 @@ select.form-select {
 }
 
 input:checked + .slider {
-  background-color: #3b82f6;
+  background-color: var(--primary-color);
 }
 
 input:checked + .slider:before {
@@ -279,4 +277,46 @@ input:checked + .slider:before {
 
 .glass-bar:hover {
   background: rgba(255, 255, 255, 0.15);
+}
+
+::ng-deep .modal-content {
+  background: var(--custom-white);   /* dark semi-solid background */
+  backdrop-filter: blur(8px);           /* subtle blur */
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  color: var(--default-text-color);                      /* light text */
+}
+
+::ng-deep .modal-header,
+::ng-deep .modal-footer {
+  border: none;                         /* cleaner look */
+  background: transparent;
+  color: var(--default-text-color);
+}
+
+select.form-select {
+  background-color: transparent !important;
+  color: var(--default-text-color) !important;
+}
+
+.select-options {
+  color: #000 !important;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #d5d4d4 37%, #f0f0f0 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: 4px; 
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
 }

@@ -7,6 +7,7 @@ import { checkHoriMenu,switcherArrowFn} from './sidebar';
 import { ViewTemplateDrivenService } from '../../../components/workbench/view-template-driven.service';
 import { LoaderService } from '../../services/loader.service';
 import { CustomThemeService } from '../../../services/custom-theme.service';
+import { SharedService } from '../../services/shared.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -23,6 +24,7 @@ export class SidebarComponent{
   viewDataSource = false;
   viewTransformations = false;
   viewEtl = false;
+  isEmbedMode: boolean = false;
   themeType: string = 'light';
   @HostListener('window:scroll', [])
   onWindowScroll() {
@@ -81,7 +83,8 @@ export class SidebarComponent{
     private elementRef: ElementRef,
     private viewTemplateService:ViewTemplateDrivenService,
     private loaderService:LoaderService,
-    private themeService: CustomThemeService
+    private themeService: CustomThemeService,
+    private sharedService: SharedService
   ) {
     this.screenWidth = window.innerWidth;
 
@@ -101,6 +104,7 @@ export class SidebarComponent{
     console.log('kjrvgug',item)
   }
   ngOnInit() {
+    this.isEmbedMode = this.sharedService.getEmbedMode();
     let bodyElement: any = document.querySelector('.main-content');
 
     bodyElement.onclick = () => {
@@ -128,10 +132,10 @@ export class SidebarComponent{
         if (item.title === 'EasyConnect') { 
           return true;
         }
-        if (item.title === 'FlowBoard') {
+        if (item.title === 'DagBoard') {
           return true;
         }
-        if (item.title === 'TaskPlan') {
+        if (item.title === 'TaskRunPlan') {
           return true;
         }
         if (item.title === 'Scheduler') { 

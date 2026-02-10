@@ -1,14 +1,14 @@
-<app-page-header title="New Connection" moduleId="etlList" title1="Home" activeitem="EasyConnect"></app-page-header>
+<app-page-header title="Easy Connect" moduleId="etlList" title1="Home" activeitem="EasyConnect"></app-page-header>
 
 <div *ngIf="showList" class="main-container container-fluid TopHeader container-background p-0">
   <div class="card mb-0 rounded-0">
-    <div class="d-flex align-items-center justify-content-end mt-2">
+    <div *ngIf="canViewConnections" class="d-flex align-items-center justify-content-end mt-2">
       <div class="new-data-btn d-flex text-align-center">
         <button type="button" ngbTooltip="Grid View" triggers="hover" (click)="gridView=true"
-          class="btn btn-icon list-type-btn me-1" [ngClass]="gridView ? 'list-type-btn-active' : ''"><i
+          class="btn btn-icon btn-outline-primary me-1" [ngClass]="gridView ? 'active' : ''"><i
             class="fa fa-th-large"></i></button>
         <button type="button" ngbTooltip="List View" triggers="hover" (click)="gridView=false"
-          class="btn btn-icon list-type-btn me-3" [ngClass]="!gridView ? 'list-type-btn-active' : ''"><i
+          class="btn btn-icon btn-outline-primary me-3" [ngClass]="!gridView ? 'active' : ''"><i
             class="fa fa-th-list"></i></button>
 
         <div class="flex-grow-1 position-relative me-2" style="max-width: 400px;">
@@ -16,14 +16,18 @@
             <input type="text" placeholder="Search" [(ngModel)]="searchConnections" (keyup.enter)="getConnectionList();"
               class="form-control border-0 bg-transparent ps-3 py-2" />
         
-            <button type="button" class="btn rounded-pill px-3 border-0 search-btn" (click)="getConnectionList();">
+            <button type="button" class="btn rounded-pill px-3 border-0 search-btn text-dark" (click)="getConnectionList();">
               <i class="fe fe-search"></i>
             </button>
           </div>
         </div>
 
-        <button type="button" class="btn btn-sm mode-btn me-2 rounded-5" (click)="routeToNewConnection()">
+        <button type="button" class="btn btn-sm mode-btn me-2 rounded-5" (click)="routeToNewConnection()" *appHasPermission="{ id: 22, mode: 'disable' }">
           <i class="fa fa-plus me-1" style="font-size: 12px;"></i> New Connection
+        </button>
+
+        <button *ngIf="isEmbedAuthorizationCode" type="button" class="btn btn-sm mode-btn me-2 rounded-5" (click)="openImportConnection(importConnection)">
+          <i class="fe fe-download me-1" style="font-size: 12px;"></i> Import Connection
         </button>
       </div>
     </div>
@@ -55,8 +59,9 @@
                     </div>
                     <div>
                       <h6 class="fw-semibold mb-0 text-truncate" style="max-width: 200px; cursor: pointer !important; font-size: 14px;" ngbTooltip="{{connection.display_name}}"
-                        (click)="connection.server_type !== 'CSV' ? editPreviewDatabaseConnection(connection?.hierarchy_id) : getFileConnection(connection?.hierarchy_id, uploadFileModal);">
-                        {{ isEditPreview ? (connection.display_name | slice:0:15) : (connection.display_name | slice:0:18) }}
+                        (click)="editOrDeleteByType(connection.server_type, true, connection)"
+                        *appHasPermission="{ id: 21, mode: 'disable' }">
+                        {{ isEditPreview ? (connection.display_name | slice:0:9) : (connection.display_name | slice:0:18) }}
                       </h6>
                       <p class="text-muted small mb-0">{{ connection.server_type }}</p>
                     </div>
@@ -66,22 +71,24 @@
                   <div class="d-flex align-items-center text-muted small flex-wrap gap-4 me-4">
                     <div>
                       <span class="fw-semibold">Created:</span>
-                      <span>{{ connection?.created_at | date: 'mediumDate' }}</span>
+                      <span>{{ connection?.created_at | date:'dd-MM-yyyy, hh:mm a' }}</span>
                     </div>
                     <div>
                       <span class="fw-semibold">Modified:</span>
-                      <span>{{ connection?.updated_at | date: 'mediumDate' }}</span>
+                      <span>{{ connection?.updated_at | date:'dd-MM-yyyy, hh:mm a' }}</span>
                     </div>
                   </div>
       
                   <!-- Right: Actions -->
                   <div class="d-flex">
                     <button class="btn btn-outline-primary-light shadow-sm rounded-4 btn-sm flex-fill me-2"
-                      (click)="connection.server_type !== 'CSV' ? editPreviewDatabaseConnection(connection?.hierarchy_id) : getFileConnection(connection?.hierarchy_id, uploadFileModal);">
+                      (click)="editOrDeleteByType(connection.server_type, true, connection)"
+                      *appHasPermission="{ id: 21, mode: 'disable' }">
                       <i class="bi bi-pencil"></i>
                     </button>
                     <button class="btn btn-outline-danger-light shadow-sm rounded-4 btn-sm flex-fill"
-                      (click)="connection.server_type === 'CSV' ? deleteFileConnection(connection) : deleteDatabaseConnection(connection);">
+                      (click)="editOrDeleteByType(connection.server_type, false, connection)"
+                      *appHasPermission="{ id: 24, mode: 'disable' }">
                       <i class="bi bi-trash"></i>
                     </button>
                   </div>
@@ -147,7 +154,8 @@
                         </div>
                         <div>
                           <h5 class="fw-semibold mb-1" style="cursor: pointer !important;" ngbTooltip="{{connection.display_name}}" triggers="hover"
-                            (click)="connection.server_type !== 'CSV' ? editPreviewDatabaseConnection(connection?.hierarchy_id) : getFileConnection(connection?.hierarchy_id, uploadFileModal);">
+                            (click)="editOrDeleteByType(connection.server_type, true, connection)"
+                            *appHasPermission="{ id: 21, mode: 'disable' }">
                             {{ isEditPreview ? (connection.display_name | slice:0:13) : (connection.display_name | slice:0:15) }}</h5>
                           <p class="text-muted small mb-0">{{ connection.server_type }}</p>
                         </div>
@@ -156,21 +164,23 @@
       
                     <div class="d-flex align-items-center justify-content-between">
                       <span class="small text-muted"> Created On</span>
-                      <span class="small  text-capitalize"> {{ connection?.created_at | date: 'mediumDate' }} </span>
+                      <span class="small  text-capitalize"> {{ connection?.created_at | date:'dd-MM-yyyy, hh:mm a' }} </span>
                     </div>
                     <div class="d-flex align-items-center justify-content-between mb-2">
                       <span class="small text-muted">Last Modified</span>
-                      <span class="small text-capitalize"> {{ connection?.updated_at | date: 'mediumDate' }} </span>
+                      <span class="small text-capitalize"> {{ connection?.updated_at | date:'dd-MM-yyyy, hh:mm a' }} </span>
                     </div>
       
                     <div class="d-flex gap-2">
                       <button class="btn-outline-primary-light p-1 rounded-5 btn-sm shadow-sm flex-fill"
-                        (click)="connection.server_type !== 'CSV' ? editPreviewDatabaseConnection(connection?.hierarchy_id) : getFileConnection(connection?.hierarchy_id, uploadFileModal);">
+                        (click)="editOrDeleteByType(connection.server_type, true, connection)"
+                        *appHasPermission="{ id: 21, mode: 'disable' }">
                         <i class="bi bi-pencil me-1"></i> Edit
                       </button>
       
                       <button class="btn-outline-danger-light p-1 rounded-5 btn-sm shadow-sm flex-fill"
-                        (click)="connection.server_type === 'CSV' ? deleteFileConnection(connection) : deleteDatabaseConnection(connection);">
+                        (click)="editOrDeleteByType(connection.server_type, false, connection)"
+                        *appHasPermission="{ id: 24, mode: 'disable' }">
                         <i class="bi bi-trash me-1"></i> Delete
                       </button>
                     </div>
@@ -238,10 +248,17 @@
               </div>
             
               <!-- Message -->
+              @if (canViewConnections) {
               <h5 class="fw-semibold text-dark mb-1">No Connections Found</h5>
               <p class="small mb-0" style="max-width: 360px;">
-                You haven’t created any connection yet.
+                You haven’t created any connections yet. Start by adding a new connection to get started.
               </p>
+              } @else {
+              <h5 class="fw-semibold text-dark mb-1">Access Restricted</h5>
+              <p class="small mb-0" style="max-width: 360px;">
+                You don’t have permission to view connections. Please contact your administrator for access.
+              </p>
+              }
             </div>
             }
           </div>
@@ -261,249 +278,187 @@
           </div>
         </div>
         <div *ngIf="isEditPreview" class="col-md-6">
-          <ng-container [ngSwitch]="selectedConnection">
-            <div *ngSwitchCase="'POSTGRESQL'">
-              <div class="form-card p-3" style="max-height: 581px;">
-                <h5 class="d-flex align-items-center">
-                  <ng-container *ngIf="getConnectionAsset(selectedConnection ?? '') as asset">
-                    <span *ngIf="asset.type === 'icon'" class="card-icon me-2 fs-5">{{ asset.value }}</span>
-                    <img *ngIf="asset.type === 'image'" [src]="asset.value" alt="{{ selectedConnection }} logo"
-                      class="me-2 card-icon" width="24" height="24">
-                    <span *ngIf="asset.type === 'svg'" class="me-2 card-icon" [innerHTML]="asset.value"></span>
-                  </ng-container>
-                  Update {{ selectedConnection }} Connection
-                </h5>
-            
-                <form (ngSubmit)="updateDatabaseConnection(editPreviewData.id);" style="overflow-x: hidden;">
-            
-                  <!-- Connection Name -->
-                  <div class="mb-3">
-                    <label class="form-label">Connection Name</label>
-                    <input type="text" class="form-control w-100" [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}"
-                      disabled>
-                  </div>
-            
-                  <!-- Server -->
-                  <div class="mb-3">
-                    <label class="form-label">Server</label>
-                    <input type="text" class="form-control w-100" [(ngModel)]="serverName" [ngModelOptions]="{standalone: true}"
-                      disabled>
-                  </div>
+          <div class="form-card p-3" style="max-height: 657px; min-height: 657px;">
+            <h5 class="d-flex align-items-center">
+              <ng-container *ngIf="getConnectionAsset(selectedConnection ?? '') as asset">
+                <span *ngIf="asset.type === 'icon'" class="card-icon me-2 fs-5">{{ asset.value }}</span>
+                <img *ngIf="asset.type === 'image'" [src]="asset.value" alt="{{ selectedConnection }} logo"
+                  class="me-2 card-icon" width="24" height="24">
+                <span *ngIf="asset.type === 'svg'" class="me-2 card-icon" [innerHTML]="asset.value"></span>
+              </ng-container>
+              Update {{ selectedConnection }} Connection
+            </h5>
+        
+            <ng-container *ngTemplateOutlet="connectionFormsTemplate">
+            </ng-container>
+        
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-                  <div class="row g-3">
-                    <!-- Port -->
-                    <div class="col-md-6 mb-3">
-                      <div class="mb-3">
-                        <label class="form-label">Port</label>
-                        <input type="text" class="form-control w-100" [(ngModel)]="portName" [ngModelOptions]="{standalone: true}"
-                          disabled>
-                      </div>
-                    </div>
-                    <!-- Database -->
-                    <div class="col-md-6 mb-3">
-                      <div class="mb-3">
-                        <label class="form-label">Database</label>
-                        <input type="text" class="form-control w-100" [(ngModel)]="databaseName" [ngModelOptions]="{standalone: true}"
-                          disabled>
-                      </div>
-                    </div>
-                  </div>
-            
-                  <!-- Username / Password Row -->
-                  <div class="row g-3">
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label">Username</label>
-                      <input type="text" class="form-control w-100" [(ngModel)]="userName" [ngModelOptions]="{standalone: true}"
-                        disabled>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                      <label [ngClass]="{'error-label': passwordError}" class="form-label">Password <span class="text-danger">*</span></label>
-                      <div class="d-flex">
-                        <input [ngClass]="{'error-input': passwordError}" (input)="passwordConditionError()" [type]="showPassword ? 'text' : 'password'" class="form-control w-100" [(ngModel)]="password"
-                          [ngModelOptions]="{standalone: true}" placeholder="Update password" autocomplete="new-password">
-                        <button class="btn mode-btn ms-2" type="button" (click)="toggleVisibility()">
-                          <i class="ri-eye-{{toggleClass}} align-middle"></i>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-            
-                  <!-- Schema Selection -->
-                  <div class="mb-3">
-                    <label class="form-label">Schema</label>
-                    <input type="text" class="form-control w-100" [(ngModel)]="selectedSchema" [ngModelOptions]="{standalone: true}"
-                      disabled>
-                  </div>
-            
-                  <!-- Footer Buttons -->
-                  <div class="d-flex justify-content-end gap-2 mt-5">
-                    <button type="button" class="btn btn-sm btn-danger rounded-5"
-                      (click)="resetForm(); isEditPreview = false;">Close</button>
-                    <button type="submit" class="btn btn-sm mode-btn rounded-5" [disabled]="!password">
-                      Update
-                    </button>
-                  </div>
-            
-                </form>
+@if(viewNewConnection) {
+<div class="p-4 container-background">
+  <div class="row">
+    <!-- Left Sidebar (Categories) -->
+    <div class="col-3 cat-border new-connection-scroll">
+      <div class="main-container container-fluid TopHeader">
+        <div class="d-flex align-items-center mb-4">
+          <div class="flex-grow-1 position-relative me-3">
+            <h6 class="mb-3">CHOOSE A CATEGORY</h6>
+          </div>
+        </div>
+
+        <div class="row g-4 flex-column">
+          <!-- All Sources Option -->
+          <div class="col-12">
+            <div
+              class="glass-card h-100 p-3 hoverable d-flex flex-column align-items-start justify-content-center text-start"
+              (click)="categorySelect('All')">
+              <h5>All Sources</h5>
+              <small class="text-muted">View all available data source connections</small>
+            </div>
+          </div>
+
+          <!-- Dynamic Category List -->
+          <div class="col-12" *ngFor="let cat of categories">
+            <div class="glass-card h-100 p-3 hoverable text-start d-flex flex-column"
+              (click)="categorySelect(cat.name)">
+              <h6 class="mb-2">{{ cat.name }}</h6>
+              <div class="d-flex align-items-start flex-grow-1">
+                <div class="fs-2 me-2 card-icon">
+                  <!-- <img *ngIf="cat.image" [src]="cat.image" [alt]="cat.name" class="db-icon">
+                <span *ngIf="!cat.image && cat.icon">{{ cat.icon }}</span>
+                <div *ngIf="!cat.image && !cat.icon && cat.svg" [innerHTML]="getSafeSvg(cat.svg)"></div> -->
+                  <img *ngIf="cat.image" [src]="cat.image" [alt]="cat.name" class="db-icon mb-2">
+                  <span class="fs-2 mb-2 card-icon" *ngIf="!cat.image && cat.icon">{{ cat.icon }}</span>
+                </div>
+                <div class="flex-frow-1 d-flex flex-column">
+                  <small class="text-muted">{{ cat.description }}</small>
+                  <span>
+                    {{ connectionTypes[cat.name]?.length || 0 }} options
+                    <i class="bi bi-arrow-right text-primary ms-2 arrow-icon"></i>
+                  </span>
+                </div>
               </div>
-            </div>  
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-            <div *ngSwitchCase="'CSV'">
-              <div class="form-card p-3" style="background: var(--bs-border-color-translucent); max-height: 581px;">
-                <h5 class="d-flex align-items-center">
-                  <ng-container *ngIf="getConnectionAsset(selectedConnection ?? '') as asset">
-                    <span *ngIf="asset.type === 'icon'" class="card-icon me-2 fs-5">{{ asset.value }}</span>
-                    <img *ngIf="asset.type === 'image'" [src]="asset.value" alt="{{ selectedConnection }} logo"
-                      class="me-2 card-icon" width="24" height="24">
-                    <span *ngIf="asset.type === 'svg'" class="me-2 card-icon" [innerHTML]="asset.value"></span>
-                  </ng-container>
-                  Update {{ selectedConnection }} Connection
-                </h5>
-            
-                <form (ngSubmit)="fileConnection(null, editPreviewData?.id); isEditPreview = false;" style="overflow-x: hidden;">
-            
-                  <!-- Connection Name (read-only in update mode) -->
-                  <div class="mb-3">
-                    <label class="form-label fw-bold">Connection Name</label>
-                    <input type="text" class="form-control w-100" [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}"
-                      disabled />
-                  </div>
-            
-                  <!-- File Selection (only editable field) -->
-                  <div class="mb-3">
-                    <label class="form-label fw-bold">Replace File</label>
-                    <div class="input-group">
-                      <label class="input-group-text btn btn-primary">
-                        <i class="bi bi-upload"></i> Choose File
-                        <input type="file" accept=".csv" (change)="onCsvFileSelected($event)" hidden #fileInput />
-                      </label>
-                      <input type="text" class="form-control w-70" [value]="selectedFile?.name || 'No file chosen'" readonly />
+    <!-- Right Panel (Connections) -->
+    <div class="col-9 new-connection-scroll">
+      <div class="main-container container-fluid TopHeader"
+        *ngIf="selectedCategory && !selectedConnection && !isEditPreview">
+        <!-- Header -->
+        <div class="d-flex align-items-center mb-4">
+          <button class="btn glass-light rounded-3 hoverable me-2" style="height: 40px;" (click)="goBackToCategories()">
+            <i class="bi bi-arrow-left"></i>
+          </button>
+
+          <div>
+            <h4 class="mb-0">{{ selectedCategory }}</h4>
+            <small class="text-muted">
+              Choose a {{ selectedCategory | lowercase }} type
+            </small>
+          </div>
+
+          <!-- Right side button (replaced app-insights-button) -->
+          <div class="d-flex ms-auto" *ngIf="selectedCategory">
+            <button class="btn btn-sm mode-btn me-2 rounded-5" type="button" (click)="routeToViewConnection();">
+              <i class="fa fa-eye me-2"></i> View Connections
+            </button>
+          </div>
+        </div>
+
+        <!-- ALL Category View -->
+        <ng-container *ngIf="selectedCategory === 'All'; else singleCategory">
+          <ng-container *ngFor="let cat of categories">
+            <div class="d-flex align-items-center gap-2 mt-3 mb-2">
+              <div class="fs-3">
+                <!-- <img *ngIf="cat.image" [src]="cat.image" [alt]="cat.name" class="db-icon">
+              <span *ngIf="!cat.image && cat.icon">{{ cat.icon }}</span>
+              <div *ngIf="!cat.image && !cat.icon && cat.svg" [innerHTML]="getSafeSvg(cat.svg)"></div> -->
+                <img *ngIf="cat.image" [src]="cat.image" [alt]="cat.name" class="db-icon mb-2">
+                <span class="fs-2 mb-2 card-icon" *ngIf="!cat.image && cat.icon">{{ cat.icon }}</span>
+              </div>
+              <div>
+                <h5 class="mb-0">{{ cat.name }}</h5>
+                <small class="text-muted">{{ cat.description }}</small>
+              </div>
+            </div>
+
+            <div class="row g-3 mt-2 pb-2">
+              <div class="col-md-4" *ngFor="let type of connectionTypes[cat.name]">
+                <div class="glass-card h-100 p-3 hoverable d-flex justify-content-between text-center"
+                  [class.disabled]="type.disabled" (click)="selectConnection(type)">
+                  <div class="d-flex align-items-center gap-3 w-100">
+                    <div class="fs-3 card-icon">
+                      <!-- <img *ngIf="type.image" [src]="type.image" [alt]="type.name" class="db-icon">
+                    <span *ngIf="!type.image && type.icon">{{ type.icon }}</span>
+                    <div *ngIf="!type.image && !type.icon && type.svg" [innerHTML]="getSafeSvg(type.svg)"></div> -->
+                      <img *ngIf="type.image" [src]="type.image" [alt]="type.name" class="db-icon mb-2">
+                      <span class="fs-2 mb-2 card-icon" *ngIf="!type.image && type.icon">{{ type.icon }}</span>
+                    </div>
+                    <div class="d-flex flex-column text-start flex-grow-1">
+                      <h6 class="mb-1 d-flex align-items-center">{{ type.displayName }}</h6>
+                      <small class="text-muted">{{ type.description }}</small>
                     </div>
                   </div>
-            
-                  <!-- Footer Buttons -->
-                  <div class="d-flex justify-content-end gap-2" style="margin-top: 330px;">
-                    <button type="button" class="btn btn-sm btn-danger rounded-5"
-                      (click)="resetForm(); isEditPreview = false;">Close</button>
-                    <button type="submit" class="btn mode-btn rounded-5" [disabled]="!selectedFile">
-                      Replace
-                    </button>
-                  </div>
-            
-                </form>
+                  <i class="bi bi-chevron-right fs-10 text-primary mt-3 arrow-icon"></i>
+                </div>
               </div>
             </div>
           </ng-container>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+        </ng-container>
 
-@if(viewNewConnection){
-<div class="main-container container-fluid TopHeader container-background">
-  <div class="d-flex align-items-center mb-4">
-    <div class="flex-grow-1 position-relative me-3">
-      <h4 class="mb-3">Choose a category</h4>
-    </div>
-    <div class="d-flex ms-auto">
-      <button class="btn btn-sm btn-warning me-2 rounded-5" type="button" (click)="testDataSourcesAPI();">
-          <i class="fa fa-bug me-2"></i> Test API
-        </button>
-      <button class="btn btn-sm mode-btn me-2 rounded-5" type="button" (click)="routeToViewConnection();">
-          <i class="fa fa-eye me-2"></i> View Connections
-        </button>
-    </div>
-  </div>
-
-  <div class="row g-4">
-    <div class="col-md-4" *ngFor="let cat of categories">
-      <div
-        class="glass-card  h-100 p-3 hoverable d-flex flex-column align-items-center justify-content-center text-center"
-        (click)="categorySelect(cat.name)">
-
-        <img *ngIf="cat.image" [src]="cat.image" [alt]="cat.name" class="db-icon mb-2">
-        <span class="fs-2 mb-2 card-icon" *ngIf="!cat.image && cat.icon">{{ cat.icon }}</span>
-        <!-- <div *ngIf="!cat.image && !cat.icon && cat.svg" [innerHTML]="getSafeSvg(cat?.svg)"></div> -->
-
-        <h5>{{ cat.name }}</h5>
-        <small class="text-muted">{{ cat.description }}</small>
-        <span class="mb-3">
-          {{ cat.count || 0 }} options
-          <i class="bi bi-arrow-right text-primary ms-2 arrow-icon"></i>
-        </span>
-      </div>
-    </div>
-  </div>
-</div>
-}
-
-@if(selectedCategory && !selectedConnection && !isEditPreview){
-<div class="main-container container-fluid TopHeader container-background">
-
-  <!-- Header -->
-  <div class="d-flex align-items-center mb-4">
-    <button class="btn btn-sm mode-btn rounded-5 hoverable me-2" (click)="goBackToCategories()">
-      <i class="bi bi-arrow-left"></i>
-    </button>
-
-    <!-- Title + Subtitle -->
-    <div>
-      <h4 class="mb-0">{{ selectedCategory }}</h4>
-      <small class="text-muted">
-        Choose a {{ selectedCategory | lowercase }} type
-      </small>
-    </div>
-
-    <!-- Right side button: only for Relational -->
-    <div class="d-flex ms-auto" *ngIf="selectedCategory">
-      <button class="btn btn-sm mode-btn me-2 rounded-5" type="button" (click)="routeToViewConnection();">
-        <i class="fa fa-eye me-2"></i> View Connections
-      </button>
-    </div>
-  </div>
-
-  <!-- Cards -->
-  <div class="row g-3" *ngIf="!selectedConnection">
-    <div class="col-md-4" *ngFor="let type of connectionTypes[selectedCategory]">
-      <div class="glass-card h-100 p-3 hoverable d-flex justify-content-between text-center"
-        (click)="selectConnection(type.name)" [class.disabled]="'FTP' === type.name">
-        <div class="d-flex align-items-start gap-3">
-          <!-- <div class="fs-3 card-icon">{{ type.icon }}</div> -->
-          <div class="fs-3 card-icon ">
-
-            <img *ngIf="type.image" [src]="type.image" [alt]="type.name" class="db-icon">
-
-            <span class="fs-3 card-icon" *ngIf="!type.image && type.icon">{{ type.icon }}</span>
-
-            <div *ngIf="!type.image && !type.icon && type.svg" [innerHTML]="getSafeSvg(type.svg)">
+        <!-- SINGLE Category View -->
+        <ng-template #singleCategory>
+          <div class="row g-3">
+            <div class="col-md-4" *ngFor="let type of connectionTypes[selectedCategory]">
+              <div class="glass-card h-100 p-3 hoverable d-flex justify-content-between text-center"
+                [class.disabled]="type.disabled" (click)="selectConnection(type)">
+                <div class="d-flex align-items-start gap-3">
+                  <div class="fs-3 card-icon">
+                    <img *ngIf="type.image" [src]="type.image" [alt]="type.name" class="db-icon">
+                    <span *ngIf="!type.image && type.icon">{{ type.icon }}</span>
+                    <div *ngIf="!type.image && !type.icon && type.svg" [innerHTML]="getSafeSvg(type.svg)"></div>
+                  </div>
+                  <div>
+                    <h6 class="mb-1 d-flex align-items-center">{{ type.displayName }}</h6>
+                    <small class="text-muted">{{ type.description }}</small>
+                  </div>
+                </div>
+                <i class="bi bi-chevron-right fs-10 text-primary mt-3 arrow-icon"></i>
+              </div>
             </div>
           </div>
-          <div>
-            <h6 class="mb-1 d-flex align-items-center">{{ type.name }}</h6>
-            <small class="text-muted">{{ type.description }}</small>
-          </div>
-        </div>
-        <i class="bi bi-chevron-right fs-10 text-primary mt-3 arrow-icon"></i>
+        </ng-template>
       </div>
     </div>
   </div>
-
 </div>
 }
 
 <div class="main-container container-fluid TopHeader container-background" *ngIf="selectedConnection && !isEditPreview">
-   <!-- Header -->
+  <!-- Header -->
   <div class="d-flex align-items-center mb-4">
-    <button class="btn btn-sm mode-btn rounded-5 me-2" (click)="goBackToSubCategories(); resetForm();">
+    <!-- <button class="btn btn-sm mode-btn rounded-5 me-2" (click)="goBackToSubCategories(); resetForm();">
+      <i class="bi bi-arrow-left"></i>
+    </button> -->
+    <button class="btn glass-light rounded-3 hoverable me-2" style="height: 40px;"
+      (click)="goBackToSubCategories(); resetForm();">
       <i class="bi bi-arrow-left"></i>
     </button>
 
     <!-- Title + Subtitle -->
     <div>
-      <h4 class="mb-0">{{ selectedCategory }} → {{ selectedConnection }}</h4>
+      <h4 class="mb-0">{{ selectedCategory }} → {{ selectedConnectionName }}</h4>
       <small class="text-muted">
-        Create {{ selectedConnection | lowercase }} Connection
+        Create {{ selectedConnectionName | lowercase }} Connection
       </small>
     </div>
 
@@ -515,960 +470,2107 @@
     </div>
   </div>
 
-  <div [ngSwitch]="selectedConnection">
+  <div class="row">
+    <!-- Left Panel: Existing Connections -->
+    <div class="col-md-6">
+      <div class="form-card p-3">
+        <h5>Existing Connections
+          <span class="badge bg-primary rounded-4"> {{ existingConnections.length }} connected </span>
+        </h5>
+        <div *ngIf="existingConnections.length > 0 && !isLoading" class="form-height pt-3">
+          <div *ngFor="let conn of existingConnections" class="glass-card m-2 p-3"
+            style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);">
 
-<div class="row">
-  <!-- Left Panel: Existing Connections -->
-  <div class="col-md-6">
-    <div class="form-card p-3">  
-      <h5>Existing Connections
-              <span class="badge bg-primary rounded-4"> {{ existingConnections.length }} connected </span>
-      </h5>
-      <div *ngIf="existingConnections.length > 0 && !isLoading" class="form-height pt-3">
-        <div *ngFor="let conn of existingConnections" class="glass-card m-2 p-3"
-          style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);">
-      
-          <div class="d-flex justify-content-between align-items-start">
-            <!-- Icon + Name -->
-            <div class="d-flex align-items-center">
-              <div class="fs-3 me-3">
-                @if(connectionListIcons[conn.server_type]?.type === 'emoji'){
-                {{ connectionListIcons[conn.server_type]?.value }}
-                }
-      
-                @if(connectionListIcons[conn.server_type]?.type === 'fa'){
-                <i [ngClass]="connectionListIcons[conn.server_type]?.value"></i>
-                }
-      
-                @if(connectionListIcons[conn.server_type]?.type === 'svg'){
-                <div [innerHTML]="getSafeSvg(connectionListIcons[conn.server_type]?.value)"></div>
-                }
+            <div class="d-flex justify-content-between align-items-start">
+              <!-- Icon + Name -->
+              <div class="d-flex align-items-center">
+                <div class="fs-3 me-3">
+                  @if(connectionListIcons[conn.server_type]?.type === 'emoji'){
+                  {{ connectionListIcons[conn.server_type]?.value }}
+                  }
+
+                  @if(connectionListIcons[conn.server_type]?.type === 'image'){
+                  <!-- <i [ngClass]="connectionListIcons[conn.server_type]?.value"></i> -->
+                  <img [src]="connectionListIcons[conn.server_type]?.value" class="db-icon">
+                  }
+
+                  @if(connectionListIcons[conn.server_type]?.type === 'svg'){
+                  <div [innerHTML]="getSafeSvg(connectionListIcons[conn.server_type]?.value)"></div>
+                  }
+                </div>
+                <div>
+                  <h6 class="mb-0">{{ conn.display_name }}</h6>
+                  <small class="text-muted">{{ conn.server_type }}</small>
+                </div>
               </div>
-              <div>
-                <h6 class="mb-0">{{ conn.display_name }}</h6>
-                <small class="text-muted">{{ conn.server_type }}</small>
-              </div>
+              <!-- <i class="bi bi-gear text-muted"></i> -->
             </div>
-            <!-- <i class="bi bi-gear text-muted"></i> -->
+
+            <!-- Description + Details -->
+            <div class="d-flex justify-content-between small">
+              <div><strong>Created On:</strong> {{ conn.created_at | date:'dd-MM-yyyy, hh:mm a' }}</div>
+              <div><strong>Last Modified:</strong> {{ conn.updated_at | date:'dd-MM-yyyy, hh:mm a' }}</div>
+            </div>
+
+            <!-- Actions -->
+            <div class="d-flex justify-content-between mt-3 gap-2">
+              <button class="btn btn-outline-primary-light rounded-2 btn-sm flex-fill"
+                (click)="editOrDeleteByType(conn.server_type, true, conn, true)"
+                *appHasPermission="{ id: 21, mode: 'disable' }">
+                <i class="bi bi-pencil me-1"></i> Edit
+              </button>
+              <button class="btn btn-outline-danger-light rounded-2 btn-sm flex-fill"
+                (click)="editOrDeleteByType(conn.server_type, false, conn, true)"
+                *appHasPermission="{ id: 24, mode: 'disable' }">
+                <i class="bi bi-trash me-1"></i> Delete
+              </button>
+            </div>
           </div>
-      
-          <!-- Description + Details -->
-          <div class="d-flex justify-content-between small">
-            <div><strong>Created On:</strong> {{ conn.created_at | date: 'mediumDate' }}</div>
-            <div><strong>Last Modified:</strong> {{ conn.updated_at | date: 'mediumDate' }}</div>
+        </div>
+
+        <ng-container *ngIf="isLoading">
+          <div class="form-height pt-3">
+            <div *ngFor="let sk of skeletons" class="glass-card m-2 p-3"
+              style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);">
+
+              <!-- Header: Icon + Title -->
+              <div class="d-flex justify-content-between align-items-start">
+                <div class="d-flex align-items-center">
+                  <!-- Icon -->
+                  <div class="skeleton rounded-circle me-3" style="width: 36px; height: 36px;"></div>
+                  <!-- Title + Subtitle -->
+                  <div>
+                    <div class="skeleton mb-2" style="width: 120px; height: 14px;"></div>
+                    <div class="skeleton" style="width: 80px; height: 12px;"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Description -->
+              <div class="skeleton mt-3 mb-2" style="width: 90%; height: 12px;"></div>
+
+              <!-- Details -->
+              <div class="d-flex justify-content-between small mt-2">
+                <div class="skeleton" style="width: 100px; height: 12px;"></div>
+                <div class="skeleton" style="width: 120px; height: 12px;"></div>
+              </div>
+
+              <!-- Actions -->
+              <div class="d-flex justify-content-between mt-3 gap-2">
+                <div class="skeleton rounded-5" style="flex:1; height: 28px;"></div>
+                <div class="skeleton rounded-5" style="flex:1; height: 28px;"></div>
+              </div>
+
+            </div>
           </div>
-      
-          <!-- Actions -->
-          <div class="d-flex justify-content-between mt-3 gap-2">
-            <button class="btn btn-outline-primary-light rounded-2 btn-sm flex-fill"
-              (click)="conn.server_type !== 'CSV' ? editPreviewDatabaseConnection(conn?.hierarchy_id, true) : getFileConnection(conn?.hierarchy_id, uploadFileModal, true);">
-              <i class="bi bi-pencil me-1"></i> Edit
-            </button>
-            <button class="btn btn-outline-danger-light rounded-2 btn-sm flex-fill"
-              (click)="conn.server_type === 'CSV' ? deleteFileConnection(conn, true) : deleteDatabaseConnection(conn, true);">
-              <i class="bi bi-trash me-1"></i> Delete
+        </ng-container>
+
+        <!-- Skeleton card when no connections -->
+        <ng-template [ngIf]="!isLoading && existingConnections.length === 0">
+          <div
+            class="glass-card d-flex flex-column align-items-center justify-content-center rounded-3 border-light form-height">
+            <i class="bi bi-database fs-1 text-muted mb-2"></i>
+            <h6 class="text-muted">No connections yet</h6>
+            <p class="small text-muted">Created connections will appear here.</p>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Right Panel: New Connection Form -->
+    <div class="col-md-6">
+      <div class="form-card p-3">
+        <h5 class="d-flex align-items-center">
+          <ng-container *ngIf="getConnectionAsset(selectedConnection) as asset">
+            <span *ngIf="asset.type === 'icon'" class="card-icon me-2 fs-5">{{ asset.value }}</span>
+            <img *ngIf="asset.type === 'image'" [src]="asset.value" alt="{{ selectedConnection }} logo"
+              class="me-2 card-icon" width="24" height="24">
+            <span *ngIf="asset.type === 'svg'" class="me-2 card-icon" [innerHTML]="asset.value"></span>
+
+          </ng-container>
+          Create New {{ selectedConnectionName }}
+        </h5>
+
+        <ng-container *ngTemplateOutlet="connectionFormsTemplate">
+        </ng-container>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #postgresForm>
+  <form class="form-height"
+    (ngSubmit)="isExistingConnectionsEdit || isEditPreview ? updateDatabaseConnection(editPreviewData.id, 1, !isEditPreview) : DatabaseConnection(1)"
+    style="overflow-x: hidden;">
+
+    <!-- Connection Name -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
+        Connection Name <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">(Enter your Connection Name in this field)</span>
+      <input [ngClass]="{'error-input': displayNameError}" type="text" class="form-control w-100"
+        [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" autocomplete="new-myname"
+        placeholder="e.g. PostgreSQL Connection" (input)="displayNameConditionError()"
+        [disabled]="isExistingConnectionsEdit || isEditPreview">
+    </div>
+
+    <!-- Server -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': serverError}" class="form-label d-inline-block me-1">
+        Host <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">(Place your host url or host name)</span>
+      <input [ngClass]="{'error-input': serverError}" type="text" class="form-control w-100" [(ngModel)]="serverName"
+        [ngModelOptions]="{standalone: true}" placeholder="Host Name/Host Url" (input)="serverConditionError()"
+        >
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-6 col-xl-12 mb-3 mt-0">
+        <!-- Port -->
+        <label [ngClass]="{'error-label': portError}" class="form-label d-inline-block me-1">
+          Port <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px;">(Example port number for PostgreSQL is 5432)</span>
+        <input [ngClass]="{'error-input': portError}" type="text" class="form-control w-100" [(ngModel)]="portName"
+          [ngModelOptions]="{standalone: true}" placeholder="e.g. 5432" (input)="portConditionError()"
+          >
+      </div>
+      <div class="col-md-6 col-xl-12 mb-3 mt-0">
+        <!-- Database -->
+        <label [ngClass]="{'error-label': databaseError}" class="form-label d-inline-block me-1">
+          Database <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px;">(Please give database name )</span>
+        <input [ngClass]="{'error-input': databaseError}" type="text" class="form-control w-100"
+          [(ngModel)]="databaseName" [ngModelOptions]="{standalone: true}" placeholder="e.g. PostgreSQL"
+          (input)="databaseConditionError()">
+      </div>
+    </div>
+
+    <!-- Username / Password Row -->
+    <div class="row g-3">
+      <div class="col-md-6 mb-3">
+        <label [ngClass]="{'error-label': userNameError}" class="form-label d-inline-block me-1">
+          Username <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px;">(Enter your username in this field)</span>
+        <input [ngClass]="{'error-input': userNameError}" type="text" class="form-control w-100" [(ngModel)]="userName"
+          [ngModelOptions]="{standalone: true}" placeholder="username" autocomplete="new-myname"
+          (input)="userNameConditionError()">
+      </div>
+      <div class="col-md-6 mb-3">
+        <label [ngClass]="{'error-label': passwordError}" class="form-label d-inline-block me-1">
+          Password <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px;">(Enter your password in this field)</span>
+        <div class="d-flex">
+          <input [ngClass]="{'error-input': passwordError}" [type]="showPassword ? 'text' : 'password'"
+            class="form-control w-100" [(ngModel)]="password" [ngModelOptions]="{standalone: true}"
+            placeholder="password" autocomplete="new-password" (input)="passwordConditionError()">
+          <button class="btn mode-btn ms-2 rounded-3" type="button" (click)="toggleVisibility()">
+            <i class="ri-eye-{{toggleClass}} align-middle"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="schemaList && schemaList.length > 0" class="mb-3">
+      <label class="form-label">Select Schema
+        <i ngbTooltip="By default public schema will be selected, if no schema is chosen."
+          class="icon icon-info ms-1 cursor-pointer"></i>
+      </label>
+      <select class="form-select w-100" [(ngModel)]="selectedSchema" [ngModelOptions]="{standalone: true}">
+        <option class="select-options" *ngFor="let schema of schemaList" [value]="schema">{{ schema }}</option>
+      </select>
+    </div>
+
+    <div *ngIf="(isExistingConnectionsEdit || isEditPreview) && schemaList && schemaList.length === 0" class="mb-3">
+      <label class="form-label">Schema</label>
+      <input type="text" class="form-control w-100" [(ngModel)]="selectedSchema" [ngModelOptions]="{standalone: true}"
+        disabled>
+    </div>
+
+    <!-- Footer Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-primary rounded-5"
+        [disabled]="disableConnectBtn" (click)="getSchemaList(1)">Fetch Schema</button>
+      <button type="button" class="btn btn-sm btn-danger rounded-5"
+        (click)="onClose()">Close</button>
+      <button type="submit" class="btn btn-sm mode-btn rounded-5" [disabled]="disableConnectBtn"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
+    </div>
+
+  </form>
+</ng-template>
+
+<ng-template #mysqlForm>
+  <form class="form-height"
+    (ngSubmit)="isExistingConnectionsEdit || isEditPreview ? updateDatabaseConnection(editPreviewData.id, 9, !isEditPreview) : DatabaseConnection(9)"
+    style="overflow-x: hidden;">
+
+    <!-- Connection Name -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
+        Connection Name <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">(Enter your Connection Name in this field)</span>
+      <input [ngClass]="{'error-input': displayNameError}" type="text" class="form-control w-100"
+        [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" placeholder="My MySQL Connection"
+        (input)="displayNameConditionError()" [disabled]="isExistingConnectionsEdit || isEditPreview">
+    </div>
+
+    <!-- Host  Row -->
+
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': serverError}" class="form-label d-inline-block me-1">
+        Host <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">(Place your host url or host name)</span>
+      <input [ngClass]="{'error-input': serverError}" type="text" class="form-control w-100" [(ngModel)]="serverName"
+        [ngModelOptions]="{standalone: true}" placeholder="localhost" (input)="serverConditionError()">
+    </div>
+    <!-- port/Database Name -->
+    <div class="row g-3">
+      <div class="col-md-6 col-xl-12 mb-3">
+        <label [ngClass]="{'error-label': portError}" class="form-label d-inline-block me-1">
+          Port <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px;">(Example port number for MySQL is 5432)</span>
+        <input [ngClass]="{'error-input': portError}" type="text" class="form-control w-100" [(ngModel)]="portName"
+          [ngModelOptions]="{standalone: true}" placeholder="5432" (input)="portConditionError()">
+      </div>
+
+
+      <div class=" col-md-6 col-xl-12 mb-3">
+        <label [ngClass]="{'error-label': databaseError}" class="form-label d-inline-block me-1">
+          Database Name <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px; ">(Please give database name )</span>
+        <input [ngClass]="{'error-input': databaseError}" type="text" class="form-control w-100"
+          [(ngModel)]="databaseName" [ngModelOptions]="{standalone: true}" placeholder="database_name"
+          (input)="databaseConditionError()">
+      </div>
+    </div>
+
+
+    <!-- Username / Password Row -->
+    <div class="row g-3">
+      <div class="col-md-6 mb-3">
+        <label [ngClass]="{'error-label': userNameError}" class="form-label d-inline-block me-1">
+          Username <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px;">(Enter your username in this field)</span>
+        <input [ngClass]="{'error-input': userNameError}" type="text" class="form-control w-100" [(ngModel)]="userName"
+          [ngModelOptions]="{standalone: true}" placeholder="username" autocomplete="new-myname"
+          (input)="userNameConditionError()">
+      </div>
+      <div class="col-md-6 mb-3">
+        <label [ngClass]="{'error-label': passwordError}" class="form-label d-inline-block me-1">
+          Password <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px;">(Enter your password in this field)</span>
+        <div class="d-flex">
+          <input [ngClass]="{'error-input': passwordError}" [type]="showPassword ? 'text' : 'password'"
+            class="form-control w-100" [(ngModel)]="password" [ngModelOptions]="{standalone: true}"
+            placeholder="password" autocomplete="new-password" (input)="passwordConditionError()">
+          <button class="btn mode-btn ms-2 rounded-3" type="button" (click)="toggleVisibility()">
+            <i class="ri-eye-{{toggleClass}} align-middle"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Footer Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5" (click)="onClose()">
+        Close
+      </button>
+      <button type="submit" class="btn btn-sm mode-btn rounded-5 me-3" [disabled]="disableConnectBtn"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
+    </div>
+  </form>
+</ng-template>
+
+<ng-template #oracleForm>
+  <form class="form-height"
+    (ngSubmit)="isExistingConnectionsEdit || isEditPreview ? updateDatabaseConnection(editPreviewData.id, 7, !isEditPreview) : DatabaseConnection(7)"
+    style="overflow-x: hidden;">
+
+    <!-- Connection Name -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
+        Connection Name <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">(Enter your Connection Name in this field)</span>
+      <input [ngClass]="{'error-input': displayNameError}" type="text" class="form-control w-100"
+        [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" placeholder="My Oracle Connection"
+        (input)="displayNameConditionError()" [disabled]="isExistingConnectionsEdit || isEditPreview">
+    </div>
+
+    <!-- Host  Row -->
+
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': serverError}" class="form-label d-inline-block me-1">
+        Host <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">( Place your host url or host name)</span>
+      <input [ngClass]="{'error-input': serverError}" type="text" class="form-control w-100" [(ngModel)]="serverName"
+        [ngModelOptions]="{standalone: true}" placeholder="Host Name / Host URL" (input)="serverConditionError()">
+    </div>
+    <!-- port/server Name -->
+    <div class="row g-3">
+      <div class="col-md-6 col-xl-12 mb-3">
+        <label [ngClass]="{'error-label': portError}" class="form-label d-inline-block me-1">
+          Port <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px; ">(Example port number for oracle is 1521)</span>
+        <input [ngClass]="{'error-input': portError}" type="text" class="form-control w-100" [(ngModel)]="portName"
+          [ngModelOptions]="{standalone: true}" placeholder="1521" (input)="portConditionError()">
+      </div>
+
+      <div class="col-md-6 col-xl-12 mb-3">
+        <label [ngClass]="{'error-label': databaseError}" class="form-label d-inline-block me-1">
+          Service Name <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px; ">( Place give your servername)</span>
+        <input [ngClass]="{'error-input': databaseError}" type="text" class="form-control w-100"
+          [(ngModel)]="databaseName" [ngModelOptions]="{standalone: true}" placeholder="e.g. orcl"
+          (input)="databaseConditionError()">
+      </div>
+    </div>
+
+
+
+    <!-- Username / Password Row -->
+    <div class="row g-3">
+      <div class="col-md-6 mb-3">
+        <label [ngClass]="{'error-label': userNameError}" class="form-label d-inline-block me-1">
+          Username <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px; ">(Enter your username in this field)</span>
+        <input [ngClass]="{'error-input': userNameError}" type="text" class="form-control w-100" [(ngModel)]="userName"
+          [ngModelOptions]="{standalone: true}" placeholder="e.g. InsignApps" autocomplete="new-myname"
+          (input)="userNameConditionError()">
+      </div>
+      <div class="col-md-6 mb-3">
+        <label [ngClass]="{'error-label': passwordError}" class="form-label d-inline-block me-1">
+          Password <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px; ">(Please give your password in this field)</span>
+        <div class="d-flex">
+          <input [ngClass]="{'error-input': passwordError}" [type]="showPassword ? 'text' : 'password'"
+            class="form-control w-100" [(ngModel)]="password" [ngModelOptions]="{standalone: true}"
+            placeholder="e.g. ******" autocomplete="new-password" (input)="passwordConditionError()">
+          <button class="btn mode-btn ms-2 rounded-3" type="button" (click)="toggleVisibility()">
+            <i class="ri-eye-{{toggleClass}} align-middle"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5" (click)="onClose()">
+        Close
+      </button>
+      <button type="submit" class="btn btn-sm mode-btn rounded-5 me-3" [disabled]="disableConnectBtn"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
+    </div>
+
+  </form>
+</ng-template>
+
+<ng-template #mssqlForm>
+  <form class="form-height"
+    (ngSubmit)="isExistingConnectionsEdit || isEditPreview ? updateDatabaseConnection(editPreviewData.id, 8, !isEditPreview) : DatabaseConnection(8)"
+    style="overflow-x: hidden;">
+
+    <!-- Authentication Type -->
+    <div class="mb-3">
+      <label for="authType" class="form-label d-inline-block me-1">
+        Authentication Type <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">(Select your Authentication type Name in this field)</span>
+      <select id="authType" class="form-select w-100" aria-label="Authentication Type"
+        [(ngModel)]="selectedMicroSoftAuthType" (change)="errorCheck()" [ngModelOptions]="{ standalone: true }">
+        <option value='null' disabled selected>Select Authentication Type</option>
+        <option class="select-options" value="Windows Authentication">Windows Authentication</option>
+        <option class="select-options" value="SQL Server Authentication">SQL Server Authentication</option>
+      </select>
+    </div>
+
+    <!-- Show rest of form only if auth type is selected -->
+    <div *ngIf="selectedMicroSoftAuthType">
+
+      <!-- Connection Name -->
+      <div class="mb-3">
+        <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
+          Connection Name <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px;">(Enter your Connection Name in this field)</span>
+        <input [ngClass]="{'error-input': displayNameError}" type="text" class="form-control w-100"
+          [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" placeholder="My SQL Server Connection"
+          (input)="displayNameConditionError()" [disabled]="isExistingConnectionsEdit || isEditPreview">
+      </div>
+
+      <!-- Host Row -->
+
+      <div class="mb-3">
+        <label [ngClass]="{'error-label': serverError}" class="form-label d-inline-block me-1">
+          Server <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px;">(Enter your Connection Name in this field)</span>
+        <input [ngClass]="{'error-input': serverError}" type="text" class="form-control w-100" [(ngModel)]="serverName"
+          [ngModelOptions]="{standalone: true}" placeholder="Host Name / Host URL" (input)="serverConditionError()">
+      </div>
+      <!-- port/Database Name -->
+      <div class="row g-3">
+        <div class="col-md-6 col-xl-12 mb-3">
+          <label [ngClass]="{'error-label': portError}" class="form-label d-inline-block me-1">
+            Port <span class="text-danger">*</span>
+          </label>
+          <span class="text-muted" style="font-size: 8px;">(Example port number for MySQL is 1433)</span>
+          <input [ngClass]="{'error-input': portError}" type="text" class="form-control w-100" [(ngModel)]="portName"
+            [ngModelOptions]="{standalone: true}" placeholder="1433" (input)="portConditionError()">
+        </div>
+
+        <div class="col-md-6 col-xl-12 mb-3">
+          <label [ngClass]="{'error-label': databaseError}" class="form-label d-inline-block me-1">
+            Database <span class="text-danger">*</span>
+          </label> <span class="text-muted" style="font-size: 8px; ">(Please give database name )</span>
+          <input [ngClass]="{'error-input': databaseError}" type="text" class="form-control w-100"
+            [(ngModel)]="databaseName" [ngModelOptions]="{standalone: true}" placeholder="e.g. sqlserver"
+            (input)="databaseConditionError()">
+        </div>
+      </div>
+
+
+      <!-- Username / Password Row (only for SQL Auth) -->
+      <div *ngIf="selectedMicroSoftAuthType === 'SQL Server Authentication'" class="row g-3">
+        <div class="col-md-6 mb-3">
+          <label [ngClass]="{'error-label': userNameError}" class="form-label">
+            Username <span class="text-danger">*</span>
+          </label>
+          <span class="text-muted" style="font-size: 8px;">(Enter your username in this field)</span>
+          <input [ngClass]="{'error-input': userNameError}" type="text" class="form-control w-100"
+            [(ngModel)]="userName" [ngModelOptions]="{standalone: true}" placeholder="e.g. InsignApps"
+            autocomplete="new-myname" (input)="userNameConditionError()">
+        </div>
+        <div class="col-md-6 mb-3">
+          <label [ngClass]="{'error-label': passwordError}" class="form-label">
+            Password <span class="text-danger">*</span>
+          </label>
+          <span class="text-muted" style="font-size: 8px;">(Enter your password in this field)</span>
+          <div class="d-flex">
+            <input [ngClass]="{'error-input': passwordError}" [type]="showPassword ? 'text' : 'password'"
+              class="form-control w-100" [(ngModel)]="password" [ngModelOptions]="{standalone: true}"
+              placeholder="e.g. ******" autocomplete="new-password" (input)="passwordConditionError()">
+            <button class="btn mode-btn ms-2 rounded-3" type="button" (click)="toggleVisibility()">
+              <i class="ri-eye-{{toggleClass}} align-middle"></i>
             </button>
           </div>
         </div>
       </div>
-
-      <ng-container *ngIf="isLoading">
-        <div class="form-height pt-3">
-          <div *ngFor="let sk of skeletons" class="glass-card m-2 p-3" style="box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);">
-      
-            <!-- Header: Icon + Title -->
-            <div class="d-flex justify-content-between align-items-start">
-              <div class="d-flex align-items-center">
-                <!-- Icon -->
-                <div class="skeleton rounded-circle me-3" style="width: 36px; height: 36px;"></div>
-                <!-- Title + Subtitle -->
-                <div>
-                  <div class="skeleton mb-2" style="width: 120px; height: 14px;"></div>
-                  <div class="skeleton" style="width: 80px; height: 12px;"></div>
-                </div>
-              </div>
-            </div>
-      
-            <!-- Description -->
-            <div class="skeleton mt-3 mb-2" style="width: 90%; height: 12px;"></div>
-      
-            <!-- Details -->
-            <div class="d-flex justify-content-between small mt-2">
-              <div class="skeleton" style="width: 100px; height: 12px;"></div>
-              <div class="skeleton" style="width: 120px; height: 12px;"></div>
-            </div>
-      
-            <!-- Actions -->
-            <div class="d-flex justify-content-between mt-3 gap-2">
-              <div class="skeleton rounded-5" style="flex:1; height: 28px;"></div>
-              <div class="skeleton rounded-5" style="flex:1; height: 28px;"></div>
-            </div>
-      
-          </div>
-        </div>
-      </ng-container>
-
-      <!-- Skeleton card when no connections -->
-      <ng-template [ngIf]="!isLoading && existingConnections.length === 0">
-        <div class="glass-card d-flex flex-column align-items-center justify-content-center rounded-3 border-light form-height">
-          <i class="bi bi-database fs-1 text-muted mb-2"></i>
-          <h6 class="text-muted">No connections yet</h6>
-          <p class="small text-muted">Created connections will appear here.</p>
-        </div>
-      </ng-template>
     </div>
-  </div>
 
-  <!-- Right Panel: New Connection Form -->
-  <div *ngSwitchCase="'POSTGRESQL'" class="col-md-6">
-    <div class="form-card p-3">
-      <h5 class="d-flex align-items-center">
-        <ng-container *ngIf="getConnectionAsset(selectedConnection) as asset">
-          <span *ngIf="asset.type === 'icon'" class="card-icon me-2 fs-5">{{ asset.value }}</span>
-          <img *ngIf="asset.type === 'image'" [src]="asset.value" alt="{{ selectedConnection }} logo"
-            class="me-2 card-icon" width="24" height="24">
-          <span *ngIf="asset.type === 'svg'" class="me-2 card-icon" [innerHTML]="asset.value"></span>
-  
-        </ng-container>
-        Create New {{ selectedConnection }}
-      </h5>
-      <form class="form-height"
-        (ngSubmit)="isExistingConnectionsEdit ? updateDatabaseConnection(editPreviewData.id) : DatabaseConnection()"
-        style="overflow-x: hidden;">
-      
-        <!-- Database Type Selection -->
-        <div class="mb-3">
-          <label class="form-label d-inline-block me-1">
-            Database Type <span class="text-danger">*</span>
-          </label>
-          <span class="text-muted" style="font-size: 8px;">(Select your database type)</span>
-          <select class="form-select w-100" [(ngModel)]="selectedDatabaseType" [ngModelOptions]="{standalone: true}" 
-                  [disabled]="isExistingConnectionsEdit">
-            <option value="">Select Database Type</option>
-            <option *ngFor="let db of availableDataSources.databases" [value]="db.id">
-              {{ db.name }}
-            </option>
-          </select>
-        </div>
-      
-        <!-- Connection Name -->
-        <div class="mb-3">
-          <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
-            Connection Name <span class="text-danger">*</span>
-          </label>
-          <span class="text-muted" style="font-size: 8px;">(Enter your Connection Name in this field)</span>
-          <input [ngClass]="{'error-input': displayNameError}" type="text" class="form-control w-100"
-            [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" autocomplete="new-myname"
-            placeholder="e.g. InsignApps" (input)="displayNameConditionError()" [disabled]="isExistingConnectionsEdit">
-        </div>
-      
-        <!-- Server -->
-        <div class="mb-3">
-          <label [ngClass]="{'error-label': serverError}" class="form-label d-inline-block me-1">
-            Host <span class="text-danger">*</span>
-          </label>
-          <span class="text-muted" style="font-size: 8px;">(Place your host url or host name)</span>
-          <input [ngClass]="{'error-input': serverError}" type="text" class="form-control w-100"
-            [(ngModel)]="serverName" [ngModelOptions]="{standalone: true}" placeholder="Host Name/Host Url"
-            (input)="serverConditionError()" [disabled]="isExistingConnectionsEdit">
-        </div>
-
-        <div class="row g-3">
-          <div class="col-md-6 col-xl-12 mb-3">
-            <!-- Port -->
-            <label [ngClass]="{'error-label': portError}" class="form-label d-inline-block me-1">
-              Port <span class="text-danger">*</span>
-            </label>
-            <span  class="text-muted" style="font-size: 8px;">(Enter the port number for your database)</span>
-            <input [ngClass]="{'error-input': portError}" type="text" class="form-control w-100" [(ngModel)]="portName"
-              [ngModelOptions]="{standalone: true}" [placeholder]="getPortPlaceholder()" (input)="portConditionError()" [disabled]="isExistingConnectionsEdit">
-          </div>
-          <div class="col-md-6 col-xl-12 mb-3">
-             <!-- Database -->
-            <label [ngClass]="{'error-label': databaseError}" class="form-label d-inline-block me-1">
-              Database <span class="text-danger">*</span>
-            </label>
-            <span  class="text-muted" style="font-size: 8px;">(Please give database name )</span>
-            <input [ngClass]="{'error-input': databaseError}" type="text" class="form-control w-100" [(ngModel)]="databaseName"
-              [ngModelOptions]="{standalone: true}" placeholder="e.g. PostgreSQL" (input)="databaseConditionError()" [disabled]="isExistingConnectionsEdit">
-          </div>
-        </div>
-
-        <!-- Username / Password Row -->
-        <div class="row g-3">
-          <div class="col-md-6 mb-3">
-            <label [ngClass]="{'error-label': userNameError}" class="form-label d-inline-block me-1">
-              Username <span class="text-danger">*</span>
-            </label>
-            <span  class="text-muted" style="font-size: 8px;">(Enter your username in this field)</span>
-            <input [ngClass]="{'error-input': userNameError}" type="text" class="form-control w-100"
-              [(ngModel)]="userName" [ngModelOptions]="{standalone: true}" placeholder="username"
-              autocomplete="new-myname" (input)="userNameConditionError()" [disabled]="isExistingConnectionsEdit">
-          </div>
-          <div class="col-md-6 mb-3">
-            <label [ngClass]="{'error-label': passwordError}" class="form-label d-inline-block me-1">
-              Password <span class="text-danger">*</span>
-            </label>
-            <span  class="text-muted" style="font-size: 8px;">(Enter your password in this field)</span>
-            <div class="d-flex">
-              <input [ngClass]="{'error-input': passwordError}" [type]="showPassword ? 'text' : 'password'"
-                class="form-control w-100" [(ngModel)]="password" [ngModelOptions]="{standalone: true}"
-                placeholder="password" autocomplete="new-password" (input)="passwordConditionError()">
-              <button class="btn mode-btn ms-2" type="button" (click)="toggleVisibility()">
-                <i class="ri-eye-{{toggleClass}} align-middle"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      
-        <div *ngIf="schemaList && schemaList.length > 0 && !isExistingConnectionsEdit" class="mb-3">
-          <label class="form-label">Select Schema
-            <i ngbTooltip="By default public schema will be selected, if no schema is chosen."
-              class="icon icon-info ms-1 cursor-pointer"></i>
-          </label>
-          <select class="form-select w-100" [(ngModel)]="selectedSchema" [ngModelOptions]="{standalone: true}">
-            <option class="select-options" *ngFor="let schema of schemaList" [value]="schema">{{ schema }}</option>
-          </select>
-        </div>
-
-        <div *ngIf="isExistingConnectionsEdit" class="mb-3">
-          <label class="form-label">Schema</label>
-          <input type="text" class="form-control w-100" [(ngModel)]="selectedSchema" [ngModelOptions]="{standalone: true}"
-            disabled>
-        </div>
-      
-        <!-- Footer Buttons -->
-        <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
-          <button *ngIf="!isExistingConnectionsEdit" type="button" class="btn btn-sm mode-btn rounded-5" [disabled]="disableConnectBtn"
-            (click)="getSchemaList()">Fetch Schema</button>
-          <button type="button" class="btn btn-sm btn-danger rounded-5"
-            (click)="resetForm();goBackToSubCategories();">Close</button>
-          <button type="submit" class="btn btn-sm mode-btn rounded-5" [disabled]="disableConnectBtn">
-            {{ isExistingConnectionsEdit ? 'Update' : 'Connect' }}
-          </button>
-        </div>
-      
-      </form>
+    <!-- Footer Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5" (click)="onClose()">
+        Close
+      </button>
+      <button type="submit" class="btn btn-sm mode-btn rounded-5 me-3" [disabled]="disableConnectBtn"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
     </div>
-  </div>
 
-  <div *ngSwitchCase="'MYSQL'" class="col-md-6">
-    <div class="form-card p-3">
-      <h5 class="d-flex align-items-center">
-        <ng-container *ngIf="getConnectionAsset(selectedConnection) as asset">
-          <span *ngIf="asset.type === 'icon'" class="card-icon me-2 fs-5">{{ asset.value }}</span>
-          <img *ngIf="asset.type === 'image'" [src]="asset.value" alt="{{ selectedConnection }} logo"
-            class="me-2 card-icon" width="24" height="24">
-          <span *ngIf="asset.type === 'svg'" class="me-2 card-icon" [innerHTML]="asset.value"></span>
-  
-        </ng-container>
-        Create New {{ selectedConnection }}
-      </h5>
-      <form class="form-height"
-        (ngSubmit)="isEditPreview ? updateDatabaseConnection(editPreviewData.id) : DatabaseConnection()"
-        style="overflow-x: hidden;">
-  
-        <!-- Connection Name -->
-        <div class="mb-3">
-          <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
-            Connection Name <span class="text-danger">*</span>
-          </label>
-          <span class="text-muted" style="font-size: 8px;">(Enter your Connection Name in this field)</span>
-          <input [ngClass]="{'error-input': displayNameError}" type="text" class="form-control w-100"
-            [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" placeholder="My MySQL Connection"
-            (input)="displayNameConditionError()">
-        </div>
-  
-        <!-- Host  Row -->
-  
-        <div class="mb-3">
-          <label [ngClass]="{'error-label': serverError}" class="form-label d-inline-block me-1">
-            Host <span class="text-danger">*</span>
-          </label>
-          <span class="text-muted" style="font-size: 8px;">(Place your host url or host name)</span>
-          <input [ngClass]="{'error-input': serverError}" type="text" class="form-control w-100"
-            [(ngModel)]="serverName" [ngModelOptions]="{standalone: true}" placeholder="localhost"
-            (input)="serverConditionError()">
-        </div>
-        <!-- port/Database Name -->
-        <div class="row g-3">
-          <div class="col-md-6 col-xl-12 mb-3">
-            <label [ngClass]="{'error-label': portError}" class="form-label d-inline-block me-1">
-              Port <span class="text-danger">*</span>
-            </label>
-            <span class="text-muted" style="font-size: 8px;">(Example port number for MySQL is 5432)</span>
-            <input [ngClass]="{'error-input': portError}" type="text" class="form-control w-100"
-              [(ngModel)]="portName" [ngModelOptions]="{standalone: true}" placeholder="5432"
-              (input)="portConditionError()">
-          </div>
-  
-  
-          <div class=" col-md-6 col-xl-12 mb-3">
-            <label [ngClass]="{'error-label': databaseError}" class="form-label d-inline-block me-1">
-              Database Name <span class="text-danger">*</span>
-            </label>
-            <span class="text-muted" style="font-size: 8px; ">(Please give database name )</span>
-            <input [ngClass]="{'error-input': databaseError}" type="text" class="form-control w-100"
-              [(ngModel)]="databaseName" [ngModelOptions]="{standalone: true}" placeholder="database_name"
-              (input)="databaseConditionError()">
-          </div>
-        </div>
-  
-  
-        <!-- Username / Password Row -->
-        <div class="row g-3">
-          <div class="col-md-6 mb-3">
-            <label [ngClass]="{'error-label': userNameError}" class="form-label d-inline-block me-1">
-              Username <span class="text-danger">*</span>
-            </label>
-            <span class="text-muted" style="font-size: 8px;">(Enter your username in this field)</span>
-            <input [ngClass]="{'error-input': userNameError}" type="text" class="form-control w-100"
-              [(ngModel)]="userName" [ngModelOptions]="{standalone: true}" placeholder="username"
-              autocomplete="new-myname" (input)="userNameConditionError()">
-          </div>
-          <div class="col-md-6 mb-3">
-            <label [ngClass]="{'error-label': passwordError}" class="form-label d-inline-block me-1">
-              Password <span class="text-danger">*</span>
-            </label>
-            <span class="text-muted" style="font-size: 8px;">(Enter your password in this field)</span>
-            <div class="d-flex">
-              <input [ngClass]="{'error-input': passwordError}" [type]="showPassword ? 'text' : 'password'"
-                class="form-control w-100" [(ngModel)]="password" [ngModelOptions]="{standalone: true}"
-                placeholder="password" autocomplete="new-password" (input)="passwordConditionError()">
-              <button class="btn mode-btn ms-2" type="button" (click)="toggleVisibility()">
-                <i class="ri-eye-{{toggleClass}} align-middle"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-        <!-- Footer Buttons -->
-        <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
-          <button type="button" class="btn btn-sm btn-danger rounded-5" (click)="resetForm();goBackToSubCategories();">
-            Close
-          </button>
-          <button type="submit" class="btn btn-sm btn-primary rounded-5 me-3" [disabled]="disableConnectBtn">
-            {{ isEditPreview ? 'Update' : 'Connect' }}
-          </button>
-        </div>
-      </form>
+  </form>
+</ng-template>
+
+<ng-template #sqliteForm>
+  <form class="form-height"
+    (ngSubmit)="isExistingConnectionsEdit || isEditPreview ? updateDatabaseConnection(editPreviewData.id, 0, !isEditPreview) : DatabaseConnection(0)"
+    style="overflow-x: hidden;">
+
+    <!-- Connection Name -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
+        Connection Name <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">(Enter your Connection Name in this field)</span>
+      <input [ngClass]="{'error-input': displayNameError}" type="text" class="form-control w-100"
+        [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" placeholder="e.g. SQLite Connection"
+        (input)="displayNameConditionError()" [disabled]="isExistingConnectionsEdit || isEditPreview">
     </div>
-  </div>
 
-  <div *ngSwitchCase="'MONGODB'" class="col-md-6">
-    <div class="form-card p-3">
-      <h5 class="d-flex align-items-center">
-        <ng-container *ngIf="getConnectionAsset(selectedConnection) as asset">
-          <span *ngIf="asset.type === 'icon'" class="card-icon me-2 fs-5">{{ asset.value }}</span>
-          <img *ngIf="asset.type === 'image'" [src]="asset.value" alt="{{ selectedConnection }} logo"
-            class="me-2 card-icon" width="24" height="24">
-          <span *ngIf="asset.type === 'svg'" class="me-2 card-icon" [innerHTML]="asset.value"></span>
-  
-        </ng-container>
-        Create New {{ selectedConnection }}
-      </h5>
-      <form class="form-height"
-        (ngSubmit)="isExistingConnectionsEdit ? updateDatabaseConnection(editPreviewData.id) : DatabaseConnection()"
-        style="overflow-x: hidden;">
-      
-        <!-- Database Type Selection -->
-        <div class="mb-3">
-          <label class="form-label d-inline-block me-1">
-            Database Type <span class="text-danger">*</span>
-          </label>
-          <span class="text-muted" style="font-size: 8px;">(Select your database type)</span>
-          <select class="form-select w-100" [(ngModel)]="selectedDatabaseType" [ngModelOptions]="{standalone: true}" 
-                  [disabled]="isExistingConnectionsEdit">
-            <option value="">Select Database Type</option>
-            <option *ngFor="let db of availableDataSources.databases" [value]="db.id">
-              {{ db.name }}
-            </option>
-          </select>
-        </div>
-      
-        <!-- Connection Name -->
-        <div class="mb-3">
-          <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
-            Connection Name <span class="text-danger">*</span>
-          </label>
-          <span class="text-muted" style="font-size: 8px;">(Enter your Connection Name in this field)</span>
-          <input [ngClass]="{'error-input': displayNameError}" type="text" class="form-control w-100"
-            [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" autocomplete="new-myname"
-            placeholder="e.g. MongoDB Connection" (input)="displayNameConditionError()" [disabled]="isExistingConnectionsEdit">
-        </div>
-      
-        <!-- Server -->
-        <div class="mb-3">
-          <label [ngClass]="{'error-label': serverError}" class="form-label d-inline-block me-1">
-            Host <span class="text-danger">*</span>
-          </label>
-          <span class="text-muted" style="font-size: 8px;">(Place your MongoDB host url or host name)</span>
-          <input [ngClass]="{'error-input': serverError}" type="text" class="form-control w-100"
-            [(ngModel)]="serverName" [ngModelOptions]="{standalone: true}" placeholder="Host Name/Host Url"
-            (input)="serverConditionError()" [disabled]="isExistingConnectionsEdit">
-        </div>
+    <!-- File Path -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': pathError}" class="form-label d-inline-block me-1">
+        Database File Path <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">(Database File Path)</span>
+      <!-- <input [ngClass]="{'error-input': pathError}" type="file" class="form-control w-100" [(ngModel)]="sqlLitePath"
+              [ngModelOptions]="{standalone: true}" placeholder="Select SQLite file"
+              (input)="pathConditionError()" autocomplete="off"> -->
 
-        <div class="row g-3">
-          <div class="col-md-6 col-xl-12 mb-3">
-            <!-- Port -->
-            <label [ngClass]="{'error-label': portError}" class="form-label d-inline-block me-1">
-              Port <span class="text-danger">*</span>
-            </label>
-            <span  class="text-muted" style="font-size: 8px;">(Enter the port number for your database)</span>
-            <input [ngClass]="{'error-input': portError}" type="text" class="form-control w-100" [(ngModel)]="portName"
-              [ngModelOptions]="{standalone: true}" [placeholder]="getPortPlaceholder()" (input)="portConditionError()" [disabled]="isExistingConnectionsEdit">
-          </div>
-          <div class="col-md-6 col-xl-12 mb-3">
-             <!-- Database -->
-            <label [ngClass]="{'error-label': databaseError}" class="form-label d-inline-block me-1">
-              Database <span class="text-danger">*</span>
-            </label>
-            <span  class="text-muted" style="font-size: 8px;">(Please give database name )</span>
-            <input [ngClass]="{'error-input': databaseError}" type="text" class="form-control w-100" [(ngModel)]="databaseName"
-              [ngModelOptions]="{standalone: true}" placeholder="e.g. myapp_db" (input)="databaseConditionError()" [disabled]="isExistingConnectionsEdit">
-          </div>
-        </div>
-
-        <!-- Username / Password Row -->
-        <div class="row g-3">
-          <div class="col-md-6 mb-3">
-            <label [ngClass]="{'error-label': userNameError}" class="form-label d-inline-block me-1">
-              Username <span class="text-danger">*</span>
-            </label>
-            <span  class="text-muted" style="font-size: 8px;">(Enter your username in this field)</span>
-            <input [ngClass]="{'error-input': userNameError}" type="text" class="form-control w-100"
-              [(ngModel)]="userName" [ngModelOptions]="{standalone: true}" placeholder="username"
-              autocomplete="new-myname" (input)="userNameConditionError()" [disabled]="isExistingConnectionsEdit">
-          </div>
-          <div class="col-md-6 mb-3">
-            <label [ngClass]="{'error-label': passwordError}" class="form-label d-inline-block me-1">
-              Password <span class="text-danger">*</span>
-            </label>
-            <span  class="text-muted" style="font-size: 8px;">(Enter your password in this field)</span>
-            <div class="d-flex">
-              <input [ngClass]="{'error-input': passwordError}" [type]="showPassword ? 'text' : 'password'"
-                class="form-control w-100" [(ngModel)]="password" [ngModelOptions]="{standalone: true}"
-                placeholder="password" autocomplete="new-password" (input)="passwordConditionError()">
-              <button class="btn mode-btn ms-2" type="button" (click)="toggleVisibility()">
-                <i [class]="showPassword ? 'fa fa-eye-slash' : 'fa fa-eye'"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Submit Button -->
-        <div class="d-flex justify-content-end">
-          <button type="submit" class="btn btn-primary"
-            [disabled]="displayNameError || serverError || portError || databaseError || userNameError || passwordError || disableConnectBtn">
-            {{ isEditPreview ? 'Update' : 'Connect' }}
-          </button>
-        </div>
-  
-      </form>
+      <div class="input-group">
+        <label class="input-group-text btn btn-primary">
+          <i class="bi bi-upload"></i> Choose File
+          <input type="file" [(ngModel)]="sqlLitePath" (input)="pathConditionError()" hidden #fileInput />
+        </label>
+        <input [ngClass]="{'error-input': pathError}" type="text" class="form-control w-70" [value]="selectedFile?.name"
+          readonly />
+      </div>
     </div>
-  </div>
-
-  <div *ngSwitchCase="'ORACLE'" class="col-md-6">
-    <div class="form-card p-3">
-      <h5 class="d-flex align-items-center">
-        <ng-container *ngIf="getConnectionAsset(selectedConnection) as asset">
-          <span *ngIf="asset.type === 'icon'" class="card-icon me-2 fs-5">{{ asset.value }}</span>
-          <img *ngIf="asset.type === 'image'" [src]="asset.value" alt="{{ selectedConnection }} logo"
-            class="me-2 card-icon" width="24" height="24">
-          <span *ngIf="asset.type === 'svg'" class="me-2 card-icon" [innerHTML]="asset.value"></span>
-  
-        </ng-container>
-        Create New {{ selectedConnection }}
-      </h5>
-      <form class="form-height" (ngSubmit)="isEditPreview ? updateDatabaseConnection(editPreviewData.id) : DatabaseConnection()" style="overflow-x: hidden;">
-      
-        <!-- Connection Name -->
-        <div class="mb-3">
-          <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
-            Connection Name <span class="text-danger">*</span>
-          </label>
-          <span  class="text-muted" style="font-size: 8px;">(Enter your Connection Name in this field)</span>
-          <input [ngClass]="{'error-input': displayNameError}" type="text" class="form-control w-100"
-            [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" placeholder="My Oracle Connection"
-            (input)="displayNameConditionError()">
-        </div>
-      
-        <!-- Host  Row -->
-        
-          <div class="mb-3">
-            <label [ngClass]="{'error-label': serverError}" class="form-label d-inline-block me-1">
-              Host <span class="text-danger">*</span>
-            </label>
-            <span  class="text-muted" style="font-size: 8px;">( Place your host url or host name)</span>
-            <input [ngClass]="{'error-input': serverError}" type="text" class="form-control w-100"
-              [(ngModel)]="serverName" [ngModelOptions]="{standalone: true}" placeholder="Host Name / Host URL"
-              (input)="serverConditionError()">
-          </div>
-          <!-- port/server Name -->
-          <div class="row g-3">
-            <div class="col-md-6 col-xl-12 mb-3">
-              <label [ngClass]="{'error-label': portError}" class="form-label d-inline-block me-1">
-                Port <span class="text-danger">*</span>
-              </label>
-              <span class="text-muted" style="font-size: 8px; ">(Example port number for oracle is 1521)</span>
-              <input [ngClass]="{'error-input': portError}" type="text" class="form-control w-100" [(ngModel)]="portName"
-                [ngModelOptions]="{standalone: true}" placeholder="1521" (input)="portConditionError()">
-            </div>
-          
-            <div class="col-md-6 col-xl-12 mb-3">
-              <label [ngClass]="{'error-label': databaseError}" class="form-label d-inline-block me-1">
-                Service Name <span class="text-danger">*</span>
-              </label>
-              <span class="text-muted" style="font-size: 8px; ">( Place give your servername)</span>
-              <input [ngClass]="{'error-input': databaseError}" type="text" class="form-control w-100" [(ngModel)]="databaseName"
-                [ngModelOptions]="{standalone: true}" placeholder="e.g. orcl" (input)="databaseConditionError()">
-            </div>
-          </div>
-       
-      
-      
-        <!-- Username / Password Row -->
-        <div class="row g-3">
-          <div class="col-md-6 mb-3">
-            <label [ngClass]="{'error-label': userNameError}" class="form-label d-inline-block me-1">
-              Username <span class="text-danger">*</span>
-            </label>
-            <span  class="text-muted" style="font-size: 8px; ">(Enter your username in this field)</span>
-            <input [ngClass]="{'error-input': userNameError}" type="text" class="form-control w-100"
-              [(ngModel)]="userName" [ngModelOptions]="{standalone: true}" placeholder="e.g. InsignApps"
-              autocomplete="new-myname" (input)="userNameConditionError()">
-          </div>
-          <div class="col-md-6 mb-3">
-            <label [ngClass]="{'error-label': passwordError}" class="form-label d-inline-block me-1">
-              Password <span class="text-danger">*</span>
-            </label>
-            <span  class="text-muted" style="font-size: 8px; ">(Please give your password in this field)</span>
-            <div class="d-flex">
-              <input [ngClass]="{'error-input': passwordError}" [type]="showPassword ? 'text' : 'password'"
-                class="form-control w-100" [(ngModel)]="password" [ngModelOptions]="{standalone: true}"
-                placeholder="e.g. ******" autocomplete="new-password" (input)="passwordConditionError()">
-              <button class="btn mode-btn ms-2" type="button" (click)="toggleVisibility()">
-                <i class="ri-eye-{{toggleClass}} align-middle"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      
-        <!-- Footer Buttons -->
-        <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
-          <button type="button" class="btn btn-sm btn-danger rounded-5"
-            (click)="resetForm();goBackToSubCategories();">
-            Close
-          </button>
-          <button type="submit" class="btn btn-sm btn-primary rounded-5 me-3" [disabled]="disableConnectBtn">
-            {{ isEditPreview ? 'Update' : 'Connect' }}
-          </button>
-        </div>
-      
-      </form>
+    <!-- Footer Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5" (click)="onClose()">
+        Close
+      </button>
+      <button type="submit" class="btn btn-sm mode-btn rounded-5"
+        [disabled]="pathError || displayNameError || !displayName || !sqlLitePath"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
     </div>
-  </div>
 
-  <div *ngSwitchCase="'Microsoft SQL SERVER'" class="col-md-6">
-    <div class="form-card p-3">
-      <h5 class="d-flex align-items-center">
-        <ng-container *ngIf="getConnectionAsset(selectedConnection) as asset">
-          <span *ngIf="asset.type === 'icon'" class="card-icon me-2 fs-5">{{ asset.value }}</span>
-          <img *ngIf="asset.type === 'image'" [src]="asset.value" alt="{{ selectedConnection }} logo"
-            class="me-2 card-icon" width="24" height="24">
-          <span *ngIf="asset.type === 'svg'" class="me-2 card-icon" [innerHTML]="asset.value"></span>
-  
-        </ng-container>
-        Create New {{ selectedConnection }}
-      </h5>
-      <form class="form-height" (ngSubmit)="isEditPreview ? updateDatabaseConnection(editPreviewData.id) : DatabaseConnection()" style="overflow-x: hidden;">
-  
-        <!-- Authentication Type -->
-        <div class="mb-3">
-          <label for="authType" class="form-label d-inline-block me-1">
-            Authentication Type <span class="text-danger">*</span>
-          </label>
-          <span  class="text-muted" style="font-size: 8px;">(Enter your Authentication type Name in this field)</span>
-          <select id="authType" class="form-select w-100" aria-label="Authentication Type"
-            [(ngModel)]="selectedMicroSoftAuthType" (change)="errorCheck()" [ngModelOptions]="{ standalone: true }">
-            <option value='null' disabled selected>Select Authentication Type</option>
-            <option class="select-options" value="Windows Authentication">Windows Authentication</option>
-            <option class="select-options" value="SQL Server Authentication">SQL Server Authentication</option>
-          </select>
-        </div>
-  
-        <!-- Show rest of form only if auth type is selected -->
-        <div *ngIf="selectedMicroSoftAuthType">
-  
-          <!-- Connection Name -->
-          <div class="mb-3">
-            <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
-              Connection Name <span class="text-danger">*</span>
-            </label>
-            <span  class="text-muted" style="font-size: 8px;">(Enter your Connection Name in this field)</span>
-            <input [ngClass]="{'error-input': displayNameError}" type="text" class="form-control w-100"
-              [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" placeholder="My SQL Server Connection"
-              (input)="displayNameConditionError()">
-          </div>
-  
-          <!-- Host Row -->
-          
-            <div class="mb-3">
-              <label [ngClass]="{'error-label': serverError}" class="form-label d-inline-block me-1">
-                Server <span class="text-danger">*</span>
-              </label>
-              <span  class="text-muted" style="font-size: 8px;">(Enter your Connection Name in this field)</span>
-              <input [ngClass]="{'error-input': serverError}" type="text" class="form-control w-100"
-                [(ngModel)]="serverName" [ngModelOptions]="{standalone: true}" placeholder="Host Name / Host URL"
-                (input)="serverConditionError()">
-            </div>
-          <!-- port/Database Name -->
-          <div class="row g-3">
-            <div class="col-md-6 col-xl-12 mb-3">
-              <label [ngClass]="{'error-label': portError}" class="form-label d-inline-block me-1">
-                Port <span class="text-danger">*</span>
-              </label>
-              <span class="text-muted" style="font-size: 8px;">(Example port number for MySQL is 1433)</span>
-              <input [ngClass]="{'error-input': portError}" type="text" class="form-control w-100" [(ngModel)]="portName"
-                [ngModelOptions]="{standalone: true}" placeholder="1433" (input)="portConditionError()">
-            </div>
-          
-            <div class="col-md-6 col-xl-12 mb-3">
-              <label [ngClass]="{'error-label': databaseError}" class="form-label d-inline-block me-1">
-                Database <span class="text-danger">*</span>
-              </label> <span class="text-muted" style="font-size: 8px; ">(Please give database name )</span>
-              <input [ngClass]="{'error-input': databaseError}" type="text" class="form-control w-100" [(ngModel)]="databaseName"
-                [ngModelOptions]="{standalone: true}" placeholder="e.g. sqlserver" (input)="databaseConditionError()">
-            </div>
-          </div>
-         
-  
-          <!-- Username / Password Row (only for SQL Auth) -->
-          <div *ngIf="selectedMicroSoftAuthType === 'SQL Server Authentication'" class="row g-3">
-            <div class="col-md-6 mb-3">
-              <label [ngClass]="{'error-label': userNameError}" class="form-label">
-                Username <span class="text-danger">*</span>
-              </label>
-              <span  class="text-muted"style="font-size: 8px;">(Enter your username in this field)</span>
-              <input [ngClass]="{'error-input': userNameError}" type="text" class="form-control w-100"
-                [(ngModel)]="userName" [ngModelOptions]="{standalone: true}" placeholder="e.g. InsignApps"
-                autocomplete="new-myname" (input)="userNameConditionError()">
-            </div>
-            <div class="col-md-6 mb-3">
-              <label [ngClass]="{'error-label': passwordError}" class="form-label">
-                Password <span class="text-danger">*</span>
-              </label>
-              <span  class="text-muted"style="font-size: 8px;">(Enter your password in this field)</span>
-              <div class="d-flex">
-                <input [ngClass]="{'error-input': passwordError}" [type]="showPassword ? 'text' : 'password'"
-                  class="form-control w-100" [(ngModel)]="password"
-                  [ngModelOptions]="{standalone: true}" placeholder="e.g. ******" autocomplete="new-password"
-                  (input)="passwordConditionError()">
-                <button class="btn mode-btn ms-2" type="button" (click)="toggleVisibility()">
-                  <i class="ri-eye-{{toggleClass}} align-middle"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-  
-        <!-- Footer Buttons -->
-        <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
-          <button type="button" class="btn btn-sm btn-danger rounded-5"
-            (click)="resetForm();goBackToSubCategories();">
-            Close
-          </button>
-          <button type="submit" class="btn btn-sm btn-primary rounded-5 me-3" [disabled]="disableConnectBtn">
-            {{ isEditPreview ? 'Update' : 'Connect' }}
-          </button>
-        </div>
-  
-      </form>
+  </form>
+</ng-template>
+
+<ng-template #csvForm>
+  <form class="form-height"
+    (ngSubmit)="fileConnection(isExistingConnectionsEdit || isEditPreview ? editPreviewData?.id : '', !isEditPreview)" style="overflow-x: hidden;">
+
+    <!-- Connection Name -->
+    <div class="mb-3">
+      <label class="form-label d-inline-block me-1">
+        Connection Name <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">(Enter your Connection Name in this field)</span>
+      <input type="text" class="form-control w-100" placeholder="Enter connection name" [(ngModel)]="displayName"
+        [ngModelOptions]="{standalone: true}" [disabled]="isExistingConnectionsEdit || isEditPreview" />
     </div>
-  </div>
 
-  <div *ngSwitchCase="'SQLite'" class="col-md-6">
-    <div class="form-card p-3">
-      <h5 class="d-flex align-items-center">
-        <ng-container *ngIf="getConnectionAsset(selectedConnection) as asset">
-          <span *ngIf="asset.type === 'icon'" class="card-icon me-2 fs-5">{{ asset.value }}</span>
-          <img *ngIf="asset.type === 'image'" [src]="asset.value" alt="{{ selectedConnection }} logo"
-            class="me-2 card-icon" width="24" height="24">
-          <span *ngIf="asset.type === 'svg'" class="me-2 card-icon" [innerHTML]="asset.value"></span>
-  
-        </ng-container>
-        Create New {{ selectedConnection }}
-      </h5>
-      <form class="form-height" (ngSubmit)="isEditPreview ? updateDatabaseConnection(editPreviewData.id) : DatabaseConnection()" style="overflow-x: hidden;">
-      
-        <!-- Connection Name -->
-        <div class="mb-3">
-          <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
-            Connection Name <span class="text-danger">*</span>
-          </label>
-            <span  class="text-muted" style="font-size: 8px;">(Enter your Connection Name in this field)</span>
-          <input [ngClass]="{'error-input': displayNameError}" type="text" class="form-control w-100"
-            [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" placeholder="e.g. SQLite Connection"
-            (input)="displayNameConditionError()">
-        </div>
-      
-        <!-- File Path -->
-        <div class="mb-3">
-          <label [ngClass]="{'error-label': pathError}" class="form-label d-inline-block me-1">
-            Database File Path <span class="text-danger">*</span>
-          </label>
-            <span  class="text-muted"style="font-size: 8px;">(Database File Path)</span>
-          <!-- <input [ngClass]="{'error-input': pathError}" type="file" class="form-control w-100" [(ngModel)]="sqlLitePath"
-            [ngModelOptions]="{standalone: true}" placeholder="Select SQLite file"
-            (input)="pathConditionError()" autocomplete="off"> -->
-
-            <div class="input-group">
-              <label class="input-group-text btn btn-primary">
-                <i class="bi bi-upload"></i> Choose File
-                <input type="file" [(ngModel)]="sqlLitePath" (input)="pathConditionError()" hidden #fileInput />
-              </label>
-              <input [ngClass]="{'error-input': pathError}" type="text" class="form-control w-70" [value]="selectedFile?.name" readonly />
-            </div>
-        </div>
-        <!-- Footer Buttons -->
-        <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
-          <button type="button" class="btn btn-sm btn-danger rounded-5"
-            (click)="resetForm();goBackToSubCategories();">
-            Close
-          </button>
-          <button type="submit" class="btn btn-sm btn-primary rounded-5"
-            [disabled]="pathError || displayNameError || !displayName || !sqlLitePath">
-            {{ isEditPreview ? 'Update' : 'Connect' }}
-          </button>
-        </div>
-      
-      </form>
+    <!-- File Selection -->
+    <div class="mb-3">
+      <label class="form-label d-inline-block me-1">
+        Choose File <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">(Upload your CSV file)</span>
+      <div class="input-group">
+        <label class="input-group-text btn btn-primary">
+          <i class="bi bi-upload"></i> Choose File
+          <input type="file" accept=".csv" (change)="onCsvFileSelected($event)" hidden #fileInput />
+        </label>
+        <input type="text" class="form-control w-70" [value]="selectedFile?.name" readonly />
+      </div>
     </div>
-  </div>
 
-  <div *ngSwitchCase="'CSV'" class="col-md-6">
-    <div class="form-card p-3" style="background: var(--bs-border-color-translucent);">
-      <h5 class="d-flex align-items-center">
-        <ng-container *ngIf="getConnectionAsset(selectedConnection) as asset">
-          <span *ngIf="asset.type === 'icon'" class="card-icon me-2 fs-5">{{ asset.value }}</span>
-          <img *ngIf="asset.type === 'image'" [src]="asset.value" alt="{{ selectedConnection }} logo"
-            class="me-2 card-icon" width="24" height="24">
-          <span *ngIf="asset.type === 'svg'" class="me-2 card-icon" [innerHTML]="asset.value"></span>
-  
-        </ng-container>
-        Create New {{ selectedConnection }}
-      </h5>
-      <form class="form-height" (ngSubmit)="fileConnection(null, isExistingConnectionsEdit ? editPreviewData?.id : '')"
-        style="overflow-x: hidden;">
-      
-        <!-- Connection Name -->
-        <div class="mb-3">
-          <label class="form-label d-inline-block me-1">
-            Connection Name <span class="text-danger">*</span>
-          </label>
-          <span class="text-muted" style="font-size: 8px;">(Enter your Connection Name in this field)</span>
-          <input type="text" class="form-control w-100" placeholder="Enter connection name"
-            [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" [disabled]="isExistingConnectionsEdit"/>
-        </div>
-      
-        <!-- File Selection -->
-        <div class="mb-3">
-          <label class="form-label d-inline-block me-1">
-            Choose File <span class="text-danger">*</span>
-          </label>
-          <span class="text-muted" style="font-size: 8px;">(Upload your CSV file)</span>
-          <div class="input-group">
-            <label class="input-group-text btn btn-primary">
-              <i class="bi bi-upload"></i> Choose File
-              <input type="file" accept=".csv" (change)="onCsvFileSelected($event)" hidden #fileInput />
-            </label>
-            <input type="text" class="form-control w-70" [value]="selectedFile?.name" readonly />
-          </div>
-        </div>
-      
-        <!-- Footer Buttons -->
-        <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
-          <button type="button" class="btn btn-sm btn-danger rounded-5"
-            (click)="selectedFile = null; displayName = ''; goBackToSubCategories()">Close</button>
-          <button type="submit" class="btn btn-sm mode-btn rounded-5" [disabled]="!selectedFile || !displayName">
-            {{isExistingConnectionsEdit ? 'Replace' : 'Upload'}}
+    <!-- Footer Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5"
+        (click)="onClose()">Close</button>
+      <button type="submit" class="btn btn-sm mode-btn rounded-5" [disabled]="!selectedFile || !displayName"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Replace' : 'Upload'}}
+      </button>
+    </div>
+
+  </form>
+</ng-template>
+
+<ng-template #excelForm>
+  <form class="form-height"
+    (ngSubmit)="fileConnection(isExistingConnectionsEdit || isEditPreview ? editPreviewData?.id : '', !isEditPreview)" style="overflow-x: hidden;">
+
+    <!-- Connection Name -->
+    <div class="mb-3">
+      <label class="form-label d-inline-block me-1">
+        Connection Name <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">(Enter your Connection Name in this field)</span>
+      <input type="text" class="form-control w-100" placeholder="Enter connection name" [(ngModel)]="displayName"
+        [ngModelOptions]="{standalone: true}" [disabled]="isExistingConnectionsEdit || isEditPreview" />
+    </div>
+
+    <!-- File Selection -->
+    <div class="mb-3">
+      <label class="form-label d-inline-block me-1">
+        Choose File <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">(Upload your Excel file)</span>
+      <div class="input-group">
+        <label class="input-group-text btn btn-primary">
+          <i class="bi bi-upload"></i> Choose File
+          <input type="file" accept=".xlsx, .xls" (change)="onCsvFileSelected($event)" hidden #fileInput />
+        </label>
+        <input type="text" class="form-control w-70" [value]="selectedFile?.name" readonly />
+      </div>
+    </div>
+
+    <!-- Footer Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5"
+        (click)="onClose()">Close</button>
+      <button type="submit" class="btn btn-sm mode-btn rounded-5" [disabled]="!selectedFile || !displayName"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Replace' : 'Upload'}}
+      </button>
+    </div>
+
+  </form>
+</ng-template>
+
+<ng-template #sftpForm>
+  <form class="form-height"
+    (ngSubmit)="isExistingConnectionsEdit || isEditPreview ? updateSFTPConnection(editPreviewData.id, !isEditPreview) : createSFTPConnection()"
+    style="overflow-x: hidden;">
+
+    <!-- Connection Name -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
+        Connection Name <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">(Enter your Connection Name in this field)</span>
+      <input [ngClass]="{'error-input': displayNameError}" type="text" class="form-control w-100"
+        [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" placeholder="e.g. Test_SFTP_Connection"
+        (input)="displayNameConditionError()" [disabled]="isExistingConnectionsEdit || isEditPreview">
+    </div>
+
+    <!-- Host -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': serverError}" class="form-label d-inline-block me-1">
+        Hostname / IP Address <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">(Enter your SFTP host or IP address)</span>
+      <input [ngClass]="{'error-input': serverError}" type="text" class="form-control w-100" [(ngModel)]="serverName"
+        [ngModelOptions]="{standalone: true}" placeholder="e.g. 101.23.213.176" (input)="serverConditionError()">
+    </div>
+
+    <!-- Port -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': portError}" class="form-label d-inline-block me-1">
+        Port <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">(Default port for SFTP is 22)</span>
+      <input [ngClass]="{'error-input': portError}" type="text" class="form-control w-100" [(ngModel)]="portName"
+        [ngModelOptions]="{standalone: true}" placeholder="22" (input)="portConditionError()">
+    </div>
+
+    <!-- Username & Password -->
+    <div class="row g-3">
+      <div class="col-md-6 mb-3">
+        <label [ngClass]="{'error-label': userNameError}" class="form-label d-inline-block me-1">
+          Username <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px;">(Enter your SFTP username)</span>
+        <input [ngClass]="{'error-input': userNameError}" type="text" class="form-control w-100" [(ngModel)]="userName"
+          [ngModelOptions]="{standalone: true}" placeholder="e.g. ubuntu" (input)="userNameConditionError()">
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label [ngClass]="{'error-label': passwordError}" class="form-label d-inline-block me-1">
+          Password <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px;">(Enter your SFTP password)</span>
+        <div class="d-flex">
+          <input [ngClass]="{'error-input': passwordError}" [type]="showPassword ? 'text' : 'password'"
+            class="form-control w-100" [(ngModel)]="password" [ngModelOptions]="{standalone: true}"
+            placeholder="••••••••" autocomplete="new-password" (input)="passwordConditionError()">
+          <button class="btn mode-btn ms-2 rounded-3" type="button" (click)="toggleVisibility()">
+            <i class="ri-eye-{{toggleClass}} align-middle"></i>
           </button>
         </div>
-      
-      </form>
+      </div>
     </div>
-  </div>
 
-  <div *ngSwitchCase="'Excel'" class="col-md-6">
-    <div class="form-card p-3" style="background: var(--bs-border-color-translucent);">
-      <h5 class="d-flex align-items-center">
-        <ng-container *ngIf="getConnectionAsset(selectedConnection) as asset">
-          <span *ngIf="asset.type === 'icon'" class="card-icon me-2 fs-5">{{ asset.value }}</span>
-          <img *ngIf="asset.type === 'image'" [src]="asset.value" alt="{{ selectedConnection }} logo"
-            class="me-2 card-icon" width="24" height="24">
-          <span *ngIf="asset.type === 'svg'" class="me-2 card-icon" [innerHTML]="asset.value"></span>
-        </ng-container>
-        Create New {{ selectedConnection }}
-      </h5>
-  
-      <form class="form-height" (ngSubmit)="fileConnection(null, isEditPreview ? editPreviewData?.id : '')">
-        <!-- Connection Name -->
-        <div class="mb-3">
-          <label class="form-label d-inline-block me-1">
-            Connection Name <span class="text-danger">*</span>
-          </label>
-          <span class="text-muted" style="font-size: 8px;">(Enter your Connection Name in this field)</span>
-          <input type="text" class="form-control w-100" placeholder="Enter connection name" [(ngModel)]="displayName"
-            [ngModelOptions]="{standalone: true}" />
-        </div>
-      
-        <!-- File Selection -->
-        <div class="mb-3">
-          <label class="form-label d-inline-block me-1">
-            Choose File <span class="text-danger">*</span>
-          </label>
-          <span class="text-muted" style="font-size: 8px;">(Upload your CSV file)</span>
-          <div class="input-group">
-            <label class="input-group-text btn btn-primary">
-              <i class="bi bi-upload"></i> Choose File
-              <input type="file" accept=".xlsx, .xls" (change)="onCsvFileSelected($event)" hidden #fileInput />
-            </label>
-            <input type="text" class="form-control w-70" [value]="selectedFile?.name" readonly />
-          </div>
-        </div>
-      
-        <!-- Footer Buttons -->
-        <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
-          <button type="button" class="btn btn-sm btn-danger rounded-5"
-            (click)="selectedFile = null; displayName = ''; goBackToSubCategories()">Close</button>
-          <button type="submit" class="btn btn-sm mode-btn rounded-5" [disabled]="!selectedFile || !displayName">
-            {{isEditPreview ? 'Replace' : 'Upload'}}
-          </button>
-        </div>
-      </form>
+    <!-- Footer Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5"
+        (click)="onClose()">Close</button>
+      <button type="submit" class="btn btn-sm mode-btn rounded-5" [disabled]="disableConnectBtn"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
     </div>
-  </div>
 
-  <div *ngSwitchCase="'SFTP'" class="col-md-6">
-    <div class="form-card p-3">
-      <h5 class="d-flex align-items-center">
-        <ng-container *ngIf="getConnectionAsset(selectedConnection) as asset">
-          <span *ngIf="asset.type === 'icon'" class="card-icon me-2 fs-5">{{ asset.value }}</span>
-          <img *ngIf="asset.type === 'image'" [src]="asset.value" alt="{{ selectedConnection }} logo"
-            class="me-2 card-icon" width="24" height="24">
-          <span *ngIf="asset.type === 'svg'" class="me-2 card-icon" [innerHTML]="asset.value"></span>
-        </ng-container>
-        Create New {{ selectedConnection }}
-      </h5>
-  
-      <form class="form-height"
-        (ngSubmit)="isEditPreview ? updateSFTPConnection(editPreviewData.id) : createSFTPConnection()"
-        style="overflow-x: hidden;">
-  
-        <!-- Connection Name -->
-        <div class="mb-3">
-          <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
-            Connection Name <span class="text-danger">*</span>
-          </label>
-          <span class="text-muted" style="font-size: 8px;">(Enter your Connection Name in this field)</span>
-          <input [ngClass]="{'error-input': displayNameError}" type="text" class="form-control w-100"
-            [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" placeholder="e.g. Test_SFTP_Connection"
-            (input)="displayNameConditionError()">
-        </div>
-  
-        <!-- Host -->
-        <div class="mb-3">
-          <label [ngClass]="{'error-label': serverError}" class="form-label d-inline-block me-1">
-            Hostname / IP Address <span class="text-danger">*</span>
-          </label>
-          <span class="text-muted" style="font-size: 8px;">(Enter your SFTP host or IP address)</span>
-          <input [ngClass]="{'error-input': serverError}" type="text" class="form-control w-100" [(ngModel)]="serverName"
-            [ngModelOptions]="{standalone: true}" placeholder="e.g. 101.23.213.176" (input)="serverConditionError()">
-        </div>
-  
+  </form>
+</ng-template>
+
+<ng-template #mongodbForm>
+  <form class="form-height"
+    (ngSubmit)="isExistingConnectionsEdit || isEditPreview ? updateDatabaseConnection(editPreviewData.id, 6, !isEditPreview) : DatabaseConnection(6)"
+    style="overflow-x: hidden;">
+
+    <!-- Connection Name -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
+        Connection Name <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">(Enter your Connection Name in this field)</span>
+      <input [ngClass]="{'error-input': displayNameError}" type="text" class="form-control w-100" [(ngModel)]="displayName" 
+        [ngModelOptions]="{standalone: true}" placeholder="e.g. MongoDB Connection" (input)="displayNameConditionError()"
+        [disabled]="isExistingConnectionsEdit || isEditPreview">
+    </div>
+
+    <!-- Server -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': serverError}" class="form-label d-inline-block me-1">
+        Host <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">(Place your MongoDB host url or host name)</span>
+      <input [ngClass]="{'error-input': serverError}" type="text" class="form-control w-100" [(ngModel)]="serverName"
+        [ngModelOptions]="{standalone: true}" placeholder="Host Name/Host Url" (input)="serverConditionError()"
+        >
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-6 col-xl-12 mb-3">
         <!-- Port -->
-        <div class="mb-3">
-          <label [ngClass]="{'error-label': portError}" class="form-label d-inline-block me-1">
-            Port <span class="text-danger">*</span>
-          </label>
-          <span class="text-muted" style="font-size: 8px;">(Default port for SFTP is 22)</span>
-          <input [ngClass]="{'error-input': portError}" type="text" class="form-control w-100" [(ngModel)]="portName"
-            [ngModelOptions]="{standalone: true}" placeholder="22" (input)="portConditionError()">
-        </div>
-  
-        <!-- Username & Password -->
-        <div class="row g-3">
-          <div class="col-md-6 mb-3">
-            <label [ngClass]="{'error-label': userNameError}" class="form-label d-inline-block me-1">
-              Username <span class="text-danger">*</span>
-            </label>
-            <span class="text-muted" style="font-size: 8px;">(Enter your SFTP username)</span>
-            <input [ngClass]="{'error-input': userNameError}" type="text" class="form-control w-100"
-              [(ngModel)]="userName" [ngModelOptions]="{standalone: true}" placeholder="e.g. ubuntu"
-              (input)="userNameConditionError()">
-          </div>
-  
-          <div class="col-md-6 mb-3">
-            <label [ngClass]="{'error-label': passwordError}" class="form-label d-inline-block me-1">
-              Password <span class="text-danger">*</span>
-            </label>
-            <span class="text-muted" style="font-size: 8px;">(Enter your SFTP password)</span>
-            <div class="d-flex">
-              <input [ngClass]="{'error-input': passwordError}" [type]="showPassword ? 'text' : 'password'"
-                class="form-control w-100" [(ngModel)]="password" [ngModelOptions]="{standalone: true}"
-                placeholder="••••••••" autocomplete="new-password" (input)="passwordConditionError()">
-              <button class="btn mode-btn ms-2" type="button" (click)="toggleVisibility()">
-                <i class="ri-eye-{{toggleClass}} align-middle"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-  
-        <!-- Footer Buttons -->
-        <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
-          <button type="button" class="btn btn-sm btn-danger rounded-5"
-            (click)="resetForm();goBackToSubCategories();">Close</button>
-          <button type="submit" class="btn btn-sm mode-btn rounded-5" [disabled]="disableConnectBtn">
-            {{ isEditPreview ? 'Update' : 'Connect' }}
+        <label [ngClass]="{'error-label': portError}" class="form-label d-inline-block me-1">
+          Port <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px;">(Enter the port number for your database)</span>
+        <input [ngClass]="{'error-input': portError}" type="text" class="form-control w-100" [(ngModel)]="portName"
+          [ngModelOptions]="{standalone: true}" placeholder="e.g. 27017" (input)="portConditionError()"
+          >
+      </div>
+      <div class="col-md-6 col-xl-12 mb-3">
+        <!-- Database -->
+        <label [ngClass]="{'error-label': databaseError}" class="form-label d-inline-block me-1">
+          Database <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px;">(Please give database name )</span>
+        <input [ngClass]="{'error-input': databaseError}" type="text" class="form-control w-100"
+          [(ngModel)]="databaseName" [ngModelOptions]="{standalone: true}" placeholder="e.g. mangoDb"
+          (input)="databaseConditionError()">
+      </div>
+    </div>
+
+    <!-- Username / Password Row -->
+    <div class="row g-3">
+      <div class="col-md-6 mb-3">
+        <label [ngClass]="{'error-label': userNameError}" class="form-label d-inline-block me-1">
+          Username <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px;">(Enter your username in this field)</span>
+        <input [ngClass]="{'error-input': userNameError}" type="text" class="form-control w-100" [(ngModel)]="userName"
+          [ngModelOptions]="{standalone: true}" placeholder="username" autocomplete="new-myname"
+          (input)="userNameConditionError()">
+      </div>
+      <div class="col-md-6 mb-3">
+        <label [ngClass]="{'error-label': passwordError}" class="form-label d-inline-block me-1">
+          Password <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px;">(Enter your password in this field)</span>
+        <div class="d-flex">
+          <input [ngClass]="{'error-input': passwordError}" [type]="showPassword ? 'text' : 'password'"
+            class="form-control w-100" [(ngModel)]="password" [ngModelOptions]="{standalone: true}"
+            placeholder="password" autocomplete="new-password" (input)="passwordConditionError()">
+          <button class="btn mode-btn ms-2 rounded-3" type="button" (click)="toggleVisibility()">
+            <i class="ri-eye-{{toggleClass}} align-middle"></i>
           </button>
         </div>
-  
-      </form>
+      </div>
     </div>
-  </div>
 
-</div>
+    <!-- Submit Button -->
+    <div class="d-flex justify-content-end  gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5"
+        (click)="onClose()">Close</button>
+      <button type="submit" class="btn btn-sm mode-btn rounded-5" [disabled]="disableConnectBtn"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
+    </div>
 
+  </form>
+</ng-template>
+
+<ng-template #snowflakeForm>
+  <form class="form-height"
+    (ngSubmit)="isExistingConnectionsEdit || isEditPreview ? updateDatabaseConnection(editPreviewData.id, 10, !isEditPreview) : DatabaseConnection(10)"
+    style="overflow-x: hidden;">
+
+    <!-- Connection Name -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
+        Connection Name <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">(Enter your Connection Name in this field)</span>
+      <input [ngClass]="{'error-input': displayNameError}" type="text" class="form-control w-100"
+        [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" placeholder="My MySQL Connection"
+        (input)="displayNameConditionError()" [disabled]="isExistingConnectionsEdit || isEditPreview">
+    </div>
+
+    <!-- Host  Row -->
+
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': serverError}" class="form-label d-inline-block me-1">
+        Host <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">(Place your host url or host name)</span>
+      <input [ngClass]="{'error-input': serverError}" type="text" class="form-control w-100" [(ngModel)]="serverName"
+        [ngModelOptions]="{standalone: true}" placeholder="localhost" (input)="serverConditionError()">
+    </div>
+    <!-- port/Database Name -->
+    <div class="row g-3">
+      <div class="col-md-6 col-xl-12 mb-3">
+        <label [ngClass]="{'error-label': portError}" class="form-label d-inline-block me-1">
+          Port <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px;">(Example port number for MySQL is 5432)</span>
+        <input [ngClass]="{'error-input': portError}" type="text" class="form-control w-100" [(ngModel)]="portName"
+          [ngModelOptions]="{standalone: true}" placeholder="5432" (input)="portConditionError()">
+      </div>
+
+
+      <div class=" col-md-6 col-xl-12 mb-3">
+        <label [ngClass]="{'error-label': databaseError}" class="form-label d-inline-block me-1">
+          Database Name <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px; ">(Please give database name )</span>
+        <input [ngClass]="{'error-input': databaseError}" type="text" class="form-control w-100"
+          [(ngModel)]="databaseName" [ngModelOptions]="{standalone: true}" placeholder="database_name"
+          (input)="databaseConditionError()">
+      </div>
+    </div>
+
+
+    <!-- Username / Password Row -->
+    <div class="row g-3">
+      <div class="col-md-6 mb-3">
+        <label [ngClass]="{'error-label': userNameError}" class="form-label d-inline-block me-1">
+          Username <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px;">(Enter your username in this field)</span>
+        <input [ngClass]="{'error-input': userNameError}" type="text" class="form-control w-100" [(ngModel)]="userName"
+          [ngModelOptions]="{standalone: true}" placeholder="username" autocomplete="new-myname"
+          (input)="userNameConditionError()">
+      </div>
+      <div class="col-md-6 mb-3">
+        <label [ngClass]="{'error-label': passwordError}" class="form-label d-inline-block me-1">
+          Password <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px;">(Enter your password in this field)</span>
+        <div class="d-flex">
+          <input [ngClass]="{'error-input': passwordError}" [type]="showPassword ? 'text' : 'password'"
+            class="form-control w-100" [(ngModel)]="password" [ngModelOptions]="{standalone: true}"
+            placeholder="password" autocomplete="new-password" (input)="passwordConditionError()">
+          <button class="btn mode-btn ms-2 rounded-3" type="button" (click)="toggleVisibility()">
+            <i class="ri-eye-{{toggleClass}} align-middle"></i>
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="schemaList && schemaList.length > 0" class="mb-3">
+        <label class="form-label">Select Schema
+          <i ngbTooltip="By default public schema will be selected, if no schema is chosen."
+            class="icon icon-info ms-1 cursor-pointer"></i>
+        </label>
+        <select class="form-select w-100" [(ngModel)]="selectedSchema" [ngModelOptions]="{standalone: true}">
+          <option class="select-options" *ngFor="let schema of schemaList" [value]="schema">{{ schema }}</option>
+        </select>
+      </div>
+
+      <div *ngIf="(isExistingConnectionsEdit || isEditPreview) && schemaList && schemaList.length === 0" class="mb-3">
+        <label class="form-label">Schema</label>
+        <input type="text" class="form-control w-100" [(ngModel)]="selectedSchema" [ngModelOptions]="{standalone: true}"
+          disabled>
+      </div>
+
+    </div>
+    <!-- Footer Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5" (click)="onClose()">
+        Close
+      </button>
+      <button type="button" class="btn btn-sm btn-primary rounded-5"
+        [disabled]="disableConnectBtn" (click)="getSchemaList(10)">Fetch Schema</button>
+      <button type="submit" class="btn btn-sm mode-btn rounded-5 me-3" [disabled]="disableConnectBtn"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
+    </div>
+  </form>
+</ng-template>
+
+<ng-template #connectwiseForm>
+  <form class="form-height"
+    (ngSubmit)="isExistingConnectionsEdit || isEditPreview ? connectwisePayload(!isEditPreview, editPreviewData.id) : connectwisePayload(!isEditPreview)"
+    style="overflow-x: hidden;">
+
+    <!-- Connection Name -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
+        Connection Name <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your Connection Name in this field)
+      </span>
+      <input type="text" class="form-control w-100" [ngClass]="{'error-input': displayNameError}"
+        [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" placeholder="My ConnectWise Connection"
+        (input)="displayNameChange()" [disabled]="isExistingConnectionsEdit || isEditPreview">
+    </div>
+
+    <!-- Company ID -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': companyIdError}" class="form-label d-inline-block me-1">
+        Company ID <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your Company ID)
+      </span>
+      <input type="text" class="form-control w-100" [ngClass]="{'error-input': companyIdError}" [(ngModel)]="companyId"
+        [ngModelOptions]="{standalone: true}" placeholder="Company ID" (input)="onCompanyIdChange()"
+        >
+    </div>
+
+    <!-- Site URL -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': siteURLError}" class="form-label d-inline-block me-1">
+        Site URL <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Example: https://connectwise.com)
+      </span>
+      <input type="text" class="form-control w-100" [ngClass]="{'error-input': siteURLError}" [(ngModel)]="siteURL"
+        [ngModelOptions]="{standalone: true}" placeholder="https://connectwise.com" (input)="onSiteUrlChange()"
+        >
+    </div>
+
+    <!-- Public / Private Key Row -->
+    <div class="row g-3">
+      <div class="col-md-6 mb-3">
+        <label [ngClass]="{'error-label': publicKeyError}" class="form-label d-inline-block me-1">
+          Public Key <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px;">
+          (Enter your Public Key)
+        </span>
+        <input type="text" class="form-control w-100" [ngClass]="{'error-input': publicKeyError}"
+          [(ngModel)]="publicKey" [ngModelOptions]="{standalone: true}" placeholder="Public Key"
+          (input)="onPublicKeyChange()">
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label [ngClass]="{'error-label': privateKeyError}" class="form-label d-inline-block me-1">
+          Private Key <span class="text-danger">*</span>
+        </label>
+        <span class="text-muted" style="font-size: 8px;">
+          (Enter your Private Key)
+        </span>
+        <input type="password" class="form-control w-100" [ngClass]="{'error-input': privateKeyError}"
+          [(ngModel)]="privateKey" [ngModelOptions]="{standalone: true}" placeholder="Private Key"
+          (input)="onPrivateKeyChange()" autocomplete="new-password">
+      </div>
+    </div>
+
+    <!-- Footer Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5" (click)="onClose()">
+        Close
+      </button>
+      <button type="submit" class="btn btn-sm mode-btn rounded-5 me-3"
+        [disabled]="!displayName || !companyId || !siteURL || !publicKey || !privateKey"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
+    </div>
+
+  </form>
+</ng-template>
+
+<ng-template #halopsaForm>
+  <form class="form-height" style="overflow-x: hidden;">
+    <div class="d-flex justify-content-end gap-2 mt-3">
+      <button (click)="routeToIntegration('halopsa')" class="btn mode-btn w-100"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">Connect</button>
+    </div>
+  </form>
+</ng-template>
+
+<ng-template #ninjaForm>
+  <form class="form-height"
+    (ngSubmit)="isExistingConnectionsEdit || isEditPreview ? ninjaPayLoad(!isEditPreview, editPreviewData.id) : ninjaPayLoad(!isEditPreview)"
+    style="overflow-x: hidden;">
+
+    <!-- Connection Name -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
+        Connection Name <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your Connection Name)
+      </span>
+      <input type="text" class="form-control w-100" [ngClass]="{'error-input': displayNameError}"
+        [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" placeholder="My Ninja RMM"
+        [disabled]="isExistingConnectionsEdit || isEditPreview" (input)="displayNameChange()">
+    </div>
+
+    <!-- Client ID -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': clientIdError}" class="form-label d-inline-block me-1">
+        Client ID <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your Client ID)
+      </span>
+      <input type="text" class="form-control w-100" [ngClass]="{'error-input': clientIdError}" [(ngModel)]="clientId"
+        [ngModelOptions]="{standalone: true}" placeholder="Client ID" (input)="onClientIdChange()"
+        >
+    </div>
+
+    <!-- Client Secret -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': clientSecretError}" class="form-label d-inline-block me-1">
+        Client Secret <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your Client Secret)
+      </span>
+      <input type="password" class="form-control w-100" [ngClass]="{'error-input': clientSecretError}"
+        [(ngModel)]="clientSecret" [ngModelOptions]="{standalone: true}" placeholder="Client Secret"
+        (input)="onClientSecretChange()" autocomplete="new-password">
+    </div>
+
+    <!-- Scopes -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': scopeError}" class="form-label d-inline-block me-1">
+        Scopes <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Select required scopes)
+      </span>
+      <ng-select class="w-100" [items]="ninjaRMMScopes" placeholder="Select Scopes"
+        [ngClass]="{'error-input': scopeError}" [(ngModel)]="selectedScopes" [ngModelOptions]="{standalone: true}"
+        [multiple]="true" (change)="onScopeChange($event)">
+      </ng-select>
+    </div>
+
+    <!-- Footer Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5" (click)="onClose()">
+        Close
+      </button>
+      <button type="submit" class="btn btn-sm mode-btn rounded-5 me-3"
+        [disabled]="!displayName || !clientId || !clientSecret || selectedScopes.length === 0"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
+    </div>
+
+  </form>
+</ng-template>
+
+<ng-template #pax8Form>
+  <form class="form-height"
+    (ngSubmit)="isExistingConnectionsEdit || isEditPreview ? pax8PayLoad(!isEditPreview, editPreviewData.id) : pax8PayLoad(!isEditPreview)"
+    style="overflow-x: hidden;">
+
+    <!-- Connection Name -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
+        Connection Name <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your Connection Name)
+      </span>
+      <input type="text" class="form-control w-100" [ngClass]="{'error-input': displayNameError}"
+        [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" placeholder="My Pax8 Connection"
+        [disabled]="isExistingConnectionsEdit || isEditPreview" (input)="displayNameChange()">
+    </div>
+
+    <!-- Client ID -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': clientIdError}" class="form-label d-inline-block me-1">
+        Client ID <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your Client ID)
+      </span>
+      <input type="text" class="form-control w-100" [ngClass]="{'error-input': clientIdError}" [(ngModel)]="clientId"
+        [ngModelOptions]="{standalone: true}" placeholder="Client ID" (input)="onClientIdChange()">
+    </div>
+
+    <!-- Client Secret -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': clientSecretError}" class="form-label d-inline-block me-1">
+        Client Secret <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your Client Secret)
+      </span>
+      <input type="password" class="form-control w-100" [ngClass]="{'error-input': clientSecretError}"
+        [(ngModel)]="clientSecret" [ngModelOptions]="{standalone: true}" placeholder="Client Secret"
+        (input)="onClientSecretChange()" autocomplete="new-password">
+    </div>
+
+    <!-- Footer Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5" (click)="onClose()">
+        Close
+      </button>
+      <button type="submit" class="btn btn-sm mode-btn rounded-5 me-3"
+        [disabled]="!displayName || !clientId || !clientSecret"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
+    </div>
+
+  </form>
+</ng-template>
+
+<ng-template #bamboohrForm>
+  <form class="form-height"
+    (ngSubmit)="isExistingConnectionsEdit || isEditPreview ? bamboohrPayLoad(!isEditPreview, editPreviewData.id) : bamboohrPayLoad(!isEditPreview)"
+    style="overflow-x: hidden;">
+
+    <!-- Connection Name -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
+        Connection Name <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your Connection Name)
+      </span>
+      <input type="text" class="form-control w-100" [ngClass]="{'error-input': displayNameError}"
+        [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" placeholder="My BambooHR Connection"
+        [disabled]="isExistingConnectionsEdit || isEditPreview" (input)="displayNameChange()">
+    </div>
+
+    <!-- Domain -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': domainNameError}" class="form-label d-inline-block me-1">
+        Domain <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Example: company.bamboohr.com)
+      </span>
+      <input type="text" class="form-control w-100" [ngClass]="{'error-input': domainNameError}"
+        [(ngModel)]="domainName" [ngModelOptions]="{standalone: true}" placeholder="company.bamboohr.com"
+        (input)="onDomainNameChange()">
+    </div>
+
+    <!-- API Key -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': apiKeyError}" class="form-label d-inline-block me-1">
+        API Key <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your BambooHR API Key)
+      </span>
+      <input type="password" class="form-control w-100" [ngClass]="{'error-input': apiKeyError}" [(ngModel)]="apiKey"
+        [ngModelOptions]="{standalone: true}" placeholder="API Key" (input)="onApiKeyChange()"
+        autocomplete="new-password">
+    </div>
+
+    <!-- Footer Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5" (click)="onClose()">
+        Close
+      </button>
+      <button type="submit" class="btn btn-sm mode-btn rounded-5 me-3"
+        [disabled]="!displayName || !domainName || !apiKey"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
+    </div>
+
+  </form>
+</ng-template>
+
+<ng-template #shopifyForm>
+  <form class="form-height"
+    (ngSubmit)="isExistingConnectionsEdit || isEditPreview ? shopifyPayLoad(!isEditPreview, editPreviewData.id) : shopifyPayLoad(!isEditPreview)"
+    style="overflow-x: hidden;">
+
+    <!-- Connection Name -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
+        Connection Name <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your Connection Name)
+      </span>
+      <input type="text" class="form-control w-100" [ngClass]="{'error-input': displayNameError}"
+        [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" placeholder="My Shopify Connection"
+        [disabled]="isExistingConnectionsEdit || isEditPreview" (input)="displayNameChange()">
+    </div>
+
+    <!-- Shop Name -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': shopNameError}" class="form-label d-inline-block me-1">
+        Shop Name <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your Shopify Shop Name)
+      </span>
+      <input type="text" class="form-control w-100" [ngClass]="{'error-input': shopNameError}" [(ngModel)]="shopName"
+        [ngModelOptions]="{standalone: true}" placeholder="shop-name" (input)="onShopNameChange()">
+    </div>
+
+    <!-- API Token -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': tokenError}" class="form-label d-inline-block me-1">
+        API Token <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your Shopify API Token)
+      </span>
+      <input type="password" class="form-control w-100" [ngClass]="{'error-input': tokenError}" [(ngModel)]="token"
+        [ngModelOptions]="{standalone: true}" placeholder="API Token" (input)="onTokenChange()"
+        autocomplete="new-password">
+    </div>
+
+    <!-- Footer Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5" (click)="onClose()">
+        Close
+      </button>
+      <button type="submit" class="btn btn-sm mode-btn rounded-5 me-3" [disabled]="!displayName || !shopName || !token"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
+    </div>
+
+  </form>
+</ng-template>
+
+<ng-template #tallyForm>
+  <form class="form-height"
+    (ngSubmit)="isExistingConnectionsEdit || isEditPreview ? tallyPayLoad(!isEditPreview, editPreviewData.id) : tallyPayLoad(!isEditPreview)"
+    style="overflow-x: hidden;">
+
+    <!-- Connection Name -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
+        Connection Name <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your Connection Name)
+      </span>
+      <input type="text" class="form-control w-100" [ngClass]="{'error-input': displayNameError}"
+        [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" placeholder="My Tally Connection"
+        [disabled]="isExistingConnectionsEdit || isEditPreview" (input)="displayNameChange()">
+    </div>
+
+    <!-- Token Key -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': tokenError}" class="form-label d-inline-block me-1">
+        Token Key <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your Tally Token Key)
+      </span>
+      <input type="password" class="form-control w-100" [ngClass]="{'error-input': tokenError}" [(ngModel)]="token"
+        [ngModelOptions]="{standalone: true}" placeholder="Token Key" (input)="onTokenChange()"
+        autocomplete="new-password">
+    </div>
+
+    <!-- Footer Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5" (click)="onClose()">
+        Close
+      </button>
+      <button type="submit" class="btn btn-sm mode-btn rounded-5 me-3" [disabled]="!displayName || !token"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
+    </div>
+
+  </form>
+</ng-template>
+
+<ng-template #googleAnalyticsForm>
+  <form class="form-height"
+    (ngSubmit)="isExistingConnectionsEdit || isEditPreview ? googleAnalyticsPayload(!isEditPreview, editPreviewData.id) : googleAnalyticsPayload(!isEditPreview)"
+    style="overflow-x: hidden;">
+
+    <!-- Connection Name -->
+    <div class="mb-3">
+      <label class="form-label d-inline-block me-1">
+        Connection Name <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your connection name)
+      </span>
+      <input type="text" class="form-control w-100" [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}"
+        placeholder="My Google Analytics" (input)="displayNameChange()" [disabled]="isExistingConnectionsEdit || isEditPreview">
+    </div>
+
+    <!-- Type -->
+    <div class="mb-3">
+      <label class="form-label d-inline-block me-1">
+        Type <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Usually service_account)
+      </span>
+      <select class="form-select w-100" [(ngModel)]="accountType" [ngModelOptions]="{ standalone: true }">
+        <option class="select-options" value="service_account">Service Account</option>
+        <option class="select-options" value="user_account">User Account</option>
+      </select>
+    </div>
+
+    <!-- Project ID -->
+    <div class="mb-3">
+      <label class="form-label d-inline-block me-1">
+        Project ID <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your Project ID)
+      </span>
+      <input type="text" class="form-control w-100" [(ngModel)]="projectId" [ngModelOptions]="{standalone: true}"
+        placeholder="analytics-project-id" (input)="onProjectIdChange()">
+    </div>
+
+    <!-- Private Key ID -->
+    <div class="mb-3">
+      <label class="form-label d-inline-block me-1">
+        Private Key ID <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your Private Key ID)
+      </span>
+      <input type="text" class="form-control w-100" [(ngModel)]="privateKeyId" [ngModelOptions]="{standalone: true}"
+        placeholder="Private Key ID" (input)="onPrivateKeyIdChange()">
+    </div>
+
+    <!-- Private Key -->
+    <div class="mb-3">
+      <label class="form-label d-inline-block me-1">
+        Private Key <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Paste full private key)
+      </span>
+      <textarea class="form-control w-100" rows="3" [(ngModel)]="privateKey" [ngModelOptions]="{standalone: true}"
+        placeholder="-----BEGIN PRIVATE KEY-----&#10;***************&#10;-----END PRIVATE KEY-----" (input)="onPrivateKeyChange()">
+      </textarea>
+    </div>
+
+    <!-- Client Email -->
+    <div class="mb-3">
+      <label class="form-label d-inline-block me-1">
+        Client Email <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter client email)
+      </span>
+      <input type="email" class="form-control w-100" [(ngModel)]="clientEmail" [ngModelOptions]="{standalone: true}"
+        placeholder="Client Email" (input)="onClientEmailChange()">
+    </div>
+
+    <!-- Client ID -->
+    <div class="mb-3">
+      <label class="form-label d-inline-block me-1">
+        Client ID <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter client ID)
+      </span>
+      <input type="text" class="form-control w-100" [(ngModel)]="clientId" [ngModelOptions]="{standalone: true}"
+        placeholder="Client ID" (input)="onClientIdChange()">
+    </div>
+
+    <!-- Client Cert URL -->
+    <div class="mb-3">
+      <label class="form-label d-inline-block me-1">
+        Client X.509 Cert URL <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter certificate URL)
+      </span>
+      <input type="text" class="form-control w-100" [(ngModel)]="clientX509CertUrl"
+        [ngModelOptions]="{standalone: true}" placeholder="Client X.509 Cert URL" (input)="onClientX509CertUrlChange()">
+    </div>
+
+    <!-- Property ID -->
+    <div class="mb-3">
+      <label class="form-label d-inline-block me-1">
+        Property ID <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (GA4 Property ID)
+      </span>
+      <input type="text" class="form-control w-100" [(ngModel)]="propertyId" [ngModelOptions]="{standalone: true}"
+        placeholder="Property ID" (input)="onPropertyIdChange()">
+    </div>
+
+    <!-- Dimensions -->
+    <div class="mb-3">
+      <label class="form-label d-inline-block me-1">
+        Dimensions <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Select dimensions)
+      </span>
+      <ng-select class="w-100" [items]="availableDimensions" [multiple]="true" [(ngModel)]="selectedDimensions"
+        [ngModelOptions]="{standalone: true}" placeholder="Select dimensions" (change)="onDimensionsChange()">
+      </ng-select>
+    </div>
+
+    <!-- Metrics -->
+    <div class="mb-3">
+      <label class="form-label d-inline-block me-1">
+        Metrics <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Select metrics)
+      </span>
+      <ng-select class="w-100" [items]="availableMetrics" [multiple]="true" [(ngModel)]="selectedMetrics"
+        [ngModelOptions]="{standalone: true}" placeholder="Select metrics" (change)="onMetricsChange()">
+      </ng-select>
+    </div>
+
+    <!-- Footer -->
+    <div class="d-flex justify-content-end gap-2 mt-3">
+      <button type="button" class="btn btn-sm btn-danger rounded-5" (click)="onClose()">
+        Close
+      </button>
+      <button type="submit" class="btn btn-sm mode-btn rounded-5 me-3"
+        [disabled]="!displayName || !accountType || !projectId || !privateKeyId || !privateKey || !clientEmail || !clientId || !clientX509CertUrl || !propertyId || selectedDimensions.length === 0 || selectedMetrics.length === 0"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
+    </div>
+
+  </form>
+</ng-template>
+
+<ng-template #hubspotForm>
+  <form class="form-height"
+    (ngSubmit)="isExistingConnectionsEdit || isEditPreview ? hubSpotPayLoad(!isEditPreview, editPreviewData.id) : hubSpotPayLoad(!isEditPreview)"
+    style="overflow-x: hidden;">
+
+    <!-- Connection Name -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
+        Connection Name <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your connection name)
+      </span>
+      <input type="text" class="form-control w-100" [ngClass]="{'error-input': displayNameError}"
+        [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" placeholder="HubSpot"
+        [disabled]="isExistingConnectionsEdit || isEditPreview" (input)="displayNameChange()">
+    </div>
+
+    <!-- API Token -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': tokenError}" class="form-label d-inline-block me-1">
+        API Token<span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your HubSpot API Token)
+      </span>
+      <input type="password" class="form-control w-100" [ngClass]="{'error-input': tokenError}" [(ngModel)]="token"
+        [ngModelOptions]="{standalone: true}" placeholder="API Token" (input)="onTokenChange()"
+        autocomplete="new-password">
+    </div>
+
+    <!-- Footer -->
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5" (click)="onClose()">
+        Close
+      </button>
+      <button type="submit" class="btn btn-sm mode-btn rounded-5 me-3" [disabled]="!displayName || !token"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
+    </div>
+
+  </form>
+</ng-template>
+
+<ng-template #jiraForm>
+  <form class="form-height" style="overflow-x: hidden;">
+    <div class="d-flex justify-content-end gap-2 mt-3">
+      <button (click)="routeToIntegration('jira')" class="btn mode-btn w-100"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">Connect</button>
+    </div>
+  </form>
+</ng-template>
+
+<ng-template #zohoCrmForm>
+  <form class="form-height" style="overflow-x: hidden;">
+    <div class="mt-3">
+      <label class="form-label d-inline-block me-1" [ngClass]="{'error-label': zohoCountryError}">
+        Country
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Select your country)
+      </span>
+      <select class="form-select w-100" [ngClass]="{'error-input': zohoCountryError}" [(ngModel)]="zohoCountry"
+        [ngModelOptions]="{standalone: true}" (change)="onZohoCountryChange()">
+        <option value="" disabled>Select Country</option>
+        <option class="select-options" *ngFor="let country of zohoCountries" [value]="country">
+          {{ country }}
+        </option>
+      </select>
+    </div>
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5" (click)="onClose()">
+        Close
+      </button>
+      <button class="btn btn-sm mode-btn rounded-5 me-3" (click)="isExistingConnectionsEdit || isEditPreview ? routeToIntegration('zoho_crm', editPreviewData.id) : routeToIntegration('zoho_crm')"
+       [disabled]="!zohoCountry"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
+    </div>
+  </form>
+</ng-template>
+
+<ng-template #zohoInventoryForm>
+  <form class="form-height" style="overflow-x: hidden;">
+    <div class="mt-3">
+      <label class="form-label d-inline-block me-1" [ngClass]="{'error-label': zohoCountryError}">
+        Country
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Select your country)
+      </span>
+      <select class="form-select w-100" [ngClass]="{'error-input': zohoCountryError}" [(ngModel)]="zohoCountry"
+        [ngModelOptions]="{standalone: true}" (change)="onZohoCountryChange()">
+        <option value="" disabled>Select Country</option>
+        <option class="select-options" *ngFor="let country of zohoCountries" [value]="country">
+          {{ country }}
+        </option>
+      </select>
+    </div>
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5" (click)="onClose()">
+        Close
+      </button>
+      <button class="btn btn-sm mode-btn rounded-5 me-3" (click)="isExistingConnectionsEdit || isEditPreview ? routeToIntegration('zoho_inventory', editPreviewData.id) : routeToIntegration('zoho_inventory')"
+       [disabled]="!zohoCountry"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
+    </div>
+  </form>
+</ng-template>
+
+<ng-template #zohoBooksForm>
+  <form class="form-height" style="overflow-x: hidden;">
+    <div class="mt-3">
+      <label class="form-label d-inline-block me-1" [ngClass]="{'error-label': zohoCountryError}">
+        Country
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Select your country)
+      </span>
+      <select class="form-select w-100" [ngClass]="{'error-input': zohoCountryError}" [(ngModel)]="zohoCountry"
+        [ngModelOptions]="{standalone: true}" (change)="onZohoCountryChange()">
+        <option value="" disabled>Select Country</option>
+        <option class="select-options" *ngFor="let country of zohoCountries" [value]="country">
+          {{ country }}
+        </option>
+      </select>
+    </div>
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5" (click)="onClose()">
+        Close
+      </button>
+      <button class="btn btn-sm mode-btn rounded-5 me-3" (click)="isExistingConnectionsEdit || isEditPreview ? routeToIntegration('zoho_books', editPreviewData.id) : routeToIntegration('zoho_books')"
+       [disabled]="!zohoCountry"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
+    </div>
+  </form>
+</ng-template>
+
+<ng-template #immybotForm>
+  <form class="form-height"
+    (ngSubmit)="isExistingConnectionsEdit || isEditPreview ? updateDatabaseConnection(editPreviewData.id, 0, true) : DatabaseConnection(0)"
+    style="overflow-x: hidden;">
+
+    <!-- Connection Name -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
+        Connection Name <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your connection name)
+      </span>
+      <input type="text" class="form-control w-100" [ngClass]="{'error-input': displayNameError}"
+        [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" placeholder="ImmyBot" autocomplete="new-myname">
+    </div>
+
+    <!-- Client ID -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': clientIdError}" class="form-label d-inline-block me-1">
+        Client ID <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your Client ID)
+      </span>
+      <input type="text" class="form-control w-100" [ngClass]="{'error-input': clientIdError}" [(ngModel)]="clientId"
+        [ngModelOptions]="{standalone: true}" placeholder="Client ID" (input)="onClientIdChange()">
+    </div>
+
+    <!-- Secret Value -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': clientSecretError}" class="form-label d-inline-block me-1">
+        Secret Value <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your secret value)
+      </span>
+      <input type="text" class="form-control w-100" [ngClass]="{'error-input': clientSecretError}"
+        [(ngModel)]="clientSecret" [ngModelOptions]="{standalone: true}" placeholder="Secret Value"
+        (input)="onClientSecretChange()">
+    </div>
+
+    <!-- Azure Domain -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': domainUrlError}" class="form-label d-inline-block me-1">
+        Azure Domain <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your Azure domain)
+      </span>
+      <input type="text" class="form-control w-100" [ngClass]="{'error-input': domainUrlError}" [(ngModel)]="domainUrl"
+        [ngModelOptions]="{standalone: true}" placeholder="https://company.onmicrosoft.com/"
+        (input)="onDomainUrlChange()">
+    </div>
+
+    <!-- Instance Subdomain -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': subDomainUrlError}" class="form-label d-inline-block me-1">
+        Instance Subdomain <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your instance subdomain)
+      </span>
+      <input type="text" class="form-control w-100" [ngClass]="{'error-input': subDomainUrlError}"
+        [(ngModel)]="subDomainUrl" [ngModelOptions]="{standalone: true}" placeholder="analytify"
+        (input)="onSubDomainUrlChange()">
+    </div>
+
+    <!-- Footer -->
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5" (click)="onClose()">
+        Close
+      </button>
+      <button type="submit" class="btn btn-sm mode-btn rounded-5 me-3" [disabled]="disableConnectBtn"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
+    </div>
+
+  </form>
+</ng-template>
+
+<ng-template #quickbooksForm>
+  <form class="form-height" style="overflow-x: hidden;">
+    <div class="d-flex justify-content-end gap-2 mt-3">
+      <button (click)="routeToIntegration('quickbooks')" class="btn mode-btn w-100"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">Connect</button>
+    </div>
+  </form>
+</ng-template>
+
+<ng-template #salesforceForm>
+  <form class="form-height" style="overflow-x: hidden;">
+    <div class="d-flex justify-content-end gap-2 mt-3">
+      <button (click)="routeToIntegration('salesforce')" class="btn mode-btn w-100"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">Connect</button>
+    </div>
+  </form>
+</ng-template>
+
+<ng-template #googleSheetForm>
+  <form class="form-height" style="overflow-x: hidden;">
+    <div class="d-flex justify-content-end gap-2 mt-3">
+      <button (click)="routeToIntegration('googlesheets')" class="btn mode-btn w-100"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">Connect</button>
+    </div>
+  </form>
+</ng-template>
+
+<ng-template #dbtForm>
+  <form class="form-height"
+    (ngSubmit)="isExistingConnectionsEdit || isEditPreview ? dbtPayLoad(!isEditPreview, editPreviewData.id) : dbtPayLoad(!isEditPreview)"
+    style="overflow-x: hidden;">
+
+    <!-- Connection Name -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
+        Connection Name <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your Connection Name in this field)
+      </span>
+      <input [ngClass]="{'error-input': displayNameError}" type="text" class="form-control w-100"
+        [(ngModel)]="displayName" [ngModelOptions]="{ standalone: true }" placeholder="e.g. dbt"
+        [disabled]="isExistingConnectionsEdit || isEditPreview" (input)="displayNameChange()">
+    </div>
+
+    <!-- Account ID -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': accountIdError}" class="form-label d-inline-block me-1">
+        Account ID <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your Account ID)
+      </span>
+      <input [ngClass]="{'error-input': accountIdError}" type="text" class="form-control w-100" [(ngModel)]="accountId"
+        [ngModelOptions]="{ standalone: true }" placeholder="Account ID" (input)="onAccountIdChange()">
+    </div>
+
+    <!-- Domain URL -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': domainUrlError}" class="form-label d-inline-block me-1">
+        Domain URL <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your dbt Cloud Domain URL)
+      </span>
+      <input [ngClass]="{'error-input': domainUrlError}" type="text" class="form-control w-100" [(ngModel)]="domainUrl"
+        [ngModelOptions]="{ standalone: true }" placeholder="https://cloud.getdbt.com" (input)="onDomainUrlChange()">
+    </div>
+
+    <!-- Token -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': tokenError}" class="form-label d-inline-block me-1">
+        Token <span class="text-danger">*</span>
+      </label>
+      <span class="text-muted" style="font-size: 8px;">
+        (Enter your dbt API Token)
+      </span>
+      <input [ngClass]="{'error-input': tokenError}" type="password" class="form-control w-100" [(ngModel)]="token"
+        [ngModelOptions]="{ standalone: true }" placeholder="Token" autocomplete="new-password"
+        (input)="onTokenChange()">
+    </div>
+
+    <!-- Footer Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5" (click)="onClose()">
+        Close
+      </button>
+
+      <button type="submit" class="btn btn-sm mode-btn rounded-5 me-3"
+        [disabled]="!displayName || !accountId || !domainUrl || !token"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
+    </div>
+
+  </form>
+</ng-template>
+
+<ng-template #connectionFormsTemplate>
+  <ng-container [ngSwitch]="selectedConnection">
+    <ng-container *ngSwitchCase="'POSTGRESQL'">
+      <ng-container *ngTemplateOutlet="postgresForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'MYSQL'">
+      <ng-container *ngTemplateOutlet="mysqlForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'ORACLE'">
+      <ng-container *ngTemplateOutlet="oracleForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'MICROSOFTSQLSERVER'">
+      <ng-container *ngTemplateOutlet="mssqlForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'SQLite'">
+      <ng-container *ngTemplateOutlet="sqliteForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'CSV'">
+      <ng-container *ngTemplateOutlet="csvForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'EXCEL'">
+      <ng-container *ngTemplateOutlet="excelForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'SFTP'">
+      <ng-container *ngTemplateOutlet="sftpForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'MONGODB'">
+      <ng-container *ngTemplateOutlet="mongodbForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'SNOWFLAKE'">
+      <ng-container *ngTemplateOutlet="snowflakeForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'CONNECTWISE'">
+      <ng-container *ngTemplateOutlet="connectwiseForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'HALOPSA'">
+      <ng-container *ngTemplateOutlet="halopsaForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'NINJA'">
+      <ng-container *ngTemplateOutlet="ninjaForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'PAX8'">
+      <ng-container *ngTemplateOutlet="pax8Form"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'BAMBOOHR'">
+      <ng-container *ngTemplateOutlet="bamboohrForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'SHOPIFY'">
+      <ng-container *ngTemplateOutlet="shopifyForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'TALLY'">
+      <ng-container *ngTemplateOutlet="tallyForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'GOOGLEANALYTIC'">
+      <ng-container *ngTemplateOutlet="googleAnalyticsForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'HUBSPOT'">
+      <ng-container *ngTemplateOutlet="hubspotForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'JIRA'">
+      <ng-container *ngTemplateOutlet="jiraForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'ZOHO_CRM'">
+      <ng-container *ngTemplateOutlet="zohoCrmForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'ZOHO_INVENTORY'">
+      <ng-container *ngTemplateOutlet="zohoInventoryForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'ZOHO_BOOKS'">
+      <ng-container *ngTemplateOutlet="zohoBooksForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'IMMYBOT'">
+      <ng-container *ngTemplateOutlet="immybotForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'QUICKBOOKS'">
+      <ng-container *ngTemplateOutlet="quickbooksForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'SALESFORCE'">
+      <ng-container *ngTemplateOutlet="salesforceForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'GOOGLESHEET'">
+      <ng-container *ngTemplateOutlet="googleSheetForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'DBT'">
+      <ng-container *ngTemplateOutlet="dbtForm"></ng-container>
+    </ng-container>
 
     <div *ngSwitchDefault>
       <p class="text-muted">No form defined yet for {{ selectedConnection }}.</p>
     </div>
-  </div>
-</div>
+  </ng-container>
+</ng-template>
 
-<ng-template #uploadFileModal let-modal>
-  <div class="modal-header">
-    <h5 class="modal-title">{{isEditPreview ? 'Replace' : 'Upload'}} File</h5>
-    <button type="button" class="btn-close btn-light" aria-label="Close" (click)="this.selectedFile = null; this.displayName = ''; modal.dismiss()"></button>
-  </div>
-  <div class="modal-body">
-    <div class="mb-3">
-      <label class="form-label fw-bold">Choose File</label>
-      <div class="input-group">
-        <label class="input-group-text btn btn-primary">
-          <i class="bi bi-upload"></i> Choose File
-          <input type="file" accept=".csv" (change)="onCsvFileSelected($event)" hidden #modalFileInput />
-        </label>
-        <input type="text" class="form-control" [value]="selectedFile?.name" readonly />
+<ng-template #importConnection let-modal>
+  <div class="glass-modal-wrapper">
+  
+  <div class="modal-body p-4 p-md-5">
+    
+    <div class="d-flex justify-content-between">
+      <div class="stepper-container mb-3">
+        <div class="step-item" [class.completed]="currentStep > 1" [class.active]="currentStep === 1">
+          <div class="step-circle">
+            <i class="bi bi-check-lg" *ngIf="currentStep > 1"></i>
+            <span *ngIf="currentStep === 1">1</span>
+          </div>
+        </div>
+        <div class="step-line" [class.filled]="currentStep > 1"></div>
+    
+        <div class="step-item" [class.completed]="currentStep > 2" [class.active]="currentStep === 2">
+          <div class="step-circle">
+            <i class="bi bi-check-lg" *ngIf="currentStep > 2"></i>
+            <span *ngIf="currentStep <= 2">2</span>
+          </div>
+        </div>
+        <div class="step-line" [class.filled]="currentStep > 2"></div>
+    
+        <div class="step-item" [class.active]="currentStep === 3">
+          <div class="step-circle"><span>3</span></div>
+        </div>
+      </div>
+
+      <div>
+        <i class="fe fe-x fs-5 text-danger" (click)="modal.dismiss('cross click'); resetImportState();"></i>
       </div>
     </div>
 
-    <div class="mb-3">
-      <label class="form-label fw-bold">Display Name</label>
-      <input type="text" class="form-control" placeholder="Enter display name" [(ngModel)]="displayName" />
+    <div *ngIf="currentStep === 1" class="fade-in">
+      <h6 class="fw-bold mb-1">Select Database</h6>
+      <small class="text-muted">Choose the database type you want to import to</small>
+
+      <!-- <div class="max-height-scroll"> -->
+        <div class="row g-3 mt-1">
+          <div class="col-2" *ngFor="let db of databases">
+            <div class="selection-card p-2 text-center" [ngbTooltip]="db.name" [class.selected]="selectedImportdDb.name === db.name" (click)="selectedImportdDb = db">
+              <img [src]="db.image" alt="db.name">
+              <!-- <span class="fw-small">{{ db.name }}</span> -->
+            </div>
+          </div>
+        </div>
+      <!-- </div> -->
+    </div>
+
+    <div *ngIf="currentStep === 2" class="fade-in">
+      <h6 class="fw-bold mb-1">Select Connection</h6>
+      <small class="text-muted">Choose an existing PostgreSQL connection</small>
+      <input type="text" placeholder="Search" class="form-control rounded-pill p-2 mt-2" 
+        [disabled]="isConnectionsLoading" [(ngModel)]="searchImportConn" (keyup.enter)="searchImportConnections()"/>
+      <cdk-virtual-scroll-viewport class="max-height-scroll viewport" itemSize="64"
+        (scrolledIndexChange)="onScrolledIndexChange($event)">
+
+        <div class="d-flex flex-column gap-3 mt-2 p-1">
+          <div *cdkVirtualFor="let conn of connections"
+            class="selection-item p-1 rounded-3 d-flex align-items-center justify-content-between"
+            [class.selected-item]="selectedImportConn.hierarchy_id === conn.hierarchy_id" (click)="setSelectedImportConn(conn)">
+            <div>
+              <div class="fw-semibold d-flex align-items-center gap-2">
+                <!-- <i class="bi bi-database"></i>  -->
+                <img [src]="selectedImportdDb.image" alt="selectedImportdDb.name">
+                {{ conn.display_name }}
+              </div>
+              <div class="text-dark small ms-4">
+                {{ conn.hostname }}:{{ conn.port }}
+              </div>
+            </div>
+        
+            <i class="bi bi-check-circle-fill fs-5 text-success"
+              *ngIf="selectedImportConn.hierarchy_id === conn.hierarchy_id"></i>
+          </div>
+        </div>
+      
+        <div class="text-center py-2" *ngIf="isConnectionsLoading">
+          Loading...
+        </div>
+      
+      </cdk-virtual-scroll-viewport>
+    
+    </div>
+
+    <div *ngIf="currentStep === 3" class="fade-in">
+      <h6 class="fw-bold mb-1">Enter Password</h6>
+      <small class="text-muted">Provide credentials for {{ selectedImportConn?.display_name }}</small>
+
+      <div class="info-box p-1 rounded-2 mb-2 mt-2 d-flex gap-3">
+        <i class="bi bi-info-circle fs-5 text-info"></i>
+        <div>
+          <div class="fw-semibold small text-dark">Connection Details</div>
+          <div class="d-flex align-items-center gap-2">
+            <div class="text-muted small">Type: {{ selectedImportdDb.name }}</div>
+            <div class="text-muted small">Database: {{ selectedImportConn?.database }}</div>
+          </div>
+          <div class="text-muted small">
+            Host: {{ selectedImportConn?.hostname }}
+          </div>
+          <div *ngIf="selectedImportConn?.port || selectedImportConn?.schema" class="d-flex align-items-center gap-2">
+            <div *ngIf="selectedImportConn?.port" class="text-muted small">
+              Port: {{ selectedImportConn?.port }}
+            </div>
+            <div *ngIf="selectedImportConn?.schema" class="text-muted small">
+              Schema: {{ selectedImportConn?.schema }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-2">
+        <label class="form-label fw-medium small"> Display Name </label>
+        <input type="text" class="form-control" [(ngModel)]="selectedImportConn.display_name" placeholder="Connection name" />
+      </div>
+
+      <div class="mb-2">
+        <label class="form-label fw-medium small">Username</label>
+        <input type="text" class="form-control" [(ngModel)]="selectedImportConn.username" placeholder="Username">
+      </div>
+      
+      <div class="mb-1">
+        <label class="form-label fw-medium small">Password</label>
+        <input type="password" class="form-control" placeholder="Enter password" autocomplete="new-password" [(ngModel)]="selectedImportConn.password">
+      </div>
+    </div>
+
+  </div>
+
+  <div class="modal-footer border-0 px-4 px-md-5 pb-4 pt-0 justify-content-between">
+    <button type="button" class="btn px-4" [ngClass]="currentStep === 1 ? 'btn-outline-danger' : 'btn-outline-primary-light'" 
+      (click)="onCancelOrBack(modal)">
+      {{ currentStep === 1 ? 'Cancel' : 'Back' }}
+    </button>
+    
+    <button type="button" class="btn px-4" [ngClass]="currentStep === 3 ? 'mode-btn' : 'btn-outline-primary'"
+      (click)="currentStep === 3 ? importNewConnection(modal) : nextStep()"
+      [disabled]="(currentStep === 1 && !selectedImportdDb.name) || (currentStep === 2 && !selectedImportConn.hierarchy_id) ||
+      (currentStep === 3 && (!selectedImportConn.display_name || !selectedImportConn.username || !selectedImportConn.password))">
+      {{ currentStep === 3 ? 'Import' : 'Next' }}
+    </button>
+  </div>
+</div>
+</ng-template>
+
+<ng-template #integrationSuccess let-modal>
+  <div class="modal-header border-0 pb-2">
+    <div class="d-flex align-items-center gap-2">
+      <span class="integration-icon">
+        <i class="bi bi-link-45deg"></i>
+      </span>
+      <h5 class="modal-title fw-semibold mb-0">
+        {{type ? type : 'Integration'}} Connected
+      </h5>
     </div>
   </div>
-  <div class="modal-footer">
-    <button class="btn btn-outline-secondary" (click)="selectedFile = null; displayName = ''; modal.dismiss()">Cancel</button>
-    <button class="btn btn-primary" [disabled]="!selectedFile || !displayName" (click)="fileConnection(modal, isEditPreview ? editPreviewData?.id : '')">Upload</button>
+
+  <div class="modal-body pt-0">
+    <p class="text-muted small mb-3">
+      Your {{type ? type : 'Integration'}} has been successfully connected.
+      Please provide a display name for this connection.
+    </p>
+
+    <div class="mb-3">
+      <label class="form-label fw-medium">Display Name</label>
+      <input type="text" class="form-control" placeholder="Enter connection display name" [(ngModel)]="displayName" />
+    </div>
+    <p class="text-muted small mb-0">
+      <i class="bi bi-clock me-1"></i>
+      Auto-saving in
+      <strong [ngClass]="countdown <= 10 ? 'text-danger' : 'text-info'">
+        {{ countdown }}s
+      </strong>
+      if not saved.
+    </p>
+  </div>
+
+  <div class="modal-footer border-0 pt-0">
+    <button class="btn btn-primary px-4" (click)="cleanupCountdown(); modalRef.close(); urlIntegrationsPayload(false, type)" [disabled]="!displayName">
+      Save Connection
+    </button>
   </div>
 </ng-template>

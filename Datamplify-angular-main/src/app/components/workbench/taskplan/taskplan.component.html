@@ -1,6 +1,6 @@
 <div class="main-container container-fluid">
     <div class="row">
-        <div class="col-md-12 mt-4">
+        <div class="col-md-12" [ngClass]="isEmbedMode ? 'mt-0' : 'mt-4'">
             <div class="card rounded-0 m-0">
                 <div class="card glass-card rounded-0 border-0 mb-0">
                     <div class="card-body py-2 px-3 d-flex justify-content-between align-items-center">
@@ -17,7 +17,7 @@
                                 <!-- Show text when not editing -->
                                 <h6 class="mb-0 fw-semibold small" *ngIf="!isEditing" (click)="isEditing = true; showInputFocus();"
                                     style="cursor: pointer; font-size: 14px;">
-                                    {{ etlName || 'Enter Taskplan Name' }}
+                                    {{ etlName || 'Enter TaskRunPlan Name' }}
                                     <i class="fa-solid fa-pencil text-primary"></i>
                                 </h6>
                                 <!-- <small class="text-muted" *ngIf="!isEditing" style="font-size: 12px;">Design Flowboard</small> -->
@@ -27,38 +27,47 @@
                                     style="font-size: 13px; height: 28px; padding: 2px 6px;" [(ngModel)]="etlName"
                                     pattern="^[a-zA-Z0-9_]+$" (blur)="isEditing = false" (ngModelChange)="validateFlowName($event)"/>
                                 <div *ngIf="!isValidFlowName && etlName" class="text-danger small" style="font-size: 12px;">
-                                    *Taskplan name can only contain letters, numbers, and underscores.
+                                    *TaskRunPlan name can only contain letters, numbers, and underscores.
                                 </div>
                             </div>
                         </div>
                 
                         <!-- Right side: Buttons -->
                         <div class="d-flex align-items-center gap-2">
-                            <button *ngIf="jobFlowId" type="button" class="btn btn-outline-primary rounded-4 btn-sm" (click)="createNewTaskplan()">
-                                <i class="fa fa-plus me-1" style="font-size: 12px;"></i> New Taskplan
+                            @if(jobFlowId){
+                            <button type="button" class="btn btn-outline-primary rounded-4 btn-sm" (click)="createNewTaskplan()" *appHasPermission="{ id: 16, mode: 'disable' }">
+                                <i class="fa fa-plus me-1" style="font-size: 12px;"></i> New TaskRunPlan
                             </button>
+                            }
                 
                             <button type="button" class="btn btn-outline-secondary rounded-4 btn-sm" (click)="clearTaskplan()">
                                 <i class="fa fa-eraser me-1" style="font-size: 12px;"></i> Clear
                             </button>
 
-                            <button *ngIf="jobFlowId" type="button" class="btn btn-info rounded-3 btn-sm" ngbTooltip="Duplicate Taskplan" 
+                            <button *ngIf="jobFlowId" type="button" class="btn btn-info rounded-3 btn-sm" ngbTooltip="Duplicate TaskRunPlan" 
                                 triggers="hover" container="body" (click)="copyTaskplan()">
                                 <i class="fa-solid fa-copy" style="font-size: 12px;"></i>
                             </button>
-                
-                            <button *ngIf="!jobFlowId" type="button" class="btn btn-primary rounded-4 btn-sm"
-                                [disabled]="!etlName || !isValidFlowName" (click)="saveOrUpdateEtlJobFlow()">
+                            
+                            @if(!jobFlowId){
+                            <button type="button" class="btn btn-primary rounded-4 btn-sm"
+                                [disabled]="!etlName || !isValidFlowName" (click)="saveOrUpdateEtlJobFlow()" *appHasPermission="{ id: 16, mode: 'disable' }">
                                 <i class="fa fa-save me-1" style="font-size: 12px;"></i> Save
                             </button>
-                            <button *ngIf="jobFlowId" type="button" class="btn btn-primary rounded-4 btn-sm"
-                                [disabled]="!etlName || !isValidFlowName" (click)="saveOrUpdateEtlJobFlow()">
+                            }
+                            @if(jobFlowId){
+                            <button type="button" class="btn btn-primary rounded-4 btn-sm"
+                                [disabled]="!etlName || !isValidFlowName" (click)="saveOrUpdateEtlJobFlow()" *appHasPermission="{ id: 17, mode: 'disable' }">
                                 <i class="fa fa-save me-1" style="font-size: 12px;"></i> Update
                             </button>
-                
-                            <button type="button" class="btn mode-btn rounded-4 btn-sm" [disabled]="!isRunEnable" (click)="runJobFlow()">
-                                <i class="fa fa-play me-1" style="font-size: 12px;"></i> Run
-                            </button>
+                            }
+                            
+                            <div [ngbTooltip]="!isRunEnable ? 'Update the TaskRunPlan to enable the Run' : null">
+                                <button type="button" class="btn mode-btn rounded-5 btn-sm" [disabled]="!isRunEnable" (click)="runJobFlow()"
+                                    *appHasPermission="{ id: 19, mode: 'disable' }">
+                                    <i class="fa fa-play me-1" style="font-size: 12px;"></i> Run
+                                </button>
+                            </div>
                         </div>
                 
                     </div>
@@ -69,8 +78,9 @@
                     <div class="d-lg-flex d-block">
                         <div class="p-0" [ngClass]="isOpen ? 'col-10' : 'col-12'">
                             <div class="container-vertical">
-                                <div id="drawflow" class="top-pane glass-card rounded-0 border-0" #drawflow [ngClass]="isOpen ? 'drawflow-width-half' : 'drawflow-width-full'"
+                                <div id="drawflow" class="top-pane glass-card rounded-0 border-0" #drawflow
                                     [ngClass]="{ 'drawflow-width-half': isOpen, 'drawflow-width-full': !isOpen, 'table-collapse-canvas': isCollapsed }"
+                                    [ngStyle]="{ 'height': isNodeSelected ? 'calc(100vh - 250px)' : 'calc(100vh - 100px)' }"
                                     (drop)="onDrop($event)" (dragover)="onDragOver($event)">
                                     <div class="bar-zoom">
                                         <i class="fas fa-search-minus" (click)="canvasZoomOut()"></i>
@@ -133,7 +143,7 @@
                                                                         </ng-template>
                                                                     </li>
                                                                     <li *ngIf="!['dataFlow', 'taskCommand', 'dbCommand'].includes(selectedNode?.data?.type)"
-                                                                        [ngbNavItem]="2" className="nav-link text-start" id="properties-tab">
+                                                                        [ngbNavItem]="2" className="nav-link text-start" id="properties-tab" (click)="((selectedNode?.data?.type ?? '') === 'loop' && serverOptions.length === 0 && (selectedNode?.data?.nodeData?.properties?.type ?? '') === 'command') ? getDataPointList(3) : null;">
                                                                         <a ngbNavLink class="fs-13 fw-semibold">Properties</a>
                                                                         <ng-template ngbNavContent>
                                                                             <div class="tab-pane " id="quarters" role="tabpanel"
@@ -328,8 +338,8 @@
                                                                         </ng-template>
                                                                     </li>
                                                                     <li *ngIf="['taskCommand', 'dbCommand'].includes(selectedNode?.data?.type)"
-                                                                        [ngbNavItem]="3" className="nav-link text-start" id="command-tab"><a
-                                                                            ngbNavLink class="fs-13 fw-semibold">Command</a>
+                                                                        [ngbNavItem]="3" className="nav-link text-start" id="command-tab" (click)="((selectedNode?.data?.type ?? '') === 'taskCommand' && serverOptions.length === 0) ? getDataPointList(3) : null;">
+                                                                        <a ngbNavLink class="fs-13 fw-semibold">Command</a>
                                                                         <ng-template ngbNavContent>
                                                                             <div class="tab-pane " id="quarters" role="tabpanel"
                                                                                 aria-labelledby="quarters-tab" tabindex="0">
@@ -468,6 +478,7 @@
                                                                                                     <th>Data Object</th>
                                                                                                     <th>Type</th>
                                                                                                     <th>Database</th>
+                                                                                                    <th>Default</th>
                                                                                                 </tr>
                                                                                             </thead>
                                                                                             <tbody>
@@ -475,12 +486,28 @@
                                                                                                 selectedNode.data.nodeData.connections; track
                                                                                                 connection; let i = $index){
                                                                                                 <tr>
-                                                                                                    <td>{{connection.data.nodeData.general.name}}
+                                                                                                    <td>
+                                                                                                        <span [ngbTooltip]="connection.data.nodeData.general.name"> {{connection.data.nodeData.general.name.length > 25  ? (connection.data.nodeData.general.name | slice: 0: 23)+'...' : connection.data.nodeData.general.name}} </span>
                                                                                                     </td>
                                                                                                     <td>{{connection.data.type ===
                                                                                                         'source_data_object' ? 'Source' :
                                                                                                         'Target' }}</td>
                                                                                                     <td>{{connection.data.nodeData.connection.display_name}}
+                                                                                                    </td>
+                                                                                                    <td>
+                                                                                                        <span *ngIf="connection.data.nodeData.connection.server_type !== 'SFTP'" [ngbTooltip]="connection.data.nodeData.dataObject?.tables"> 
+                                                                                                            {{connection.data.nodeData.dataObject?.tables.length > 25  ? (connection.data.nodeData.dataObject?.tables | slice: 0: 23)+'...' : connection.data.nodeData.dataObject?.tables}} 
+                                                                                                        </span>
+                                                                                                        <span *ngIf="!connection.data.paramEdit && connection.data.paramValue && connection.data.nodeData.connection.server_type === 'SFTP'"> {{connection.data.paramValue}} </span>
+                                                                                                        <i *ngIf="!connection.data.paramEdit && connection.data.nodeData.connection.server_type === 'SFTP'" class="fe fe-edit text-primary" (click)="connection.data.paramEdit = true"></i>
+                                                                                                        <div *ngIf="connection.data.paramEdit && connection.data.nodeData.connection.server_type === 'SFTP'" class="input-group">
+                                                                                                            <input type="text" class="form-control" [(ngModel)]="connection.data.paramValue" placeholder="Enter Value"
+                                                                                                                (blur)="updateNode('')" />
+                                                                                                            <span class="input-group-text bg-primary" ngbTooltip=""
+                                                                                                                (click)="openExpressionEdit(expressionEdit, 'connection', i)">
+                                                                                                                <i class="fa-solid fa-up-right-from-square"></i>
+                                                                                                            </span>
+                                                                                                        </div>
                                                                                                     </td>
                                                                                                 </tr>
                                                                                                 }
@@ -493,7 +520,7 @@
                                                                     </li>
                                                                     <li *ngIf="selectedNode?.data?.type === 'dataFlow'" [ngbNavItem]="6"
                                                                         className="nav-link text-start" id="data-points-tab"><a
-                                                                            ngbNavLink class="fs-13 fw-semibold">Flowboard Transforms</a>
+                                                                            ngbNavLink class="fs-13 fw-semibold">DagBoard Transforms</a>
                                                                         <ng-template ngbNavContent>
                                                                             <div class="tab-pane " id="quarters" role="tabpanel"
                                                                                 aria-labelledby="quarters-tab" tabindex="0">
@@ -524,7 +551,7 @@
                                                                     </li>
                                                                     <li *ngIf="selectedNode?.data?.type === 'dataFlow'" [ngbNavItem]="7"
                                                                         className="nav-link text-start" id="data-points-tab"><a
-                                                                            ngbNavLink class="fs-13 fw-semibold">Flowboard Parameters</a>
+                                                                            ngbNavLink class="fs-13 fw-semibold">DagBoard Parameters</a>
                                                                         <ng-template ngbNavContent>
                                                                             <div class="tab-pane " id="quarters" role="tabpanel"
                                                                                 aria-labelledby="quarters-tab" tabindex="0">
@@ -591,7 +618,7 @@
                                                                     </li>
                                                                     <li *ngIf="selectedNode?.data?.type === 'dataFlow'" [ngbNavItem]="11"
                                                                         className="nav-link text-start" id="data-points-tab"><a
-                                                                            ngbNavLink class="fs-13 fw-semibold">Flowboard SQL Parameters</a>
+                                                                            ngbNavLink class="fs-13 fw-semibold">DagBoard SQL Parameters</a>
                                                                         <ng-template ngbNavContent>
                                                                             <div class="tab-pane " id="quarters" role="tabpanel"
                                                                                 aria-labelledby="quarters-tab" tabindex="0">
@@ -952,12 +979,17 @@
                                                 </li>
                                             </ul>
                                             <div class="d-flex justify-content-between">
-                                                <button *ngIf="selectedNode?.data?.type === 'dataFlow'" class="btn btn-info rounded-5 text-light me-2" [ngbTooltip]="'Redirected to '+ selectedNode?.data?.nodeData?.dataFlow?.Flow_name +' Flowboard'" (click)="goToFlowboard()">
-                                                    <i class="fa-solid fa-up-right-from-square me-1"></i> Flowboard
+                                                <button *ngIf="selectedNode?.data?.type === 'dataFlow'" class="btn btn-info rounded-5 text-light me-2" [ngbTooltip]="'Redirected to '+ selectedNode?.data?.nodeData?.dataFlow?.Flow_name +' DagBoard'" (click)="goToFlowboard()">
+                                                    <i class="fa-solid fa-up-right-from-square me-1"></i> DagBoard
                                                 </button>
-                                                <div type="button" class="btn btn-primary" (click)="toggleCollapse()">
-                                                    <i *ngIf="isCollapsed" class="fa fa-angle-up small"></i>
-                                                    <i *ngIf="!isCollapsed" class="fa fa-angle-down small"></i>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i *ngIf="validatedData?.isValid === false" class="fa fa-exclamation-circle text-danger cursor-pointer fs-5"
+                                                        triggers="hover" [ngbTooltip]="validatedData?.msg">
+                                                    </i>
+                                                    <button type="button" class="btn btn-primary" (click)="toggleCollapse()">
+                                                        <i *ngIf="isCollapsed" class="fa fa-angle-up small"></i>
+                                                        <i *ngIf="!isCollapsed" class="fa fa-angle-down small"></i>
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -973,11 +1005,11 @@
                         <div class="p-0" [ngClass]="isOpen ? 'col-2' : 'd-none'">
                             <div class="card rounded-0 glass-card h-100 position-relative" style="border-left: 1px solid var(--default-border) !important; box-shadow: none;">
                                 <!-- Collapse Button -->
-                                <button class="btn btn-sm border mode-btn toggle-btn ms-1" (click)="isOpen = !isOpen;">
+                                <button class="btn btn-sm border mode-btn toggle-btn ms-1 mt-1" (click)="isOpen = !isOpen;">
                                     <i class="fa-solid" [ngClass]="isOpen ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
                                 </button>
                                 
-                                <span *ngIf="isRefrshEnable" class="text-danger p-1" style="font-size: 9px;">*Component dragging is disabled since the taskplan is running.</span>
+                                <span *ngIf="isRefrshEnable" class="text-danger p-1" style="font-size: 9px;">*Component dragging is disabled since the TaskRunPlan is running.</span>
                                 <span *ngIf="!isOpen" class="vertical-text fw-bold">
                                     COMPONENTS
                                 </span>
@@ -1004,7 +1036,7 @@
                                             <button class="rounded-5 nav-link fw-semibold"
                                                 [ngClass]="activeTab === 'flowboardInstance' ? 'tab-active bg-info' : 'tab-inactive'"
                                                 (click)="activeTab = 'flowboardInstance'">
-                                                Flowboard Instance
+                                                DagBoard Instance
                                             </button>
                                         <!-- </div> -->
                         
@@ -1027,7 +1059,7 @@
                                                     [draggable]="!isRefrshEnable"
                                                     (dragstart)="onDragStart($event, item.type, activeTab === 'flowboardInstance' ? dataFlowList : (activeTab === 'tasks' && item.type === 'dbCommand' ? dataPointList : null))">
                                                     <div class="icon-wrap me-2">
-                                                        <i class="fa-solid" [ngClass]="[
+                                                        <i [ngClass]="[
                                                               item.icon,    
                                                               activeTab === 'flowboardInstance' ? 'text-info' : 
                                                               activeTab === 'tasks' ? 'text-warning' : ''
@@ -1044,7 +1076,7 @@
                                                 <div *ngFor="let item of componentsContent[activeTab]" class="col-6">
                                                     <div class="component-card text-center p-3 rounded-4 shadow-sm" [draggable]="!isRefrshEnable"
                                                         (dragstart)="onDragStart($event, item.type, activeTab === 'flowboardInstance' ? dataFlowList : (activeTab === 'tasks' && item.type === 'dbCommand' ? dataPointList : null))">
-                                                        <i class="mb-2 fa-solid" [ngClass]="[
+                                                        <i class="mb-2" [ngClass]="[
                                                               item.icon,    
                                                               activeTab === 'flowboardInstance' ? 'text-info' : 
                                                               activeTab === 'tasks' ? 'text-warning' : ''
@@ -1138,7 +1170,7 @@
                             <!-- Transforms Column -->
                             <td *ngIf="expEditorAddType === 'parameters'" class="align-top col-4">
                                 <div class="overflow-y-auto" style="max-height: 145px;">
-                                    <div *ngFor="let group of groupedColumns | keyvalue" class="text-break py-1 px-2 hover-bg"
+                                    <div *ngFor="let group of groupedColumns | keyvalue" class="text-break py-1 px-2 hover-bg rounded-2"
                                         style="cursor: pointer;" [class.bg-primary]="selectedGroup === group.key"
                                         [class.text-white]="selectedGroup === group.key" (click)="selectedGroup = group.key">
                                         {{ group.key }}
@@ -1148,7 +1180,7 @@
             
                             <td *ngIf="expEditorAddType === 'functions'" class="align-top col-4">
                                 <div class="overflow-y-auto" style="max-height: 145px;">
-                                    <div *ngFor="let group of functionGroupType" class="text-break py-1 px-2 hover-bg"
+                                    <div *ngFor="let group of functionGroupType" class="text-break py-1 px-2 hover-bg rounded-2"
                                         style="cursor: pointer;" [class.bg-primary]="selectedGroup === group.value"
                                         [class.text-white]="selectedGroup === group.value" (click)="selectedGroup = group.value">
                                         {{ group.key }}
@@ -1219,7 +1251,8 @@
     </div>
 
     <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="modal.dismiss('cancel'); isParameter = false; isSQLParameter = false;  isTaskCommand = false; isDbCommand = false; isLoopCommand = false; isTo = false; isCC = false; isSubject = false; isMessage = false;">Cancel</button>
+        <button type="button" class="btn btn-secondary" (click)="modal.dismiss('cancel'); isParameter = false; isSQLParameter = false;  isTaskCommand = false; isDbCommand = false; 
+            isLoopCommand = false; isTo = false; isCC = false; isSubject = false; isMessage = false; selectedNode.data.nodeData.connections[this.selectedIndex].data.paramEdit = false;">Cancel</button>
         <button type="button" class="btn btn-primary" (click)="updateExpressionToNode(); modal.dismiss('Save click'); isParameter = false; isSQLParameter = false;">OK</button>
     </div>
 </ng-template>

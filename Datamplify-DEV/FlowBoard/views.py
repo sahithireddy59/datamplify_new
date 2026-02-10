@@ -9,6 +9,7 @@ from FlowBoard import models as flow_model
 from Connections import models as conn_models
 from authentication import models as auth_models
 from Monitor import models as mon_models
+from Tasks_Scheduler import models as scheduler_models
 from authentication.utils import token_function
 from drf_yasg.utils import swagger_auto_schema
 from Monitor.utils import airflow_token
@@ -96,20 +97,24 @@ class FlowBoard(APIView):
                     
             flow['dag_id'] = Flow_data.Flow_id
             flow['flow_name'] = flow_name
-            flow_owner_id = Flow_data.user_id.id if hasattr(Flow_data.user_id, 'id') else Flow_data.user_id
             
-            # Add required fields for DAG generation
+            flow_owner_id = Flow_data.user_id.id if hasattr(Flow_data.user_id, 'id') else Flow_data.user_id
+            # flow_user_name = Flow_data.user_id.username if hasattr(Flow_data.user_id, 'id') else Flow_data.user_id.username
+            from django.utils.encoding import force_str
+
+            user_obj = getattr(Flow_data, "user_id", None)
+            if user_obj and hasattr(user_obj, "username"):
+                flow['username'] = force_str(user_obj.username)
+            else:
+                flow['username'] = ""
             flow['user_id'] = flow_owner_id
-            flow['username'] = Flow_data.user_id.username
 
             configs_dir = f'{settings.config_dir}/FlowBoard/{str(flow_owner_id)}'
             file_path = os.path.join(configs_dir, f'{Flow_data.Flow_id}.json')
             new_file_path = os.path.join(configs_dir, f'{Flow_data.Flow_id}.json')
             data = flow
             with open(file_path, 'w') as f:
-                json.dump(data, f, indent=4,cls=UUIDEncoder)
-            
-            # DAG generation is now handled dynamically by FlowBoard_dynamic.py
+                json.dump(data, f, indent=4,cls=UUIDEncoder,ensure_ascii=False)
             os.rename(file_path,new_file_path)
             datasrc_key = Flow_data.DrawFlow.split('FlowBoard/')[1]
             file_data = drawflow.read().decode('utf-8')  
@@ -122,103 +127,7 @@ class FlowBoard(APIView):
             return Response({'message':'updated SucessFully','Flow_Board_id':str(id)},status=status.HTTP_200_OK)
         else:
                 return Response({'message':'Serializer Error'},status=status.HTTP_400_BAD_REQUEST)
-    
-    def generate_airflow_dag(self, config):
-        """Generate Airflow DAG file directly when FlowBoard is saved"""
-        try:
-            dag_id = config['dag_id']
-            flow_name = config['flow_name']
-            username = config.get('username', 'airflow')
-            
-            # Create DAG file content
-            dag_content = f'''from airflow import DAG
-from airflow.operators.python import PythonOperator
-from datetime import datetime, timedelta
-import pendulum
-
-def src_task():
-    """Source task: {config.get('tasks', [{}])[0].get('source_table_name', 'Unknown')}"""
-    print("🔄 Starting data extraction from MongoDB")
-    print("📊 Source: MongoDB collection")
-    print("✅ Data extraction completed")
-    return "Source task completed"
-
-def tgt_task():
-    """Target task: {config.get('tasks', [{}])[1].get('target_table_name', 'Unknown') if len(config.get('tasks', [])) > 1 else 'Unknown'}"""
-    print("🔄 Starting data loading to target")
-    print("📊 Target: PostgreSQL table")
-    print("✅ Data loading completed")
-    return "Target task completed"
-
-# Create the DAG
-dag = DAG(
-    '{dag_id}',
-    default_args={{
-        'owner': '{username}',
-        'depends_on_past': False,
-        'start_date': pendulum.datetime(2024, 1, 1, tz='UTC'),
-        'email_on_failure': False,
-        'email_on_retry': False,
-        'retries': 0,
-    }},
-    description='FlowBoard DAG: {flow_name}',
-    schedule_interval=None,
-    catchup=False,
-    tags=['flowboard', '{flow_name}'],
-)
-
-# Create tasks
-'''
-            
-            # Add tasks based on config
-            tasks = config.get('tasks', [])
-            for i, task in enumerate(tasks):
-                task_id = task.get('id', f'task_{i}')
-                if task.get('type') == 'source_data_object':
-                    dag_content += f'''
-{task_id}_task = PythonOperator(
-    task_id='{task_id}',
-    python_callable=src_task,
-    dag=dag,
-)
-'''
-                elif task.get('type') == 'target_data_object':
-                    dag_content += f'''
-{task_id}_task = PythonOperator(
-    task_id='{task_id}',
-    python_callable=tgt_task,
-    dag=dag,
-)
-'''
-            
-            # Add task dependencies
-            flows = config.get('flow', [])
-            if flows:
-                for flow in flows:
-                    if len(flow) == 2:
-                        source_task, target_task = flow
-                        dag_content += f'''
-# Set task dependencies
-{source_task}_task >> {target_task}_task
-'''
-            
-            # Add globals
-            dag_content += f'''
-# Make DAG available to Airflow
-globals()['{dag_id}'] = dag
-'''
-            
-            # Write DAG file
-            dag_file_path = os.path.join(settings.BASE_DIR, 'Airflow', 'Dags', f'dag_{dag_id.replace("-", "_")}.py')
-            with open(dag_file_path, 'w') as f:
-                f.write(dag_content)
-            
-            print(f"✅ Generated Airflow DAG file: {dag_file_path}")
-            
-        except Exception as e:
-            print(f"❌ Error generating Airflow DAG: {e}")
-            import traceback
-            traceback.print_exc()
+        
         
 
 class FlowOperation(APIView):  
@@ -283,6 +192,7 @@ class FlowOperation(APIView):
             s3.delete_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=f'Datamplify/FlowBoard/{str(datasrc_key)}')               
             flow_model.FlowBoard.objects.filter(id = id,user_id=user_id).delete()
             mon_models.RunHistory.objects.filter(source_id = flow_data.Flow_id).delete()
+            scheduler_models.Schedule.objects.filter(source_id = flow_data.Flow_id).delete()
             return Response({'message':'Deleted Successfully'},status=status.HTTP_200_OK)
         else:
             return Response({'message':'Data Flow Not Created'},status=status.HTTP_404_NOT_FOUND)
@@ -299,9 +209,7 @@ class Flow_List(APIView):
     permission_classes = [CustomIsAuthenticated]
 
       # optional: define scope requirement
-
     @csrf_exempt
-    @transaction.atomic
     @method_decorator(require_permission('flowboard.view'))
     def get(self, request):
         from math import ceil
@@ -313,8 +221,9 @@ class Flow_List(APIView):
         search = request.query_params.get('search', '')
 
         accessible_user_ids = [user_id]
-        if hasattr(user, 'created_by') and user.created_by:
-            accessible_user_ids.append(user.created_by.id)
+
+        if user.created_by_id:
+            accessible_user_ids.append(user.created_by_id)
         
 
         try:
@@ -323,18 +232,18 @@ class Flow_List(APIView):
         except (ValueError, TypeError):
             return Response({"error": "Invalid pagination parameters"}, status=400)
 
-        total_records = flow_model.FlowBoard.objects.filter(
-            user_id__in=accessible_user_ids,
-            Flow_name__icontains=search
-        ).count()
+        flow_data = flow_model.FlowBoard.objects.filter(
+                user_id__in=accessible_user_ids,
+            ).order_by('-updated_at')
+        if search:
+            flow_data = flow_data.filter(Flow_name__icontains=search)
+        total_records  = flow_data.count()
+
 
         total_pages = ceil(total_records / page_size)
         offset = (page_number - 1) * page_size
 
-        data = flow_model.FlowBoard.objects.filter(
-            user_id__in=accessible_user_ids,
-            Flow_name__icontains=search
-        ).values('id', 'Flow_name', 'Flow_id', 'created_at', 'updated_at','user_id'
+        data = flow_data.values('id', 'Flow_name', 'Flow_id', 'created_at', 'updated_at','user_id'
         )[offset:offset + page_size]
 
         return Response({

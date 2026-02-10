@@ -52,7 +52,7 @@ a.TabShadow.nav-link.active {
 
 .drag-drawflow { line-height: 50px;  padding-left: 20px; cursor: pointer; user-select: none; }
 .drag-drawflow:hover { background-color: var(--primary-color); }
-#drawflow { position: relative; height: calc(100vh - 100px); overflow: hidden; -ms-overflow-style: none; scrollbar-width: none;}
+#drawflow { position: relative; overflow: hidden; -ms-overflow-style: none; scrollbar-width: none;}
 #drawflow::-webkit-scrollbar { display: none; }
 .drawflow-width-half { width: auto; }
 .drawflow-width-full { width: auto; }
@@ -120,6 +120,8 @@ textarea { width:280px; overflow:auto; resize:none; border:1px solid #d8d8d8; fo
 ::ng-deep .drawflow .drawflow-node .node-status-failed { background-color:#e3403a; color:white; }
 ::ng-deep .drawflow .drawflow-node .node-status-upstream_failed { background-color:#f0841e; color:white; font-size:9px !important; }
 ::ng-deep .drawflow .drawflow-node .node-status-removed { background-color:#4E5D6C; color:white; }
+::ng-deep .drawflow .drawflow-node .drawflow-delete { line-height: 23px; }
+::ng-deep .drawflow .drawflow-node.node-error { border: 2px solid #dc3545 !important; box-shadow: 0 0 8px rgba(220, 53, 69, 0.7) }
 
 ::ng-deep .modal-content {
   background: var(--custom-white);   /* dark semi-solid background */
@@ -230,6 +232,8 @@ textarea { width:280px; overflow:auto; resize:none; border:1px solid #d8d8d8; fo
   border-radius: 1rem;
   padding: 0px;
   margin: 0px;
+  display: flex;
+  width: 100%;
 }
 
 /* ----------- For 110% Resolution (Slight zoom) ----------- */
@@ -238,7 +242,9 @@ textarea { width:280px; overflow:auto; resize:none; border:1px solid #d8d8d8; fo
     position: relative;
     overflow: auto;
     width: 100%;
-    scrollbar-width: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0,0,0,0.3) transparent;
+    padding: 5px;
   }
 }
 
@@ -248,8 +254,17 @@ textarea { width:280px; overflow:auto; resize:none; border:1px solid #d8d8d8; fo
     position: relative;
     overflow: auto;
     width: 100%;
-    scrollbar-width: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0,0,0,0.3) transparent;
+    padding: 5px;
   }
+}
+
+.custom-tabs button {
+  flex: 1 1 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .custom-tabs .nav-link {
@@ -319,20 +334,75 @@ textarea { width:280px; overflow:auto; resize:none; border:1px solid #d8d8d8; fo
 }
 
 .content-area {
-  height: 100%;
-  overflow-y: auto;
+  height: 410px;
+  overflow: hidden;
 }
 
+/* ----------- For 90% Resolution (Large screens) ----------- */
+@media (min-width: 1420px) and (max-width: 1560px) {
+  .content-area {
+    height: 410px;
+    overflow: hidden;
+  }
+}
+
+/* ----------- For 100% Resolution (Standard desktop) ----------- */
+@media (min-width: 1280px) and (max-width: 1419px) {
+  .content-area {
+    height: 370px;
+    overflow: hidden;
+  }
+}
+
+/* ----------- For 110% Resolution (Slight zoom) ----------- */
+@media (min-width: 1163px) and (max-width: 1279px) {
+  .content-area {
+    height: 370px;
+    overflow: hidden;
+  }
+}
+
+/* ----------- For 125% Resolution (Zoomed or smaller screens) ----------- */
+@media (min-width: 1024px) and (max-width: 1162px) {
+  .content-area {
+    height: 370px;
+    overflow: hidden;
+  }
+}
+
+.scroll-content {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.3) transparent;
+}
+
+// .mode-btn {
+//   border-radius: 1rem;
+//   background: linear-gradient(90deg, #3b82f6 0%, #9b25f2 70%);
+//   color: var(--custom-white);
+//   transition: transform .18s ease, box-shadow .18s ease;
+
+//   &:hover { 
+//     transform: translateY(-2px) scale(1.02);
+//     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08), 
+//     0 6px 12px rgba(14,165,233,0.15);
+//     }
+// }
+
 .mode-btn {
-  border-radius: 1rem;
   background: linear-gradient(90deg, #3b82f6 0%, #9b25f2 70%);
-  color: var(--custom-white);
+  color: #fff;
+  border: none !important;
   transition: transform .18s ease, box-shadow .18s ease;
 
   &:hover { 
-    transform: translateY(-2px) scale(1.02);
+   transform: translateY(-2px) scale(1.02);
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08), 
     0 6px 12px rgba(14,165,233,0.15);
+    border: 1px solid #7c5cff !important;
     }
 }
 
@@ -500,7 +570,7 @@ textarea { width:280px; overflow:auto; resize:none; border:1px solid #d8d8d8; fo
         vertical-align: middle;
     }
     .table thead th {
-        background-color: rgba(0, 0, 0, 0.2);
+        background-color: var(--primary-color);
         color: #fff;
         font-weight: 600;
         border-bottom: 1px solid var(--primary-color);
@@ -528,4 +598,52 @@ select.form-select {
   scrollbar-width: thin;
   scrollbar-color: rgba(0,0,0,0.3) transparent;
 }
-  
+
+input {
+  border: 1px solid var(--default-border) !important;
+}
+
+.input-group-text {
+  border: 1px solid var(--default-border) !important;
+}
+
+th {
+  border: 1px solid var(--default-border) !important;
+}
+
+.schema-selection-modal {
+  min-height: 420px;
+  max-height: 420px;
+  overflow: auto;
+}
+
+.schema-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.schema-row {
+  display: grid;
+  grid-template-columns: 40px 1fr 160px;
+  align-items: center;
+  padding: 6px 0;
+}
+
+.schema-cell.checkbox {
+  display: flex;
+  justify-content: center;
+}
+
+.component-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.validation-message {
+  color: #856404;
+  font-size: 13px;
+  font-weight: 500;
+} 

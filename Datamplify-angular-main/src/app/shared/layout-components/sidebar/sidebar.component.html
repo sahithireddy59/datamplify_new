@@ -1,7 +1,7 @@
 
-<aside class="app-sidebar sticky container-background" id="sidebar" [ngClass]="{ 'sticky-pin': scrolled }">
+<aside class="app-sidebar sticky"  id="sidebar" [ngClass]="{ 'sticky-pin': scrolled, 'embed-container-background': isEmbedMode, 'container-background': !isEmbedMode }">
   <!-- Start::main-sidebar-header -->
-  <div class="main-sidebar-header glass-card">
+  <div *ngIf="!isEmbedMode" class="main-sidebar-header glass-card">
     <a routerLink="/datamplify/home" class="header-logo">
       <!-- <img src="./assets/images/brand/analytify-logo-genBI.png" alt="logo" class="desktop-logo">
       <img src="./assets/images/brand/dark-icon-analytify.png" alt="logo" class="toggle-logo">
@@ -17,7 +17,7 @@
   <!-- End::main-sidebar-header -->
   <!-- <ngx-simplebar> -->
   <ngx-simplebar class="main-sidebar glass-card" id="sidebar-scroll">
-    <nav class="main-menu-container nav nav-pills flex-column sub-open">
+    <nav class="main-menu-container nav nav-pills flex-column sub-open w-100" [ngStyle]="{ 'height': isEmbedMode ? '100%' : null }">
       <!-- <div class="slide-left" id="slide-left">
         <svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24" height="24"
           viewBox="0 0 24 24">
@@ -25,7 +25,7 @@
         </svg>
       </div> -->
 
-      <ul class="main-menu" [ngStyle]="{ display: 'block' }">
+      <ul class="main-menu" [ngStyle]="{ display: 'block', 'height': isEmbedMode ? '100%' : null }" [ngClass]="{ 'embed-horizontal-menu': isEmbedMode }">
         @for (menuItem of menuItems; track menuItem) {
           <li class="slide" #activeMenuItems
                     [ngClass]="{'slide__category':menuItem.headTitle,
@@ -43,7 +43,7 @@
                 @if (menuItem.icon) {
                   <span  class="iconclick"  [innerHTML]="getSanitizedSVG(menuItem.icon)"></span>
                 }
-                <span class="side-menu__label">{{menuItem.title}}</span>
+                <span class="side-menu__label" [ngClass]="{ 'side-menu__label_embed': isEmbedMode, 'side-menu__label': !isEmbedMode }">{{menuItem.title}}</span>
               </a>
             }
             <!-- has-empty -->

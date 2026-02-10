@@ -30,7 +30,7 @@ export const admin: Routes = [
       import('./forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent),
   },  
   {
-    path: 'under-maintainance',
+    path: 'under-maintenance',
     loadComponent: () =>
       import('./under-maintainance/under-maintainance.component').then((m) => m.UnderMaintainanceComponent),
   },
@@ -39,11 +39,6 @@ export const admin: Routes = [
     loadComponent: () =>
       import('./email-activation/email-activation.component').then((m) => m.EmailActivationComponent),
   },
-  // {
-  //   path: 'activate_account/:token',
-  //   loadComponent: () =>
-  //     import('./email-activation/email-activation.component').then((m) => m.EmailActivationComponent),
-  // },
   {
     path: 'email-reactivation',
     loadComponent: () =>

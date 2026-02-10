@@ -453,7 +453,6 @@ active=1;
   userId : any;
   setChartType(){
     this.chartType = localStorage.getItem('chartType');
-    this.userId = localStorage.getItem('userId');
   }
 
   setTextColor(event : any){

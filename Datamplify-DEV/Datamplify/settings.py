@@ -46,6 +46,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 ENV_FILE = os.path.join(BASE_DIR, ".env")
 
+LOGIN_URL = '/v1/authentication/accounts/login/'
+LOGIN_REDIRECT_URL = '/'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -59,6 +61,7 @@ DEBUG = True
 ALLOWED_HOSTS = ['172.16.17.159','127.0.0.1','localhost','*']
 
 
+SILKY_PYTHON_PROFILER = True
 
 
 # Application definition
@@ -83,13 +86,18 @@ INSTALLED_APPS = [
     'Tasks_Scheduler',
 
     #swagger
-    'drf_yasg',  
+    'drf_yasg', 
 
     "corsheaders",
 
-
-
 ]
+
+# Add debug_toolbar only if available (not in Airflow container)
+try:
+    import debug_toolbar
+    INSTALLED_APPS.append('debug_toolbar')
+except ImportError:
+    pass
 
 
 CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8000/','http://172.16.17.159/','http://127.0.0.1:4201/']
@@ -99,18 +107,32 @@ CORS_ALLOW_ALL_ORIGINS = True
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+]
+
+# Add debug_toolbar middleware only if available
+try:
+    import debug_toolbar
+    MIDDLEWARE.append('debug_toolbar.middleware.DebugToolbarMiddleware')
+except ImportError:
+    pass
+
+MIDDLEWARE.extend([
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'oauth2_provider.middleware.OAuth2TokenMiddleware'
-
-
-]
+    # 'oauth2_provider.middleware.OAuth2TokenMiddleware',
+])
 
 ROOT_URLCONF = 'Datamplify.urls'
+DEBUG_TOOLBAR_CONFIG = {
+    "SHOW_TOOLBAR_CALLBACK": lambda request: True,
+}
+ALLOWED_HOSTS = ['172.16.17.159','127.0.0.1','localhost','*']
+
+INTERNAL_IPS = ['localhost']
 
 TEMPLATES = [
     {
@@ -128,6 +150,14 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'Datamplify.wsgi.application'
+OAUTH2_PROVIDER = {
+    "SCOPES": {
+        "read": "Read access to Datamplify resources",
+        "write": "Write access to Datamplify resources",
+    }
+}
+
+
 
 
 # Database
@@ -144,13 +174,89 @@ WSGI_APPLICATION = 'Datamplify.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': config('DB_ENGINE', default='django.db.backends.postgresql'),
-        'NAME': config('DB_NAME', default='Datamplify3'),
+        'NAME': config('DB_NAME', default='Datamplify4'),
         'USER': config('DB_USER', default='postgres'),
         'PASSWORD': config('DB_PASSWORD', default='postgres'),
         # Note: when running inside Docker, use host.docker.internal to reach host Postgres on Windows/Mac
         'HOST': config('DB_HOST', default='localhost'),
         'PORT': config('DB_PORT', default='5432'),
     }
+}
+
+
+
+
+Integration_Credentials = {
+    "QUICKBOOKS": {
+        "CLIENT_ID": config("QUICKBOOKS_CLIENT_ID"),
+        "CLIENT_SECRET": config("QUICKBOOKS_CLIENT_SECRET"),
+        "REDIRECT_URI":config("QUICHBOOKS_REDIRECT_URI")
+    },
+    "SALESFORCE": {
+        "CLIENT_ID": config("SALESFORCE_CLIENT_ID"),
+        "CLIENT_SECRET": config("SALESFORCE_CLIENT_SECRET"),
+        "REDIRECT_URI":config("SALESFORCE_REDIRECT_URI")
+    },
+    # "CONNECTWISE": {
+    #     "CLIENT_ID": config("CONNECTWISE_CLIENT_ID"),
+    #     "CLIENT_SECRET": config("CONNECTWISE_CLIENT_SECRET"),
+    # },
+    # "DBT": {
+    #     "CLIENT_ID": config("DBT_CLIENT_ID"),
+    #     "CLIENT_SECRET": config("DBT_CLIENT_SECRET"),
+    # },
+    "HALOPSA": {
+        "CLIENT_ID": config("HALOPSA_CLIENT_ID"),
+        "CLIENT_SECRET": config("HALOPSA_CLIENT_SECRET"),
+        "REDIRECT_URI":config("HALOPSA_REDIRECT_URI")
+    },
+    "PAX8": {
+        "CLIENT_ID": config("PAX8_CLIENT_ID"),
+        "CLIENT_SECRET": config("PAX8_CLIENT_SECRET"),
+    },
+    # "BAMBOOHR": {
+    #     "CLIENT_ID": config("BAMBOOHR_CLIENT_ID"),
+    #     "CLIENT_SECRET": config("BAMBOOHR_CLIENT_SECRET"),
+    # },
+    "JIRA": {
+        "CLIENT_ID": config("JIRA_CLIENT_ID"),
+        "CLIENT_SECRET": config("JIRA_CLIENT_SECRET"),
+        "REDIRECT_URI":config("JIRA_REDIRECT_URI")
+    },
+    # "SHOPIFY": {
+    #     "CLIENT_ID": config("SHOPIFY_CLIENT_ID"),
+    #     "CLIENT_SECRET": config("SHOPIFY_CLIENT_SECRET"),
+    # },
+    # "TALLY": {
+    #     "CLIENT_ID": config("TALLY_CLIENT_ID"),
+    #     "CLIENT_SECRET": config("TALLY_CLIENT_SECRET"),
+    # },
+    "GOOGLESHEETS": {
+        "CLIENT_ID": config("GOOGLESHEET_CLIENT_ID"),
+        "CLIENT_SECRET": config("GOOGLESHEET_CLIENT_SECRET"),
+    },
+    "NINJA": {
+        "CLIENT_ID": config("NINJA_CLIENT_ID"),
+        "CLIENT_SECRET": config("NINJA_CLIENT_SECRET"),
+    },
+    "GOOGLEANALYTICS": {
+        "CLIENT_ID": config("GOOGLEANALYTICS_CLIENT_ID"),
+        "CLIENT_SECRET": config("GOOGLEANALYTICS_CLIENT_SECRET"),
+    },
+    "HUBSPOT": {
+        "CLIENT_ID": config("HUBSPOT_CLIENT_ID"),
+        "CLIENT_SECRET": config("HUBSPOT_CLIENT_SECRET"),
+    },
+    "IMMYBOT": {
+        "CLIENT_ID": config("IMMYBOT_CLIENT_ID"),
+        "CLIENT_SECRET": config("IMMYBOT_CLIENT_SECRET"),
+    },
+    "ZOHO": {
+        "CLIENT_ID": config("ZOHO_CLIENT_ID"),
+        "CLIENT_SECRET": config("ZOHO_CLIENT_SECRET"),
+    },
+    
+
 }
 
 #oauth2
@@ -165,16 +271,16 @@ CLIENT_SECRET = config("OAUTH_CLIENT_SECRET")
 
 Fernet_Key = config('DB_Fernet_Key').encode()
 
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',  
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': (
+#         'oauth2_provider.contrib.rest_framework.OAuth2Authentication',  
         
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
+#     ),
+#     'DEFAULT_PERMISSION_CLASSES': (
+#         'rest_framework.permissions.IsAuthenticated',
+#     ),
 
-}
+# }
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'oauth2_provider.backends.OAuth2Backend',
@@ -182,7 +288,7 @@ AUTHENTICATION_BACKENDS = (
 
 OAUTH2_PROVIDER = {
     "ACCESS_TOKEN_EXPIRE_SECONDS": 57600,  # 1 hour
-    "REFRESH_TOKEN_EXPIRE_SECONDS": 86400,  # 7 days
+    "REFRESH_TOKEN_EXPIRE_SECONDS": 2592000,  # 30 days
     'ROTATE_REFRESH_TOKEN': True,
 }
 
@@ -230,15 +336,19 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Mail
 
-if DATABASES['default']['NAME'] =='Datamplify2':
+if DATABASES['default']['NAME'] =='Datamplify_DEV':
 
     Link_url = 'http://202.65.155.119/'
-    TOKEN_URL = 'http://172.16.17.159/v1/authentication/o/token/'
-    REDIRECT_URI = 'http://172.16.17.159/v1/nocallback/'
-    airflow_host = "http://202.65.155.123:8081/"
-    airflow_url = "http://202.65.155.123:8081/auth/token"
-    airflow_username = "airflow"
-    airflow_password = "airflow"
+    TOKEN_URL = 'http://138.252.68.41/v1/authentication/oauth2/token/'
+    REDIRECT_URI = 'http://138.252.68.41/v1/nocallback/'
+    # airflow_host = "http://138.252.68.41:8080/"
+    # airflow_url = "http://138.252.68.41:8080/auth/token"
+    airflow_host = "http://138.252.68.41:8080"
+    airflow_url = "http://138.252.68.41:8080/auth/token"
+    airflow_username = "admin"
+    airflow_password = "TUff7tv8g6RVRp97"
+    config_dir = '/var/www/Configs'
+
     # Link_url = 'http://localhost:4201/'
     # TOKEN_URL = 'http://127.0.0.1:8000/v1/authentication/o/token/'
     # REDIRECT_URI = 'http://127.0.0.1:8000/v1/nocallback/'
@@ -249,13 +359,13 @@ if DATABASES['default']['NAME'] =='Datamplify2':
     
 else:
     Link_url = 'http://localhost:4201/'
-    TOKEN_URL = 'http://127.0.0.1:8000/v1/authentication/o/token/'
+    TOKEN_URL = 'http://127.0.0.1:8000/v1/authentication/oauth2/token/'
     REDIRECT_URI = 'http://127.0.0.1:8000/v1/nocallback/'
-    airflow_host = "http://127.0.0.1:8082"
-    airflow_url = "http://127.0.0.1:8082/auth/token"
+    airflow_host = "http://127.0.0.1:8080"
+    airflow_url = "http://127.0.0.1:8080/auth/token"
     airflow_username = "airflow"
     airflow_password = "airflow"
-
+    config_dir = os.path.join(BASE_DIR,'configs')
 
 
 
@@ -272,9 +382,11 @@ AWS_S3_SECRET_ACCESS_KEY = config('AWS_S3_SECRET_ACCESS_KEY')
 AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME')
 
-config_dir = config('CONFIG_DIR', default=str(BASE_DIR / 'Configs'))
-
-
 
 file_save_path= 's3'
+CREDENTIAL_ENCRYPTION_KEY = 'frdrjUMenQ4U5V0Fe4gKkDIgfY8YxMmW8rPoK3eRCoc='
 
+
+#Ninja
+
+NINJA_API_BASE_URL = 'https://api.ninjaone.com'

@@ -5,9 +5,10 @@ from functools import wraps
 from django.http import JsonResponse
 from django.core.cache import cache
 from .models import UserProfile, Permission
+import authentication.models as auth_models
 
 
-def has_permission(user, permission_code):
+def has_permission(request, permission_code):
     """
     Check if user has a specific permission
     
@@ -19,32 +20,35 @@ def has_permission(user, permission_code):
         Boolean indicating if user has permission
     """
     # Super admin has all permissions
-    if user.is_superuser:
+    if request.user.is_superuser:
         return True
     
     # Check cache first (5 minute cache)
-    cache_key = f"user_perms_{user.id}_{permission_code}"
+    cache_key = f"user_perms_{request.user.id}_{permission_code}"
     cached_result = cache.get(cache_key)
     if cached_result is not None:
         return cached_result
     
+    if permission_code in request.custom_permissions:
+        cache.set(cache_key, True, 300)  # 5 minutes
+
+        return True    
     # Get all user's roles and their permissions
-    user_roles = UserProfile.objects.filter(id=user.id).prefetch_related('roles__permissions')
+    # user_roles = UserProfile.objects.filter(id=user.id).prefetch_related('roles__permissions')
     
     # Check if any role has the permission
-    has_perm = False
-    for user_profile in user_roles:
-        for role in user_profile.roles.all():
-            if role.permissions.filter(code=permission_code).exists():  # check each role's permissions
-                has_perm = True
-                break
-        if has_perm:
-            break
+    # has_perm = False
+    # for user_profile in user_roles:
+    #     for role in user_profile.roles.all():
+    #         if role.permissions.filter(code=permission_code).exists():  # check each role's permissions
+    #             has_perm = True
+    #             break
+    #     if has_perm:
+    #         break
     
     # Cache the result
-    cache.set(cache_key, has_perm, 300)  # 5 minutes
     
-    return has_perm
+    return False
 
 
 def has_any_permission(user, permission_codes):
@@ -115,6 +119,7 @@ def clear_user_permission_cache(user):
     cache.delete_pattern(f"user_perms_{user.id}_*")
     cache.delete(f"user_all_perms_{user.id}")
 
+from oauth2_provider.models import Application
 
 def require_permission(permission_code):
     """
@@ -136,7 +141,7 @@ def require_permission(permission_code):
                 }, status=401)
             
             # Check permission
-            if has_permission(request.user, permission_code):
+            if has_permission(request, permission_code):
                 return view_func(request, *args, **kwargs)
             else:
                 return JsonResponse({
@@ -225,19 +230,46 @@ class PermissionMixin:
         return get_user_permissions(self.user)
     
 
+def get_user_custom_permissions(user_id):
+    key = f"user_perms:{user_id}"
+    perms = cache.get(key)
+
+    if perms is None:
+
+        perms = set(
+                auth_models.Permission.objects.filter(
+                    roles__users=user_id
+                ).distinct().values_list('code', flat=True)
+            )
+        cache.set(key, perms, 300)  # 5 minutes
+    return perms
+
 
 
 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import AuthenticationFailed
+from oauth2_provider.models import Application
 
 class CustomIsAuthenticated(IsAuthenticated):
     message = "Access denied: Please provide a valid access token."
 
     def has_permission(self, request, view):
+        if hasattr(request, "_custom_perm_cached"):
+            return True
+        if request.auth is None:
+            raise AuthenticationFailed({
+                "error": "unauthorized",
+                "message": "Access token missing or invalid. Please log in again."
+            })
+        if request.auth.application.authorization_grant_type == Application.GRANT_CLIENT_CREDENTIALS:
+            request.user = request.auth.application.user
         if not request.user or not request.user.is_authenticated:
             raise AuthenticationFailed({
                 "error": "unauthorized",
                 "message": "Access token missing or invalid. Please log in again."
             })
+        request.custom_permissions = get_user_custom_permissions(request.user.id)
+        request._custom_perm_cached = True
+        # request.custom_permissions = request.user.get_all_permissions()
         return True

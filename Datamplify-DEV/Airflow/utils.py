@@ -61,14 +61,14 @@ from airflow.operators.python import PythonOperator
 import os, json, sys, django, textwrap, uuid
 import traceback
 from datetime import datetime,timezone
+import pytz
 
-from datetime import datetime
 # from Datamplify.settings import logger
 import pendulum,re
 
 
 sys.path.insert(0, '/var/www/Datamplify')
-now = datetime.now(timezone.utc)
+now = datetime.now(pytz.utc)
 
 # from FlowBoard.utils import (Extraction,Loading,ETL_Filter,Remove_duplicates,Expressions,Join,Rank,Union,Router,Pivot)
 # from Connections.utils import generate_engine
@@ -183,14 +183,17 @@ def dag_success_callback(context):
     dag_run = context["dag_run"]
     run_id = dag_run.run_id
     dag_id = dag_run.dag_id
-
-    RunHistory.objects.filter(
+    try:
+        a = RunHistory.objects.update_or_create(
         run_id=run_id,
-        source_id=dag_id
-    ).update(
-        status="success",
-        finished_at=now
+        source_id=dag_id,
+        defaults={
+            "status": "success",
+            "finished_at": now
+        }
     )
+    except Exception as e :
+        print(e)
 
 
 
@@ -202,48 +205,131 @@ def dag_failure_callback(context):
     run_id = dag_run.run_id
     dag_id = dag_run.dag_id
 
-    RunHistory.objects.filter(
+    try:
+        a = RunHistory.objects.update_or_create(
         run_id=run_id,
-        source_id=dag_id
-    ).update(
-        status="failed",
-        finished_at=now
+        source_id=dag_id,
+        defaults={
+            "status": "failed",
+            "finished_at": now
+        }
     )
+    except Exception as e :
+        print('error',e)
+
 
 
 GLOBAL_PARAM_HOLDER = '__global_param_store__'
 
+def init_global_params(param_list, config, user_id,**context):
+    """
+    Initialize global parameters for the child DAG.
 
-def init_global_params(param_list,config, **context):
-    ti = context['ti']
-    conf = context.get('dag_run').conf or {}
+    1. Reads parameters passed via TriggerDagRunOperator (conf["params"])
+    2. Uses default values from config if not provided by trigger
+    3. Resolves placeholders ($param_name)
+    4. Pushes all params to XCom for use by downstream tasks
+    5. Returns the updated task config with placeholders replaced
+    """
+    ti = context["ti"]
+    dag_run = context.get("dag_run")
+    conf = dag_run.conf if dag_run else {}
 
+    # Extract trigger parameters and metadata
+    trigger_params = conf.get("params", [])
+    trigger_meta = conf.get("trigger_meta", {})
+
+    # Convert trigger params list -> dict for easy lookup
+    trigger_param_map = {p["param_name"]: p.get("value") for p in trigger_params}
+
+
+    # Iterate over configured params and initialize values
     for param in param_list:
-        name = param['param_name']
-        default_val = param.get('value', 'None')
-        if name in conf:
-            print(f"Overriding param '{name}' from trigger input")
+        name = param.get("param_name")
+        default_val = param.get("value", None)
+
+        # Check trigger override
+        if name in trigger_param_map:
+            raw_value = trigger_param_map[name]
         else:
-            print(f"Using default param '{name}' from config")
+            raw_value = default_val
 
-        raw_value = conf.get(name, default_val)
+        # Resolve dynamic placeholders if needed
         resolved_value = resolve_value(raw_value, ti, {}, parent_task_name=None)
+
+        # Push value to XCom (for use by later tasks)
         ti.xcom_push(key=name, value=resolved_value)
+
+    # Replace placeholders inside the full task config (with updated globals)
+    resolved_tasks = replace_params_in_json(
+        config.get("tasks", {}),
+        xcom_cache=None,
+        parent_task_name=None,
+        **context
+    )
+
+    ## make running state for schedulers :
+
+    dag_run = context["dag_run"]
+    dag_id = dag_run.dag_id
+    run_id = getattr(dag_run, "run_id", None)
+
+    from FlowBoard.models import FlowBoard
+
+    if not dag_run:
+        return
+    dag = context["dag"]
+    if dag_run.run_type == "scheduled":
+        schedule_id = dag.params.get("schedule_id")
+
+        current_run = dag_run.execution_date
+        next_run = dag.following_schedule(current_run)
+        prev_run = dag.previous_schedule(current_run)
+
     
-    config['tasks'] = replace_params_in_json(config['tasks'],xcom_cache=None,parent_task_name = None,**context)
+        from Tasks_Scheduler.models import Schedule
+        schedule_obj = Schedule.objects.get(id=schedule_id)
+        schedule_obj.last_run = prev_run
+        schedule_obj.next_run = next_run
+        schedule_obj.updated_at = datetime.now()
+        schedule_obj.save()
+
+    from Monitor.models import RunHistory
+
+    if RunHistory.objects.filter(source_id = dag_id).exists():
+        RunHistory.objects.filter(
+                run_id=run_id or str(current_run),
+                source_id=dag_id
+            ).update(
+                status="running",
+            )
+    else:
+        
+        if FlowBoard.objects.filter(Flow_id = dag_id).exists():
+            source_name  = FlowBoard.objects.get(Flow_id = dag_id).Flow_name
+            RunHistory.objects.create(
+                run_id=run_id,
+                source_type='flowboard',
+                source_id=dag_id,
+                name = source_name,
+                status ='running',
+                user_id = user_id,
+                started_at = now,
+                finished_at = None,
+
+            )
+
+    return resolved_tasks
 
 
-    return config['tasks']
 
 
-
-def replace_params_in_json(data, xcom_cache=None, parent_task_name=None, **kwargs):
+def replace_params_in_json(data, xcom_cache=None, parent_task_name=None,ti=None, **kwargs):
     """
     Here the config file Json Data convert into a proper key and pass to Resolve value functions
 
     json data encounters - list,dict,string
     """
-    ti = kwargs.get('ti')
 
     if ti is None:
         return data
@@ -251,12 +337,12 @@ def replace_params_in_json(data, xcom_cache=None, parent_task_name=None, **kwarg
         xcom_cache = {}
     if isinstance(data, dict):
         return {
-            replace_params_in_json(k, xcom_cache=xcom_cache, parent_task_name=parent_task_name, **kwargs):
-            replace_params_in_json(v, xcom_cache=xcom_cache, parent_task_name=parent_task_name, **kwargs)
+            replace_params_in_json(k, xcom_cache=xcom_cache, parent_task_name=parent_task_name,ti=ti, **kwargs):
+            replace_params_in_json(v, xcom_cache=xcom_cache, parent_task_name=parent_task_name,ti=ti, **kwargs)
             for k, v in data.items()
         }
     elif isinstance(data, list):
-        return [replace_params_in_json(i, xcom_cache=xcom_cache, parent_task_name=parent_task_name, **kwargs) for i in data]
+        return [replace_params_in_json(i, xcom_cache=xcom_cache, parent_task_name=parent_task_name, ti=ti,**kwargs) for i in data]
     elif isinstance(data, str) and '$' in data:
         return resolve_value(data, ti, xcom_cache, parent_task_name)
     return data
@@ -264,10 +350,10 @@ def replace_params_in_json(data, xcom_cache=None, parent_task_name=None, **kwarg
 
 
 
-def task_creator(task_conf,dag_id,user_id,target_hierarchy_id,source_id,task_map,config=None,**kwargs):
+def task_creator(task_conf,dag_id,user_id,target_hierarchy_id,source_id,task_map,**kwargs):
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-    from FlowBoard.utils import (Extraction,Loading,ETL_Filter,Remove_duplicates,Expressions,Join,Rank,Union,Router,Pivot,UpdateStrategy)
+    from FlowBoard.utils import (Extraction,Loading,ETL_Filter,Remove_duplicates,Expressions,Join,Rank,Union,Router,Pivot,Updatestrategy)
 
     """
     It Intializes The tasks Based on those Type for Execution of Pipelines
@@ -277,42 +363,24 @@ def task_creator(task_conf,dag_id,user_id,target_hierarchy_id,source_id,task_map
     # overall_task_list.append(task_id)
     match task_type:
         case 'source_data_object':
-            # Try to find the target table name from the config for MongoDB to MongoDB transfers
-            target_table_name = None
-            if config:
-                for task in config.get('tasks', []):
-                    if task.get('type') == 'target_data_object':
-                        target_table_name = task.get('target_table_name')
-                        break
-            
-            op_kwargs = {
-                'dag_id': dag_id,
-                'task_id': task_id,
-                'source_type': task_conf['format'],
-                'path': task_conf['path'],
-                'hierarchy_id': task_conf['hierarchy_id'],
-                'user_id': user_id,
-                'source_table_name': task_conf['source_table_name'],
-                'source_attributes': task_conf.get('source_attributes', ''),
-                "attributes": task_conf.get('attributes', ''),
-                "target_hierarchy_id": target_hierarchy_id
-            }
-            
-            # Add target table name if found
-            if target_table_name:
-                op_kwargs['target_table_name'] = target_table_name
-            
             task = PythonOperator(
                 task_id=task_id,
                 python_callable=Extraction,
-                op_kwargs=op_kwargs
+                op_kwargs={
+                    'dag_id': dag_id,
+                    'task_id': task_id,
+                    'source_type': task_conf['format'],
+                    'path': task_conf['path'],
+                    'hierarchy_id': task_conf['hierarchy_id'],
+                    'user_id': user_id,
+                    'tables_list':task_conf.get('tables_list',[]),
+                    'source_table_name': task_conf['source_table_name'],
+                    'source_attributes': task_conf.get('source_attributes', ''),
+                    "attributes": task_conf.get('attributes', ''),
+                    "target_hierarchy_id": target_hierarchy_id
+                }
             )
         case "target_data_object":
-            previous_task_id = task_conf['previous_task_id']
-            print(f"[task_creator] Creating target task {task_id}")
-            print(f"[task_creator] previous_task_id from config: {previous_task_id}")
-            print(f"[task_creator] previous_task_id type: {type(previous_task_id)}")
-            
             task = PythonOperator(
                 task_id=task_id,
                 python_callable=Loading,
@@ -323,13 +391,13 @@ def task_creator(task_conf,dag_id,user_id,target_hierarchy_id,source_id,task_map
                     'truncate': task_conf['truncate'],
                     'create': task_conf['create'],
                     'format': task_conf['format'],
-                    'previous_id': previous_task_id,
+                    'previous_id': task_conf['previous_task_id'],
                     'instance_id':task_conf.get('previous_instance_id',None),
                     'target_table_name': task_conf['target_table_name'],
                     'attribute_mapper': task_conf.get('attribute_mapper', ''),
                     'sources': source_id,
-                    'update_strategy': task_conf.get('update_strategy', 'append'),
-                    'key_columns': task_conf.get('key_columns', None)
+                    'join_key':task_conf.get('join_keys',None),
+                    'strategy':task_conf.get('strategy','append')
                 }
             )
         case "Filter":
@@ -452,32 +520,30 @@ def task_creator(task_conf,dag_id,user_id,target_hierarchy_id,source_id,task_map
                 task_id=task_id,
                 python_callable=Pivot,
                 op_args=[
-                    task_conf.get('pivot_group_by_columns', ''),
-                    task_conf.get('pivot_column', ''),
-                    task_conf.get('pivot_values', ''),
-                    task_conf.get('pivot_value_columns', ''),
-                    task_conf.get('pivot_aggregation', ''),
-                    task_conf.get('previous_instance_id',None),
+                    task_conf['group_by_cols'],
+                    task_conf['pivot_col'],
+                    task_conf['value_cols'],
+                    task_conf['aggregation'],
+                    task_conf['pivot_values'],  
                     dag_id,
                     task_id,
+                    task_conf['previous_task_id'],
+                    task_conf.get('previous_instance_id',None),
+                    target_hierarchy_id,
                     user_id
                 ]
             )
-
         case "UpdateStrategy":
             task = PythonOperator(
                 task_id=task_id,
-                python_callable=UpdateStrategy,
+                python_callable =Updatestrategy,
                 op_args=[
-                    task_conf.get('update_strategy', 'append'),
-                    task_conf.get('key_columns', []),
-                    task_conf.get('previous_instance_id', None),
-                    dag_id,
+                    task_conf['source_attributes'],
                     task_id,
+                    task_conf['previous_task_id'],
                     target_hierarchy_id,
-                    user_id,
-                    source_id
-                ]
+                    user_id
+                                                    ]
             )
 
         case _:
@@ -508,6 +574,127 @@ def cleanup_on_success(tasks_list,user_id,hierarchy_id,**kwargs):
         if table_name and table_name is not None:
             with engine.connect() as cursor:
                 cursor.execute(f'DROP TABLE IF EXISTS "{schema}"."{table_name}"')
+
+    dag_run = kwargs["dag_run"]
+    dag_id = dag_run.dag_id
+    run_id = getattr(dag_run, "run_id", None)
+
+    from FlowBoard.models import FlowBoard
+
+    if not dag_run:
+        return
+    dag = kwargs["dag"]
+    if dag_run.run_type == "scheduled":
+        schedule_id = dag.params.get("schedule_id")
+
+        current_run = dag_run.execution_date
+        next_run = dag.following_schedule(current_run)
+        prev_run = dag.previous_schedule(current_run)
+
+    
+        from Tasks_Scheduler.models import Schedule
+        schedule_obj = Schedule.objects.get(id=schedule_id)
+        schedule_obj.last_run = prev_run
+        schedule_obj.next_run = next_run
+        schedule_obj.updated_at = datetime.now()
+        schedule_obj.save()
+
+    from Monitor.models import RunHistory
+    try:
+        if RunHistory.objects.filter(source_id = dag_id,source_type = 'flowboard',run_id=run_id).exists():
+            RunHistory.objects.filter(
+                    run_id=run_id or str(current_run),
+                    source_id=dag_id
+                ).update(
+                    status="success",
+                    finished_at=now
+                )
+        else:
+            
+            if FlowBoard.objects.filter(Flow_id = dag_id).exists():
+                source_name  = FlowBoard.objects.get(Flow_id = dag_id).Flow_name
+                RunHistory.objects.create(
+                    run_id=run_id,
+                    source_type='flowboard',
+                    source_id=dag_id,
+                    name = source_name,
+                    status ='success',
+                    user_id = user_id,
+                    started_at = now,
+                    finished_at = now,
+
+                )
+    except Exception as e:
+        print('error ',e)
+
+def cleanup_on_failure(tasks_list,user_id,hierarchy_id,**kwargs):
+    from Connections.utils import generate_engine
+
+    """
+    Cleans Temporary Tables Created by Each Task Instances and it run End of The Pipeline
+    """
+    ti = kwargs['ti']
+    if not user_id or not hierarchy_id:
+        return
+
+    engine_data = generate_engine(hierarchy_id, user_id)
+    engine = engine_data['engine']
+    schema = engine_data['schema']
+    for task_id in tasks_list:
+        table_name = ti.xcom_pull(task_ids=task_id, key=task_id)
+
+        if table_name and table_name is not None:
+            with engine.connect() as cursor:
+                cursor.execute(f'DROP TABLE IF EXISTS "{schema}"."{table_name}"')
+    dag_run = kwargs["dag_run"]
+    if not dag_run:
+        return
+    dag = kwargs["dag"]
+    dag_id = dag_run.dag_id
+    from FlowBoard.models import FlowBoard
+
+    run_id = getattr(dag_run, "run_id", None)
+    if dag_run.run_type == "scheduled":
+
+        schedule_id = dag.params.get("schedule_id")
+        
+
+        current_run = dag_run.execution_date
+        next_run = dag.following_schedule(current_run)
+        prev_run = dag.previous_schedule(current_run)
+
+        
+        from Tasks_Scheduler.models import Schedule
+        schedule_obj = Schedule.objects.get(id=schedule_id)
+        schedule_obj.last_run = prev_run
+        schedule_obj.next_run = next_run
+        schedule_obj.updated_at = datetime.now()
+        schedule_obj.save()
+    from Monitor.models import RunHistory
+
+    if RunHistory.objects.filter(source_id = dag_id,run_id=run_id).exists():
+        RunHistory.objects.filter(
+                run_id=run_id or str(current_run),
+                source_id=dag_id
+            ).update(
+                status="failed",
+                finished_at=now
+            )
+    else:
+        if FlowBoard.objects.filter(Flow_id = dag_id).exists():
+            source_name  = FlowBoard.objects.get(Flow_id = dag_id).Flow_name
+            RunHistory.objects.create(
+                run_id=run_id,
+                source_type='flowboard',
+                source_id=dag_id,
+                name = source_name,
+                status ='failed',
+                user_id = user_id,
+                started_at = now,
+                finished_at = now,
+
+            )
+    raise Exception("Upstream task failed  DAG marked failed.")
 
 
 

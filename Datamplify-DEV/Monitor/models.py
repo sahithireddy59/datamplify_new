@@ -14,4 +14,9 @@ class RunHistory(TimeStampedModel):
     user_id = models.UUIDField(null=True, blank=True)
 
     class Meta:
+        indexes = [
+            models.Index(fields=['user_id', 'started_at']),
+            models.Index(fields=['user_id', 'source_type', 'status']),
+            models.Index(fields=['started_at']),
+        ]
         db_table = "run_history"

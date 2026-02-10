@@ -9,6 +9,8 @@ import { WorkbenchService } from '../workbench.service';
 import { LoaderService } from '../../../shared/services/loader.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import Swal from 'sweetalert2';
+import { PermissionService } from '../../../services/permission.service';
+import { NavigationService } from '../../../shared/services/navigation.service';
 
 @Component({
   selector: 'app-monitor-list',
@@ -56,60 +58,68 @@ export class MonitorListComponent {
       subTextClass: "text-danger"
     },
   ];
+  canViewMonitor: boolean = true;
 
-  constructor(private toasterService: ToastrService, private workbechService: WorkbenchService, private loaderService: LoaderService, private router: Router, private route: ActivatedRoute) {
+  constructor(private toasterService: ToastrService, private workbechService: WorkbenchService, private loaderService: LoaderService, private router: Router, private route: ActivatedRoute, private permissionService: PermissionService, private navigationService: NavigationService) {
   }
 
   ngOnInit() {
     this.loaderService.hide();
+    this.canViewMonitor = this.permissionService.hasPermission(29);
     this.getMonitorList();
     this.getKpiData();
   }
 
   getMonitorList() {
-    this.isLoading = true;
-    this.workbechService.disableLoaderForNextRequest();
-    this.workbechService.getMonitorList(this.page, this.pageSize, this.search).subscribe({
-      next: (data: any) => {
-        console.log(data);
-        this.monitorsList = data.runs_list.data;
-        this.totalItems = data.runs_list.total_records;
-        this.page = data.runs_list.page_number
-        this.pageSize = data.runs_list.page_size;
-        this.isLoading = false;
-      },
-      error: (error: any) => {
-        this.toasterService.error(error.error.message, 'error', { positionClass: 'toast-top-right' });
-        console.log(error);
-        this.isLoading = false;
-      }
-    });
+    if (this.canViewMonitor) {
+      this.isLoading = true;
+      this.workbechService.disableLoaderForNextRequest();
+      this.workbechService.getMonitorList(this.page, this.pageSize, this.search).subscribe({
+        next: (data: any) => {
+          console.log(data);
+          this.monitorsList = data.runs_list.data;
+          this.totalItems = data.runs_list.total_records;
+          this.page = data.runs_list.page_number
+          this.pageSize = data.runs_list.page_size;
+          this.isLoading = false;
+        },
+        error: (error: any) => {
+          this.toasterService.error(error.error.message, 'error', { positionClass: 'toast-top-right' });
+          console.log(error);
+          this.isLoading = false;
+        }
+      });
+    } else{
+      this.toasterService.info('You don’t have permission to view Monitor', 'info', { positionClass: 'toast-top-right' });
+    }
   }
 
   getKpiData(){
-    this.isLoading = true;
-    this.workbechService.disableLoaderForNextRequest();
-    this.workbechService.getMonitorKpiData().subscribe({
-      next: (data: any) => {
-        console.log(data);
-        this.kpiCards[0].value = data.Running;
-        this.kpiCards[1].value = data.success;
-        this.kpiCards[1].subText = data.success_rate+'%';
-        this.kpiCards[2].value = data.failed;
-        this.kpiCards[2].subText = data.failure_rate+'%';
-        this.isLoading = false;
-      },
-      error: (error: any) => {
-        this.toasterService.error(error.error.message, 'error', { positionClass: 'toast-top-right' });
-        console.log(error);
-        this.isLoading = false;
-      }
-    });
+    if (this.canViewMonitor) {
+      this.isLoading = true;
+      this.workbechService.disableLoaderForNextRequest();
+      this.workbechService.getMonitorKpiData().subscribe({
+        next: (data: any) => {
+          console.log(data);
+          this.kpiCards[0].value = data.Running;
+          this.kpiCards[1].value = data.success;
+          this.kpiCards[1].subText = data.success_rate + '%';
+          this.kpiCards[2].value = data.failed;
+          this.kpiCards[2].subText = data.failure_rate + '%';
+          this.isLoading = false;
+        },
+        error: (error: any) => {
+          this.toasterService.error(error.error.message, 'error', { positionClass: 'toast-top-right' });
+          console.log(error);
+          this.isLoading = false;
+        }
+      });
+    }
   }
 
   goToMonitor(id: any) {
     const encodedId = btoa(id.toString());
-    this.router.navigate(['/datamplify/monitorList/monitor/' + encodedId]);
+    this.navigationService.navigate(['datamplify','monitorList','monitor',encodedId]);
   }
 
   onPageSizeChange() {

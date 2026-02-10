@@ -11,7 +11,11 @@ from Connections import models as conn_models
 from FlowBoard import models as flow_models
 from TaskPlan import models as task_models
 from rest_framework.pagination import PageNumberPagination
-# from Connections.utils import generate_engine
+import json
+from cryptography.fernet import Fernet
+from Datamplify import settings
+
+fernet = Fernet('frdrjUMenQ4U5V0Fe4gKkDIgfY8YxMmW8rPoK3eRCoc='.encode())
 import boto3,os,uuid,paramiko
 
 # def encode_value(value):
@@ -43,26 +47,37 @@ def encode_value(input_string):
     return encoded_string
 
 def decode_value(encoded_string):
-    """Decode a base64-encoded string, tolerating None/bytes inputs.
-
-    This avoids errors like "decoding to str: need a bytes-like object, NoneType found"
-    when a password or token is missing (None) or already bytes.
-    """
-    # Handle completely missing values gracefully
-    if encoded_string is None:
-        return ''
-
-    # Normalise to str before decoding
-    if isinstance(encoded_string, bytes):
-        encoded_string = encoded_string.decode('utf-8', errors='ignore')
-    else:
-        encoded_string = str(encoded_string)
-
     decoded_bytes = base64.b64decode(encoded_string.encode('utf-8'))
     decoded_string = decoded_bytes.decode('utf-8')
     return decoded_string
 
 
+def encrypt_json(data: dict) -> dict:
+    encrypted = {}
+
+    for k, v in data.items():
+        if v is None:
+            encrypted[k] = None
+        else:
+            encrypted[k] = fernet.encrypt(
+                json.dumps(v).encode()
+            ).decode()
+
+    return encrypted
+
+
+def decrypt_json(data: dict) -> dict:
+    decrypted = {}
+
+    for k, v in data.items():
+        if v is None:
+            decrypted[k] = None
+        else:
+            decrypted[k] = json.loads(
+                fernet.decrypt(v.encode()).decode()
+            )
+
+    return decrypted
 
 def file_files_save(file_path,file_path112):
     if settings.file_save_path=='s3':
@@ -213,7 +228,6 @@ def SSHConnect(connection_type, host, username, password, port=None, share=None)
                 'status': 200
             }
         except Exception as e:
-            print(e)
             return {'status':400,'message':str(e)}
 
     elif connection_type.lower() == "ftp":
@@ -237,6 +251,24 @@ def SSHConnect(connection_type, host, username, password, port=None, share=None)
     else:
         raise ValueError(f"Unsupported connection type: {connection_type}")
 
+
+
+def flatten_document(doc, parent_key='', sep='_'):
+    import json
+    """
+    Flatten a nested document/dictionary into a single level dictionary.
+    """
+    items = []
+    for k, v in doc.items():
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+        if isinstance(v, dict):
+            items.extend(flatten_document(v, new_key, sep=sep).items())
+        elif isinstance(v, list):
+            # Convert lists to JSON strings to handle them properly
+            items.append((new_key, json.dumps(v) if v else None))
+        else:
+            items.append((new_key, v))
+    return dict(items)
 
 
 

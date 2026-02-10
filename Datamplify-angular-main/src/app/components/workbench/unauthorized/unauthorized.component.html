@@ -1,0 +1,18 @@
+<div class="container-background d-flex justify-content-center align-items-center">
+  <div class="glass-card p-5 text-center" style="max-width: 480px; width: 100%;">
+    <h1 class="display-4 text-danger fw-bold mb-3">403</h1>
+    <h3 class="text-light fw-semibold mb-3">Access Denied</h3>
+    <p class="text-muted mb-4">
+      You don’t have permission to view this page or perform this action.
+    </p>
+
+    <div class="d-flex justify-content-center gap-3">
+      <button class="btn btn-primary rounded-pill px-4" (click)="goHome()">
+        <i class="bi bi-house-door me-2"></i>Go to Dashboard
+      </button>
+      <button class="btn btn-outline-info rounded-pill px-4" (click)="goBack()">
+        <i class="bi bi-arrow-left me-2"></i>Go Back
+      </button>
+    </div>
+  </div>
+</div>

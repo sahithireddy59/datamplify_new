@@ -13,11 +13,14 @@ import { DataFlowSearchFilterPipe } from '../../../shared/pipes/data-flow-search
 import { ResizableTopDirective } from '../../../shared/directives/resizable-top.directive';
 import { SharedService } from '../../../shared/services/shared.service';
 import Swal from 'sweetalert2';
+import { HasPermissionDirective } from '../../../shared/directives/has-permission.directive';
+import { NavigationService } from '../../../shared/services/navigation.service';
+import { NodeValidationService } from '../../../services/node-validation.service';
 
 @Component({
   selector: 'app-taskplan',
   standalone: true,
-  imports: [NgbModule, CommonModule, NgSelectModule, FormsModule, EtlLoggerViewComponent, DataFlowSearchFilterPipe, ResizableTopDirective],
+  imports: [NgbModule, CommonModule, NgSelectModule, FormsModule, EtlLoggerViewComponent, DataFlowSearchFilterPipe, ResizableTopDirective, HasPermissionDirective],
   templateUrl: './taskplan.component.html',
   styleUrl: './taskplan.component.scss'
 })
@@ -90,6 +93,7 @@ export class TaskplanComponent {
   isCC: boolean = false;
   isSubject: boolean = false;
   isMessage: boolean = false;
+  isFlowboardConnection: boolean = false;
   dataPointPopUpFrom: string = '';
   expEditorAddType: string = 'parameters';
   taskId: string = '';
@@ -395,29 +399,31 @@ export class TaskplanComponent {
   viewMode: string = 'list';
   componentsContent: any = {
     flowboardInstance: [
-      { name: 'postgresSQL', icon: 'fa-database', type: 'dataFlow' },
+      { name: 'postgresSQL', icon: 'fa-solid fa-database', type: 'dataFlow' },
     ],
     tasks: [
-      { name: 'Task Command', icon: 'fa-calculator', type: 'taskCommand' },
-      { name: 'DB Command', icon: 'fa-coins', type: 'dbCommand' },
-      { name: 'Loop', icon: 'fa-filter-circle-xmark', type: 'loop' },
-      { name: 'Email Notification', icon: 'fa-filter', type: 'email' }
+      { name: 'Task Command', icon: 'fe fe-activity', type: 'taskCommand' },
+      { name: 'DB Command', icon: 'fe fe-database', type: 'dbCommand' },
+      { name: 'Loop', icon: 'fe fe-repeat', type: 'loop' },
+      { name: 'Email Notification', icon: 'fe fe-mail', type: 'email' }
     ]
   }
   isFromMonitor: boolean = false;
   @ViewChild('nameInput') nameInput!: ElementRef;
   private isComponentDestroyed = false;
   private pollingTimeout: any;
+  isEmbedMode: boolean = false;
+  validatedData: any = {};
 
-  constructor(private modalService: NgbModal, private toasterService: ToastrService, private workbechService: WorkbenchService,
-    private loaderService: LoaderService, private router: Router, private route: ActivatedRoute, private sharedService: SharedService) {
-
-    if (this.router.url.startsWith('/datamplify/taskplanList/taskplan')) {
+  constructor(private modalService: NgbModal, private toasterService: ToastrService, private workbechService: WorkbenchService, private loaderService: LoaderService,
+    private router: Router, private route: ActivatedRoute, private sharedService: SharedService, private navigationService: NavigationService, private nodeValidationService: NodeValidationService) {
+    const url = this.navigationService.getNormalizedUrl(this.router.url);
+    if (url.startsWith('/datamplify/TaskRunPlanList/TaskRunPlan') || this.router.url.startsWith('/datamplify/home/TaskRunPlan')) {
       if (route.snapshot.params['id1']) {
         const id = atob(route.snapshot.params['id1']);
         this.jobFlowId = id.toString();
       }
-    } else if (this.router.url.startsWith('/datamplify/monitor/taskplan')) {
+    } else if (url.startsWith('/datamplify/monitor/TaskRunPlan')) {
       if (route.snapshot.params['id1']) {
         const id = atob(route.snapshot.params['id1']);
         this.jobFlowId = id.toString();
@@ -429,6 +435,9 @@ export class TaskplanComponent {
   ngOnInit() {
     this.loaderService.hide();
     this.intializeDrawflow();
+    if(this.sharedService.getEmbedMode()){
+      this.isEmbedMode = true;
+    }
   }
   ngOnDestroy() {
     this.isComponentDestroyed = true;
@@ -479,20 +488,25 @@ export class TaskplanComponent {
         const module = this.drawflow.module;
         const data = this.drawflow.drawflow.drawflow[module].data;
 
-        const { input_id, input_class } = connection;
+        const { input_id, input_class, output_id } = connection;
         const inputNode = data[input_id];
+        const outputNode = data[output_id];
         const inputPort = inputNode.inputs[input_class];
         const nodeType = inputNode.data.type;
-        if (!['loop', 'loop_end'].includes(nodeType) && inputPort.connections.length > 1) {
-          const lastConnection = inputPort.connections[inputPort.connections.length - 1];
+        if (this.validateParentNode(outputNode)) {
+          if (!['loop', 'loop_end'].includes(nodeType) && inputPort.connections.length > 1) {
+            const lastConnection = inputPort.connections[inputPort.connections.length - 1];
 
-          this.drawflow.removeSingleConnection(lastConnection.node, input_id, lastConnection.input, input_class);
+            this.drawflow.removeSingleConnection(lastConnection.node, input_id, lastConnection.input, input_class);
 
-          console.log('Connection limit exceeded for this node type!');
+            console.log('Connection limit exceeded for this node type!');
+          } else {
+            this.getConnectionData(connection);
+          }
         } else {
-          this.getConnectionData(connection);
+          const lastConnection = inputPort.connections[inputPort.connections.length - 1];
+          this.drawflow.removeSingleConnection(lastConnection.node, input_id, lastConnection.input, input_class);
         }
-
       });
       this.drawflow.on('connectionSelected', (connection: any) => {
       });
@@ -542,13 +556,13 @@ export class TaskplanComponent {
           nodeEl.addEventListener('click', () => {
             const node = this.drawflow.getNodeFromId(nodeId);
             this.getSelectedNodeData(node);
-            if (node.data.type && ['taskCommand', 'loop'].includes(node.data.type) && this.serverOptions.length === 0) {
-              if (node.data.type === 'loop' && node?.data?.nodeData?.properties?.type === 'command') {
-                this.getDataPointList(3);
-              } else if (node.data.type === 'taskCommand') {
-                this.getDataPointList(3);
-              }
-            }
+            // if (node.data.type && ['taskCommand', 'loop'].includes(node.data.type) && this.serverOptions.length === 0) {
+            //   if (node.data.type === 'loop' && node?.data?.nodeData?.properties?.type === 'command') {
+            //     this.getDataPointList(3);
+            //   } else if (node.data.type === 'taskCommand') {
+            //     this.getDataPointList(3);
+            //   }
+            // }
           });
         }
       });
@@ -780,6 +794,7 @@ export class TaskplanComponent {
     if (type !== 'parameter') {
       this.drawflow.updateNodeDataFromId(nodeId, data);
     }
+    this.validateParentNode(this.selectedNode);
     console.log(this.drawflow.drawflow.drawflow[this.drawflow.module]);
   }
 
@@ -982,7 +997,22 @@ export class TaskplanComponent {
           console.log(data);
           this.isRunEnable = true;
           this.jobFlowId = data.Task_Plan_id;
-          this.toasterService.success(data.message, 'success', { positionClass: 'toast-top-right' });
+          this.toasterService.success('TaskRunPlan Updated Successfully', 'success', { positionClass: 'toast-top-right' });
+
+          Object.entries(this.drawflow.drawflow.drawflow[this.drawflow.module].data).forEach(([id, node]) => {
+            const nodeElement = document.querySelector(`#node-${id}`);
+            if (nodeElement) {
+              const statusDiv = nodeElement.querySelector('.node-status') as HTMLElement;
+              if (statusDiv) {
+                statusDiv.textContent = '';
+                statusDiv.style.display = 'none';
+                statusDiv.className = 'node-status'; // remove any previous status class
+              }
+            }
+          });
+          if (!this.validateDagBoard()) {
+            return;
+          }
         },
         error: (error: any) => {
           this.isRunEnable = false;
@@ -997,8 +1027,8 @@ export class TaskplanComponent {
           this.isRunEnable = true;
           this.jobFlowId = data.Task_Plan_id;
           const encodedId = btoa(this.jobFlowId.toString());
-          this.router.navigate(['/datamplify/taskplanList/taskplan/'+encodedId]);
-          this.toasterService.success('JobFlow Saved Successfully', 'success', { positionClass: 'toast-top-right' });
+          this.navigationService.navigate(['datamplify','TaskRunPlanList','TaskRunPlan',encodedId]);
+          this.toasterService.success('TaskRunPlan Saved Successfully', 'success', { positionClass: 'toast-top-right' });
         },
         error: (error: any) => {
           this.isRunEnable = false;
@@ -1010,6 +1040,9 @@ export class TaskplanComponent {
   }
 
   runJobFlow() {
+    if (!this.validateDagBoard()) {
+      return;
+    }
     this.workbechService.runEtl(this.taskId, 'taskplan').subscribe({
       next: (data: any) => {
         console.log(data);
@@ -1151,6 +1184,15 @@ export class TaskplanComponent {
       task.message = nodes[nodeId].data.nodeData.properties.message;
     } else if(nodes[nodeId].data.type === 'dataFlow'){
       task.trigger_dag = nodes[nodeId].data.nodeData.dataFlow.Flow_id;
+      task.parameters = nodes[nodeId].data.nodeData.dataFlowParameters.map((params:any)=> { 
+        return { param_name: params.paramName , data_type: params.dataType , value: params.default }
+      });
+      task.file_source = nodes[nodeId].data.nodeData.connections.filter((conn: any) => conn?.data?.paramValue).map((conn:any)=> {
+        return { id: conn?.data?.nodeData?.general?.name ?? '', value: conn?.data?.paramValue ?? '' }
+      });
+      // task.file_source = nodes[nodeId].data.nodeData.connections.map((conn:any)=> {
+      //   return { id: conn?.data?.nodeData?.general?.name ?? '', value: conn?.data?.paramValue ?? '' }
+      // });
     }
 
 
@@ -1268,7 +1310,7 @@ export class TaskplanComponent {
     const groupKeys = Object.keys(this.groupedColumns);
     this.selectedGroup = groupKeys.length > 0 ? groupKeys[0] : null;
 
-    if (attribute.hasOwnProperty('paramName')) {
+    if (attribute.hasOwnProperty('paramName') && this.selectedNode?.data?.type !== 'dataFlow') {
       this.selectedField = attribute;
       this.selectedColumn = '';
       if (attribute.hasOwnProperty('sql')) {
@@ -1353,7 +1395,17 @@ export class TaskplanComponent {
         this.isSubject = false;
         this.isMessage = true;
         this.expression = this.selectedNode.data.nodeData.properties.message;
-      } 
+      } else if (this.selectedNode.data.type === 'dataFlow'){
+        this.selectedField = attribute;
+        this.selectedColumn = '';
+        if(attribute === 'connection'){
+          this.isFlowboardConnection = true;
+          this.expression = this.selectedNode.data?.nodeData.connections[this.selectedIndex].data.paramValue;
+        } else{
+          this.isFlowboardConnection = false;
+          this.expression = attribute.default;
+        }
+      }
     }
     this.modalService.open(modal, {
       centered: true,
@@ -1381,6 +1433,13 @@ export class TaskplanComponent {
       this.selectedNode.data.nodeData.properties.subject = this.expression;
     }  else if(this.isMessage) {
       this.selectedNode.data.nodeData.properties.message = this.expression;
+    } else if(this.selectedNode.data.type === 'dataFlow'){
+      if(this.isFlowboardConnection){
+        this.selectedNode.data.nodeData.connections[this.selectedIndex].data.paramValue = this.expression;
+        this.selectedNode.data.nodeData.connections[this.selectedIndex].data.paramEdit = false;
+      } else{
+         this.selectedNode.data.nodeData.dataFlowParameters[this.selectedIndex].default = this.expression;
+      }
     }
 
     if (!this.isParameter && !this.isSQLParameter) {
@@ -1455,6 +1514,9 @@ export class TaskplanComponent {
               }
             }
           });
+          if (!this.validateDagBoard()) {
+            return;
+          }
           if(this.isFromMonitor){
             this.runJobFlow();
           }
@@ -1595,7 +1657,14 @@ export class TaskplanComponent {
         const allNodes = Object.values(drawFlowJson.drawflow.Home.data);
         const params = Object.values(drawFlowJson.drawflow.Home?.canvasData?.parameters);
         const sqlParams = Object.values(drawFlowJson.drawflow.Home?.canvasData?.sqlParameters);
-        this.srcConnections = allNodes.filter((node: any) => node.data.type === 'source_data_object' || node.data.type === 'target_data_object');
+        this.srcConnections = allNodes.filter((node: any) => node.data.type === 'source_data_object' || node.data.type === 'target_data_object').map((node: any) => ({
+          ...node,
+          data: {
+            ...node.data,
+            paramValue: '', 
+            paramEdit: false
+          }
+        }));
         this.transformations = allNodes.filter((node: any) => node.data.type !== 'source_data_object' && node.data.type !== 'target_data_object');
         this.flowboardParams = params;
         this.flowboardSqlParams = sqlParams;
@@ -1608,7 +1677,7 @@ export class TaskplanComponent {
   }
 
   goBackToJobflowList() {
-    this.router.navigate(['/datamplify/taskplanList']);
+    this.navigationService.navigate(['datamplify','TaskRunPlanList']);
   }
 
   onTypeChange() {
@@ -1624,7 +1693,7 @@ export class TaskplanComponent {
   }
 
   createNewTaskplan(){
-    this.router.navigate(['/datamplify/taskplanList/taskplan']);
+    this.navigationService.navigate(['datamplify','TaskRunPlanList','TaskRunPlan']);
   }
 
   clearTaskplan(){
@@ -1634,7 +1703,7 @@ export class TaskplanComponent {
   goToFlowboard(){
     const id = this.selectedNode?.data?.nodeData?.dataFlow?.id;
     const encodedId = btoa(id.toString());
-    this.router.navigate(['/datamplify/flowboardList/flowboard/' + encodedId]);
+    this.navigationService.navigate(['datamplify','TaskRunPlan','DagBoard',encodedId]);
   }
 
   showInputFocus(){
@@ -1680,11 +1749,128 @@ export class TaskplanComponent {
       this.sharedService.clearDuplicatedFlow();
       Swal.fire({
         icon: 'info',
-        title: 'Taskplan Duplicated',
-        text: 'Taskplan duplicated successfully. If you refresh the page without saving, the duplicate data will be lost.',
+        title: 'TaskRunPlan Duplicated',
+        text: 'TaskRunPlan duplicated successfully. If you refresh the page without saving, the duplicate data will be lost.',
         confirmButtonText: 'Got it',
         width: '400px'
       });
     }, 100);
+  }
+
+  validateParentNode(node: any, hideToaster?: boolean): boolean {
+    const nodeValidateData = this.nodeValidationService.nodeValidation(node, node?.data?.type);
+    const parameterValidateData = this.nodeValidationService.parametersValidation(this.canvasData);
+
+    const isNodeValid = nodeValidateData?.isValid !== false;
+    const isParameterValid = parameterValidateData?.isValid !== false;
+
+    if (nodeValidateData?.isValid === false && node?.data) {
+      this.validatedData = nodeValidateData;
+      this.highlightErrorNode(node.id);
+    } else if (node?.data) {
+      this.removeErrorNode(node.id);
+    }
+
+    if (isNodeValid && parameterValidateData?.isValid === false) {
+      this.validatedData = parameterValidateData;
+
+      if (!hideToaster) {
+        this.toasterService.info(parameterValidateData.msg, `${parameterValidateData.msg.includes('DependentJobName') ? 'SQL Parameter' : 'Parameter'} Error`,
+          { positionClass: 'toast-top-right' }
+        );
+      }
+    }
+
+    if (isNodeValid && isParameterValid) {
+      this.validatedData = {};
+    }
+
+    this.isRunEnable = isNodeValid && isParameterValid;
+    return this.isRunEnable;
+  }
+
+  highlightErrorNode(nodeId: number) {
+    const nodeEl = document.querySelector(`#node-${nodeId}`);
+    if (!nodeEl) return;
+
+    if (!nodeEl.classList.contains('node-error')) {
+      nodeEl.classList.add('node-error');
+    }
+  }
+
+  removeErrorNode(nodeId: number) {
+    const nodeEl = document.querySelector(`#node-${nodeId}`);
+    if (!nodeEl) return;
+
+    if (nodeEl.classList.contains('node-error')) {
+      nodeEl.classList.remove('node-error');
+    }
+  }
+
+  getTopologicallySortedNodes(): any[] {
+    const flowData = this.drawflow.drawflow.drawflow[this.drawflow.module].data;
+
+    const inDegree = new Map<string, number>();
+    const graph = new Map<string, string[]>();
+
+    // Initialize
+    Object.keys(flowData).forEach((id) => {
+      inDegree.set(id, 0);
+      graph.set(id, []);
+    });
+
+    // Build graph from connections
+    Object.entries(flowData).forEach(([id, node]: any) => {
+      const outputs = node.outputs || {};
+
+      Object.values(outputs).forEach((output: any) => {
+        output.connections?.forEach((conn: any) => {
+          const targetId = conn.node;
+          graph.get(id)?.push(targetId);
+          inDegree.set(targetId, (inDegree.get(targetId) || 0) + 1);
+        });
+      });
+    });
+
+    // Kahn’s Algorithm
+    const queue: string[] = [];
+    inDegree.forEach((deg, id) => {
+      if (deg === 0) queue.push(id);
+    });
+
+    const sortedNodes: any[] = [];
+
+    while (queue.length) {
+      const id = queue.shift()!;
+      sortedNodes.push(flowData[id]);
+
+      graph.get(id)?.forEach((childId) => {
+        inDegree.set(childId, inDegree.get(childId)! - 1);
+        if (inDegree.get(childId) === 0) {
+          queue.push(childId);
+        }
+      });
+    }
+
+    console.log(sortedNodes);
+    return sortedNodes;
+  }
+
+  validateDagBoard(): boolean {
+    const sortedNodes = this.getTopologicallySortedNodes();
+    let hasError = false;
+    sortedNodes.forEach((node: any) => {
+      const isValid = this.validateParentNode(node, true);
+      if (!isValid) {
+        hasError = true;
+      }
+    });
+    if (hasError) {
+      const msg = 'TaskRunPlan validation failed. Please fix the highlighted nodes';
+      this.toasterService.info(msg, 'Validation Failed', { positionClass: 'toast-top-right' });
+      return false;
+    }
+
+    return true;
   }
 }

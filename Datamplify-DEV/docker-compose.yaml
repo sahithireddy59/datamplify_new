@@ -1,23 +1,20 @@
 version: '3'
 x-airflow-common:
   &airflow-common
-  build:
-    context: .
-    dockerfile: Dockerfile
+  build: .
   environment:
     &airflow-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-    CUSTOM_CONNECTION: postgresql+psycopg2://postgres:postgres@host.docker.internal:5432/Datamplify3?options=-csearch_path%3Danimal_biome_production
-    AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+    CUSTOM_CONNECTION: postgresql+psycopg2://postgres:postgres@host.docker.internal:5432/Datamplify4?options=-csearch_path%3Danimal_biome_production
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
     AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
     AIRFLOW__CORE__FERNET_KEY: ''
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session"
-    AIRFLOW__WEBSERVER__WEB_SERVER_PORT: 8082
     DB_HOST: host.docker.internal
-    DB_NAME: Datamplify3
+    DB_NAME: Datamplify4
     DB_USER: postgres
     DB_PASSWORD: postgres
     DB_PORT: "5432"
@@ -33,8 +30,6 @@ x-airflow-common:
     - ./requirements.txt:/requirements.txt
     - .:/opt/airflow/project  # Mount entire project root
     - ./Configs:/opt/airflow/project/Configs
-    - ./Configs/FlowBoard:/opt/airflow/project/Configs/FlowBoard
-    - ./Configs/Taskplan:/opt/airflow/project/Configs/Taskplan
   depends_on:
     - postgres
     - redis
@@ -65,7 +60,7 @@ services:
     <<: *airflow-common
     command: ["bash", "-lc", "airflow webserver"]
     ports:
-      - "8082:8082"
+      - "8081:8080"
     depends_on:
       - airflow-scheduler
     volumes:
@@ -78,8 +73,8 @@ services:
       - .:/opt/airflow/project
       - ./Configs:/opt/airflow/project/Configs
       - ./Configs/FlowBoard:/opt/airflow/project/Configs/FlowBoard
-      - ./Configs/Taskplan:/opt/airflow/project/Configs/Taskplan
-  
+      - ./Configs/Scheduler:/opt/airflow/project/Configs/Scheduler
+
   airflow-scheduler:
     <<: *airflow-common
     command: ["bash", "-lc", "airflow scheduler"]
@@ -93,8 +88,8 @@ services:
       - .:/opt/airflow/project
       - ./Configs:/opt/airflow/project/Configs
       - ./Configs/FlowBoard:/opt/airflow/project/Configs/FlowBoard
-      - ./Configs/Taskplan:/opt/airflow/project/Configs/Taskplan
-  
+      - ./Configs/Scheduler:/opt/airflow/project/Configs/Scheduler
+
   airflow-worker:
     <<: *airflow-common
     command: ["bash", "-lc", "airflow celery worker"]
@@ -107,9 +102,6 @@ services:
       - ./requirements.txt:/requirements.txt
       - .:/opt/airflow/project
       - ./Configs:/opt/airflow/project/Configs
-      - ./Configs/FlowBoard:/opt/airflow/project/Configs/FlowBoard
-      - ./Configs/Taskplan:/opt/airflow/project/Configs/Taskplan
-    
   airflow-triggerer:
     <<: *airflow-common
     command: ["bash", "-lc", "airflow triggerer"]
@@ -122,9 +114,6 @@ services:
       - ./requirements.txt:/requirements.txt
       - .:/opt/airflow/project
       - ./Configs:/opt/airflow/project/Configs
-      - ./Configs/FlowBoard:/opt/airflow/project/Configs/FlowBoard
-      - ./Configs/Taskplan:/opt/airflow/project/Configs/Taskplan
-  
 
   airflow-init:
     <<: *airflow-common
@@ -139,8 +128,6 @@ services:
       - ./requirements.txt:/requirements.txt
       - .:/opt/airflow/project
       - ./Configs:/opt/airflow/project/Configs
-      - ./Configs/FlowBoard:/opt/airflow/project/Configs/FlowBoard
-      - ./Configs/Taskplan:/opt/airflow/project/Configs/Taskplan
 
   
 

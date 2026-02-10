@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Routes } from '@angular/router';
 import { authGuard } from '../../auth.guard';
+import { permissionGuard } from '../../shared/guards/permission.guard'
 
 export const admin: Routes = [
 
@@ -53,7 +54,7 @@ export const admin: Routes = [
 
       {
         path: 'configure-page/configure',
-        canActivate: [authGuard],
+        canActivate: [authGuard, permissionGuard(1)],
         loadComponent: () =>
           import('./configure/configure.component').then((m) => m.ConfigureComponent),
       },
@@ -66,21 +67,28 @@ export const admin: Routes = [
       },
 
       {
-        path: 'easyConnection/newConnection',
+        path: 'easyConnection/integrations/:type',
         canActivate: [authGuard],
         loadComponent: () =>
           import('./easy-connection/easy-connection.component').then((m) => m.EasyConnectionComponent),
       },
 
       {
-        path: 'flowboardList',
+        path: 'easyConnection/newConnection',
+        canActivate: [authGuard, permissionGuard(22)],
+        loadComponent: () =>
+          import('./easy-connection/easy-connection.component').then((m) => m.EasyConnectionComponent),
+      },
+
+      {
+        path: 'DagBoardList',
         canActivate: [authGuard],
         loadComponent: () =>
           import('./flowboard-list/flowboard-list.component').then((m) => m.FlowboardListComponent),
       },
       
       {
-        path: 'taskplanList',
+        path: 'TaskRunPlanList',
         canActivate: [authGuard],
         loadComponent: () =>
           import('./taskplan-list/taskplan-list.component').then((m) => m.TaskplanListComponent),
@@ -94,57 +102,71 @@ export const admin: Routes = [
       },
 
       {
-        path: 'flowboardList/flowboard',
-        canActivate: [authGuard],
+        path: 'DagBoardList/DagBoard',
+        canActivate: [authGuard, permissionGuard(10)],
         loadComponent: () =>
           import('./flowboard/flowboard.component').then((m) => m.FlowboardComponent),
       },
 
       {
-        path: 'flowboardList/flowboard/:id1',
-        canActivate: [authGuard],
+        path: 'DagBoardList/DagBoard/:id1',
+        canActivate: [authGuard, permissionGuard(9)],
         loadComponent: () =>
           import('./flowboard/flowboard.component').then((m) => m.FlowboardComponent),
       },
 
       {
-        path: 'monitor/flowboard/:id1',
-        canActivate: [authGuard],
+        path: 'home/DagBoard/:id1',
+        canActivate: [authGuard, permissionGuard(9)],
         loadComponent: () =>
           import('./flowboard/flowboard.component').then((m) => m.FlowboardComponent),
       },
 
       {
-        path: 'taskplanList/taskplan',
-        canActivate: [authGuard],
+        path: 'TaskRunPlan/DagBoard/:id1',
+        canActivate: [authGuard, permissionGuard(9)],
+        loadComponent: () =>
+          import('./flowboard/flowboard.component').then((m) => m.FlowboardComponent),
+      },
+
+      {
+        path: 'monitor/DagBoard/:id1',
+        canActivate: [authGuard, permissionGuard(9)],
+        loadComponent: () =>
+          import('./flowboard/flowboard.component').then((m) => m.FlowboardComponent),
+      },
+
+      {
+        path: 'TaskRunPlanList/TaskRunPlan',
+        canActivate: [authGuard, permissionGuard(16)],
         loadComponent: () =>
           import('./taskplan/taskplan.component').then((m) => m.TaskplanComponent),
       },
 
       {
-        path: 'taskplanList/taskplan/:id1',
-        canActivate: [authGuard],
+        path: 'TaskRunPlanList/TaskRunPlan/:id1',
+        canActivate: [authGuard, permissionGuard(15)],
         loadComponent: () =>
           import('./taskplan/taskplan.component').then((m) => m.TaskplanComponent),
       },
 
       {
-        path: 'monitor/taskplan/:id1',
-        canActivate: [authGuard],
+        path: 'home/TaskRunPlan/:id1',
+        canActivate: [authGuard, permissionGuard(15)],
         loadComponent: () =>
-          import('./flowboard/flowboard.component').then((m) => m.FlowboardComponent),
+          import('./taskplan/taskplan.component').then((m) => m.TaskplanComponent),
       },
 
-      // {
-      //   path: 'monitorList/monitor/:id1',
-      //   canActivate: [authGuard],
-      //   loadComponent: () =>
-      //     import('./etl-monitor/etl-monitor.component').then((m) => m.EtlMonitorComponent),
-      // },
+      {
+        path: 'monitor/TaskRunPlan/:id1',
+        canActivate: [authGuard, permissionGuard(15)],
+        loadComponent: () =>
+          import('./taskplan/taskplan.component').then((m) => m.TaskplanComponent),
+      },
 
       {
         path: 'monitorList/monitor/:id1',
-        canActivate: [authGuard],
+        canActivate: [authGuard, permissionGuard(29)],
         loadComponent: () =>
           import('./monitor/monitor.component').then((m) => m.MonitorComponent),
       },
@@ -161,6 +183,16 @@ export const admin: Routes = [
         canActivate: [authGuard],
         loadComponent: () =>
           import('./scheduler/scheduler.component').then((m) => m.SchedulerComponent),
+      },
+      {
+        path: 'unauthorized',
+        loadComponent: () =>
+          import('../workbench/unauthorized/unauthorized.component').then((m) => m.UnauthorizedComponent)
+      },
+      {
+        path: 'embed-sdk',
+        loadComponent: () =>
+          import('../workbench/embed-application/embed-application.component').then((m) => m.EmbedApplicationComponent)
       },
     ]
   }

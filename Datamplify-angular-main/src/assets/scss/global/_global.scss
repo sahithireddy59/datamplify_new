@@ -208,10 +208,10 @@
 .ngx-slider .ngx-slider-pointer{
   background-color: $primary !important;
 }
-.ng-untouched.ng-valid{
-  border-color: $border !important;
-  border-radius: 5px;
-}
+// .ng-untouched.ng-valid{
+//   border-color: $border !important;
+//   border-radius: 5px;
+// }
 #nonlinear .ngx-slider {
   margin: 35px 0 25px !important;
 }
@@ -533,6 +533,7 @@ font-size: 1.25rem;
 .iconclick{
 z-index: -1 !important;
 position: relative !important;
+top: 1px;
 }
 .alert-dismissible .btn-close {
 font-size: 10px;
@@ -556,10 +557,10 @@ border: 1px solid $border !important;
 background:$custom-white !important;
 border-color: $border !important;
 }
-.ng-dropdown-panel .ng-dropdown-panel-items .ng-option {
-background-color: $custom-white !important;
-color: $default-color!important;
-}
+// .ng-dropdown-panel .ng-dropdown-panel-items .ng-option {
+// background-color: $custom-white !important;
+// color: $default-color!important;
+// }
 .ng-dropdown-panel .ng-dropdown-panel-items .ng-option.ng-option-marked {
 background-color: $primary !important;
 color: var(--fixed-white) !important;

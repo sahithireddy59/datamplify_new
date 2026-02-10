@@ -1,6 +1,6 @@
 <div class="main-container container-fluid">
     <div class="row">
-        <div class="col-md-12 mt-4">
+        <div class="col-md-12" [ngClass]="isEmbedMode ? 'mt-0' : 'mt-4'">
             <div class="card rounded-0 m-0">
                 <div class="card glass-card rounded-0 border-0 mb-0">
                     <div class="card-body py-2 px-3 d-flex justify-content-between align-items-center">
@@ -17,7 +17,7 @@
                                 <!-- Show text when not editing -->
                                 <h6 class="mb-0 fw-semibold small" *ngIf="!isEditing" (click)="isEditing = true; showInputFocus();"
                                     style="cursor: pointer; font-size: 14px;">
-                                    {{ etlName || 'Enter Flowboard Name' }}
+                                    {{ etlName || 'Enter DagBoard Name' }}
                                     <i class="fa-solid fa-pencil text-primary"></i>
                                 </h6>
                                 <!-- <small class="text-muted" *ngIf="!isEditing" style="font-size: 12px;">Design Flowboard</small> -->
@@ -27,40 +27,46 @@
                                     style="font-size: 13px; height: 28px; padding: 2px 6px;" [(ngModel)]="etlName"
                                     pattern="^[a-zA-Z0-9_]+$" (blur)="isEditing = false" (ngModelChange)="validateFlowName($event)"/>
                                 <div *ngIf="!isValidFlowName && etlName" class="text-danger small" style="font-size: 12px;">
-                                    *DataFlow name can only contain letters, numbers, and underscores.
+                                    *DagBoard name can only contain letters, numbers, and underscores.
                                 </div>
                             </div>
                         </div>
                 
                         <!-- Right side: Buttons -->
                         <div class="d-flex align-items-center gap-2">
-                            <button *ngIf="dataFlowId" type="button" class="btn btn-outline-primary rounded-4 btn-sm" (click)="createNewFlowboard()">
-                                <i class="fa fa-plus me-1" style="font-size: 12px;"></i> New Flowboard
+                            @if(dataFlowId){
+                            <button type="button" class="btn btn-outline-primary rounded-4 btn-sm" (click)="createNewFlowboard()"
+                                *appHasPermission="{ id: 10, mode: 'disable' }">
+                                <i class="fa fa-plus me-1" style="font-size: 12px;"></i> New DagBoard
                             </button>
+                            }
                 
                             <button type="button" class="btn btn-outline-danger rounded-4 btn-sm" (click)="clearFlowboard()">
                                 <i class="fa fa-eraser me-1" style="font-size: 12px;"></i> Clear
                             </button>
 
-                            <button *ngIf="dataFlowId" type="button" class="btn btn-info rounded-3 btn-sm" ngbTooltip="Duplicate Flowboard" 
+                            <button *ngIf="dataFlowId" type="button" class="btn btn-info rounded-3 btn-sm" ngbTooltip="Duplicate DagBoard" 
                                 triggers="hover" container="body" (click)="copyFlowboard()">
                                 <i class="fa-solid fa-copy" style="font-size: 12px;"></i>
                             </button>
-                
-                            <button *ngIf="!dataFlowId" type="button" class="btn btn-primary rounded-4 btn-sm"
-                                [disabled]="!etlName || !isValidFlowName" (click)="saveOrUpdateEtlDataFlow()">
+                            @if(!dataFlowId){
+                            <button type="button" class="btn btn-primary rounded-4 btn-sm"
+                                [disabled]="!etlName || !isValidFlowName" (click)="saveOrUpdateEtlDataFlow()" *appHasPermission="{ id: 10, mode: 'disable' }">
                                 <i class="fa fa-save me-1" style="font-size: 12px;"></i> Save
                             </button>
-                            <button *ngIf="dataFlowId" type="button" class="btn btn-primary rounded-4 btn-sm"
-                                [disabled]="!etlName || !isValidFlowName" (click)="saveOrUpdateEtlDataFlow()">
+                            }
+                            @if(dataFlowId){
+                            <button type="button" class="btn btn-primary rounded-4 btn-sm"
+                                [disabled]="!etlName || !isValidFlowName" (click)="saveOrUpdateEtlDataFlow()" *appHasPermission="{ id: 11, mode: 'disable' }">
                                 <i class="fa fa-save me-1" style="font-size: 12px;"></i> Update
                             </button>
-                
-                            <button type="button" class="btn mode-btn btn-sm" [disabled]="!isRunEnable" (click)="runDataFlow()"
-                                [ngbTooltip]="!isRunEnable ? 'Drag and connect the target data object to nodes to enable' : null"
-                                container="body">
-                                <i class="fa fa-play me-1" style="font-size: 12px;"></i> Run
-                            </button>
+                            }
+                            <div [ngbTooltip]="!isRunEnable ? 'Update the DagBoard to enable the Run' : null">
+                                <button type="button" class="btn mode-btn btn-sm rounded-5" [disabled]="!isRunEnable" (click)="runDataFlow()"
+                                    container="body" *appHasPermission="{ id: 13, mode: 'disable' }">
+                                    <i class="fa fa-play me-1" style="font-size: 12px;"></i> Run
+                                </button>
+                            </div>
                         </div>
                 
                     </div>
@@ -73,6 +79,7 @@
                                 <!-- <div class="top-pane border" [ngbNavOutlet]="nav"></div> -->
                                 <div id="drawflow" class="top-pane glass-card rounded-0 border-0" #drawflow
                                     [ngClass]="{ 'drawflow-width-half': isOpen, 'drawflow-width-full': !isOpen, 'table-collapse-canvas': isCollapsed }" 
+                                    [ngStyle]="{ 'height': isNodeSelected ? 'calc(100vh - 250px)' : 'calc(100vh - 100px)' }"
                                     (drop)="onDrop($event)" (dragover)="onDragOver($event)">
                                     <div class="bar-zoom">
                                         <i class="fas fa-search-minus" (click)="canvasZoomOut()"></i>
@@ -131,7 +138,7 @@
                                                                             </div>
                                                                         </ng-template>
                                                                     </li>
-                                                                    <li *ngIf="!['Expression','source_data_object'].includes(selectedNode?.data?.type)"
+                                                                    <li *ngIf="(selectedNode?.data?.type === 'target_data_object' && !selectedNode.data.nodeData.properties.create) || !['Expression','source_data_object', 'target_data_object'].includes(selectedNode?.data?.type)"
                                                                         [ngbNavItem]="2" className="nav-link text-start" id="properties-tab"><a ngbNavLink class="fs-13 fw-semibold">Properties</a>
                                                                         <ng-template ngbNavContent>
                                                                             <div class="tab-pane " id="quarters" role="tabpanel" aria-labelledby="quarters-tab" tabindex="0">
@@ -265,41 +272,69 @@
                                                                                         </table>
                                                                                     </div>
                                                                                     <div *ngIf="selectedNode.data.type === 'target_data_object'">
-                                                                                        <div class="mb-2">
+                                                                                        <!-- <div>
                                                                                             <input type="checkbox" id="truncate" name="truncate"
                                                                                                 [(ngModel)]="selectedNode.data.nodeData.properties.truncate"
                                                                                                 (change)="updateNode('properties')" />
-                                                                                            <label for="truncate" class="ms-1"> Truncate Before Load</label>
-                                                                                        </div>
-
+                                                                                            <label for="truncate"> Truncate Before Load</label>
+                                                                                        </div> -->
                                                                                         <div class="mb-2">
-                                                                                            <label class="label-font-weight" for="updateStrategy">Update Strategy</label><br>
-                                                                                            <select id="updateStrategy" class="form-select form-select-sm"
-                                                                                                [(ngModel)]="selectedNode.data.nodeData.properties.updateStrategy"
-                                                                                                (change)="updateNode('properties')">
+                                                                                            <label for="loadType" class="me-2">Update Strategy </label>
+                                                                                            <select name="loadType" id="loadType" class="form-select" [(ngModel)]="selectedNode.data.nodeData.properties.target.updateStrategy" (change)="updateNode('')">
                                                                                                 <option class="select-options" value="append">Append (default)</option>
                                                                                                 <option class="select-options" value="insert">Insert (new rows only)</option>
                                                                                                 <option class="select-options" value="update">Update only</option>
                                                                                                 <option class="select-options" value="upsert">Upsert (insert or update)</option>
                                                                                                 <option class="select-options" value="delete">Delete matching</option>
                                                                                                 <option class="select-options" value="dd_update">DD_UPDATE (Delete rows missing in source)</option>
-                                                                                                <option class="select-options" value="truncate_insert">Truncate &amp; Insert</option>
-                                                                                                <option class="select-options" value="replace">Replace table</option>
+                                                                                                <option class="select-options" value="truncate_and_insert">Truncate &amp; Insert</option>
+                                                                                                <option class="select-options" value="replace_table">Replace table</option>
                                                                                             </select>
-                                                                                            <small class="text-muted">Controls how data is written into the target table, similar to Informatica Update Strategy.</small>
                                                                                         </div>
-
-                                                                                        <div class="mb-2" *ngIf="['insert','update','upsert','delete','dd_update'].includes(selectedNode.data.nodeData.properties.updateStrategy)">
-                                                                                            <label class="label-font-weight" for="keyColumns">Key Columns</label><br>
-                                                                                            <ng-select id="keyColumns" [items]="selectedNode.data.nodeData.columnsDropdown || selectedNode.data.nodeData.dataObject"
-                                                                                                bindLabel="label" [multiple]="true" appendTo="body"
-                                                                                                placeholder="Select key columns"
-                                                                                                [(ngModel)]="selectedNode.data.nodeData.properties.keyColumns"
-                                                                                                (change)="updateNode('properties')"
-                                                                                                [searchable]="true" [dropdownPosition]="'bottom'">
-                                                                                            </ng-select>
-                                                                                            <small class="text-muted">Used to match source and target rows for Insert/Update/Upsert/Delete.</small>
-                                                                                        </div>
+                                                                                        <ng-container *ngIf="!['append','truncate_and_insert','replace_table'].includes(selectedNode?.data?.nodeData?.properties?.target?.updateStrategy)">
+                                                                                            <div class="d-flex justify-content-end align-items-center gap-2 mb-3">
+                                                                                                <button class="btn btn-sm btn-primary d-flex align-items-center" ngbTooltip="Add" [triggers]="'hover'"
+                                                                                                    (click)="addNewJoiningColumnforUpdateStrategy()">
+                                                                                                    <i class="fa fa-plus me-1"></i> Add
+                                                                                                </button>
+                                                                                            </div>
+                                                                                            <div class="table-responsive table-responsive-height">
+                                                                                                <table class="table border text-nowrap text-md-nowrap table-striped table-bordered mb-0">
+                                                                                                    <thead class="Result-preview-table-sticky">
+                                                                                                        <tr>
+                                                                                                            <th>#</th>
+                                                                                                            @for(node of updateStrategyHeaders; let index = $index; track index){
+                                                                                                            <th>{{node}}</th>
+                                                                                                            }
+                                                                                                            <th>Action</th>
+                                                                                                        </tr>
+                                                                                        
+                                                                                                    </thead>
+                                                                                                    <tbody>
+                                                                                                        @for(condition of selectedNode.data.nodeData.properties.target.joiningConditions;track condition; let i
+                                                                                                        = $index){
+                                                                                                        <tr (click)="selectedAttributeIndex = i" [ngClass]="{ 'selected-row': selectedAttributeIndex === i }">
+                                                                                                            <td>{{ i + 1 }}</td>
+                                                                                                            @for(node of updateStrategyHeaders; let index = $index; track index){
+                                                                                                            <td>
+                                                                                                                <ng-select [items]="updateStrategyDropdown[node]" bindLabel="label" (change)="updateNode('')"
+                                                                                                                    placeholder="Select a Column" [searchable]="true" [(ngModel)]="condition[index]"
+                                                                                                                    [dropdownPosition]="'bottom'">
+                                                                                                                </ng-select>
+                                                                                                            </td>
+                                                                                                            }
+                                                                                                            <td>
+                                                                                                                <button class="btn btn-outline-danger" ngbTooltip="Delete" [triggers]="'hover'"
+                                                                                                                    (click)="deleteJoiningColumnforUpdateStrategy(i)">
+                                                                                                                    <i class="fa fa-trash"></i>
+                                                                                                                </button>
+                                                                                                            </td>
+                                                                                                        </tr>
+                                                                                                        }
+                                                                                                    </tbody>
+                                                                                                </table>
+                                                                                            </div>
+                                                                                        </ng-container>
                                                                                     </div>
                                                                                     <div *ngIf="selectedNode.data.type === 'Rank'" class="col-6">
                                                                                         <label class="label-font-weight" for="rankType"> Rank Type </label><br>
@@ -327,43 +362,6 @@
                                                                                         <label class="label-font-weight"> Sort </label><br>
                                                                                         <input type="radio" name="sort" id="top" [(ngModel)]="selectedNode.data.nodeData.properties.rank.sortType" value="top" (change)="updateNode('')"> <label for="top"> Top </label><br>
                                                                                         <input type="radio" name="sort" id="bottom" [(ngModel)]="selectedNode.data.nodeData.properties.rank.sortType" value="bottom" (change)="updateNode('')"> <label for="bottom"> Bottom </label>
-                                                                                    </div>
-                                                                                    <div *ngIf="selectedNode.data.type === 'UpdateStrategy'">
-                                                                                        <div class="mb-2">
-                                                                                            <input type="checkbox" id="truncate" name="truncate"
-                                                                                                [(ngModel)]="selectedNode.data.nodeData.properties.truncate"
-                                                                                                (change)="updateNode('properties')" />
-                                                                                            <label for="truncate" class="ms-1"> Truncate Before Load</label>
-                                                                                        </div>
-
-                                                                                        <div class="mb-2">
-                                                                                            <label class="label-font-weight" for="updateStrategy">Update Strategy</label><br>
-                                                                                            <select id="updateStrategy" class="form-select form-select-sm"
-                                                                                                [(ngModel)]="selectedNode.data.nodeData.properties.updateStrategy"
-                                                                                                (change)="updateNode('properties')">
-                                                                                                <option class="select-options" value="append">Append (default)</option>
-                                                                                                <option class="select-options" value="insert">Insert (new rows only)</option>
-                                                                                                <option class="select-options" value="update">Update only</option>
-                                                                                                <option class="select-options" value="upsert">Upsert (insert or update)</option>
-                                                                                                <option class="select-options" value="delete">Delete matching</option>
-                                                                                                <option class="select-options" value="dd_update">DD_UPDATE (Delete rows missing in source)</option>
-                                                                                                <option class="select-options" value="truncate_insert">Truncate &amp; Insert</option>
-                                                                                                <option class="select-options" value="replace">Replace table</option>
-                                                                                            </select>
-                                                                                            <small class="text-muted">Controls how data is written into the target table, similar to Informatica Update Strategy.</small>
-                                                                                        </div>
-
-                                                                                        <div class="mb-2" *ngIf="['insert','update','upsert','delete','dd_update'].includes(selectedNode.data.nodeData.properties.updateStrategy)">
-                                                                                            <label class="label-font-weight" for="keyColumns">Key Columns</label><br>
-                                                                                            <ng-select id="keyColumns" [items]="selectedNode.data.nodeData.dataObject"
-                                                                                                bindLabel="label" [multiple]="true" appendTo="body"
-                                                                                                placeholder="Select key columns"
-                                                                                                [(ngModel)]="selectedNode.data.nodeData.properties.keyColumns"
-                                                                                                (change)="updateNode('properties')"
-                                                                                                [searchable]="true" [dropdownPosition]="'bottom'">
-                                                                                            </ng-select>
-                                                                                            <small class="text-muted">Used to match source and target rows for Insert/Update/Upsert/Delete.</small>
-                                                                                        </div>
                                                                                     </div>
                                                                                     <div *ngIf="selectedNode.data.type === 'Pivot'" class="col-6">
                                                                                         <label class="label-font-weight"> Group By Columns </label><br>
@@ -400,9 +398,13 @@
                                                                                             <option class="select-options" value="UNION ALL">Union All</option>
                                                                                         </select><br>
                                                                                         <div class="d-flex justify-content-end align-items-center gap-2 mb-3">
-                                                                                            <button class="btn btn-sm btn-primary d-flex align-items-center" ngbTooltip="Add" [triggers]="'hover'" (click)="addNewColumnMappings()">
-                                                                                                <i class="fa fa-plus me-1"></i> Add
-                                                                                            </button>
+                                                                                            <div ngbTooltip="Connect Two Nodes to Enable!" [triggers]="'hover'">
+                                                                                                <button class="btn btn-sm btn-primary d-flex align-items-center"
+                                                                                                    [disabled]="selectedNode.data.nodeData.properties.union.sourceNodes.length < 2" ngbTooltip="Add"
+                                                                                                    [triggers]="'hover'" (click)="addNewColumnMappings()">
+                                                                                                    <i class="fa fa-plus me-1"></i> Add
+                                                                                                </button>
+                                                                                            </div>
                                                                                     
                                                                                             <div class="input-group input-group-sm search-width-height">
                                                                                                 <input type="text" class="form-control" placeholder="Search" [(ngModel)]="groupSearchTerm" />
@@ -436,7 +438,7 @@
                                                                                                         </td>
                                                                                                         @for(node of selectedNode.data.nodeData.properties.union.sourceNodes; let index = $index; track index){
                                                                                                         <td>
-                                                                                                            <ng-select [items]="node.data.nodeData.dataObject.columns" bindLabel="col"
+                                                                                                            <ng-select [items]="unionNodesColumnList[node.data.nodeData.general.name]" bindLabel="label"
                                                                                                                 (change)="updateNode('')" placeholder="Select a Column" [searchable]="true"
                                                                                                                 [(ngModel)]="attribute.columns[index]" [dropdownPosition]="'bottom'">
                                                                                                             </ng-select>
@@ -507,6 +509,93 @@
                                                                                                 </tbody>
                                                                                             </table>
                                                                                         </div>
+                                                                                    </div>
+                                                                                    <div *ngIf="selectedNode?.data?.type === 'UpdateStrategy'">
+                                                                                        <div class="d-flex align-items-center gap-2">
+                                                                                            <div class="py-1">
+                                                                                                <div *ngIf="selectedNode?.data?.nodeData?.properties?.strategy?.selectedTable?.display_name && selectedNode?.data?.nodeData?.properties?.strategy?.selectedTableColumns?.tables" class="text-dark">
+                                                                                                    <span class="fw-semibold">Connection:</span>
+                                                                                                    <small [ngbTooltip]="selectedNode?.data?.nodeData?.properties?.strategy?.selectedTable?.display_name"> 
+                                                                                                        {{ selectedNode?.data?.nodeData?.properties?.strategy?.selectedTable?.display_name.length > 12 ? (selectedNode?.data?.nodeData?.properties?.strategy?.selectedTable?.display_name | slice:0:12) + '...' : selectedNode?.data?.nodeData?.properties?.strategy?.selectedTable?.display_name }} 
+                                                                                                    </small>
+                                                                                                    <span class="fw-semibold">Target Table:</span>
+                                                                                                    <small [ngbTooltip]="selectedNode?.data?.nodeData?.properties?.strategy?.selectedTableColumns?.tables">
+                                                                                                        {{ selectedNode?.data?.nodeData?.properties?.strategy?.selectedTableColumns?.tables.length > 12 ? (selectedNode?.data?.nodeData?.properties?.strategy?.selectedTableColumns?.tables | slice:0:12) + '...' : selectedNode?.data?.nodeData?.properties?.strategy?.selectedTableColumns?.tables }}
+                                                                                                    </small>
+                                                                                                </div>
+                                                                                        
+                                                                                                <div *ngIf="!(selectedNode?.data?.nodeData?.properties?.strategy?.selectedTable?.display_name && selectedNode?.data?.nodeData?.properties?.strategy?.selectedTableColumns?.tables)" class="text-muted fst-italic">
+                                                                                                    No Table Selected
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            <div>
+                                                                                                <i class="fe fe-edit text-primary cursor-pointer" (click)="openConnectionPopup(connectionList)"></i>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        <!-- <div class="d-flex align-items-center justify-content-start gap-2 mb-1">
+                                                                                            <div *ngIf="selectedConnection?.display_name && selectedDataObject?.tables">
+                                                                                                Connection: {{selectedConnection?.display_name}}, Target Table: {{selectedDataObject?.tables}}
+                                                                                            </div>
+                                                                                            <div *ngIf="!selectedConnection?.display_name && !selectedDataObject?.tables">No Table Selected</div>
+                                                                                            <div><i class="fe fe-edit text-primary" (click)="openConnectionPopup(connectionList)"></i></div>
+                                                                                        </div> -->
+                                                                                        <div class="mb-2">
+                                                                                            <label for="loadType" class="me-2">Update Strategy </label>
+                                                                                            <select name="loadType" id="loadType" class="form-select" [(ngModel)]="selectedNode.data.nodeData.properties.strategy.updateStrategy" (change)="updateNode('')">
+                                                                                                <option class="select-options" value="append">Append (default)</option>
+                                                                                                <option class="select-options" value="insert">Insert (new rows only)</option>
+                                                                                                <option class="select-options" value="update">Update only</option>
+                                                                                                <option class="select-options" value="upsert">Upsert (insert or update)</option>
+                                                                                                <option class="select-options" value="delete">Delete matching</option>
+                                                                                                <option class="select-options" value="dd_update">DD_UPDATE (Delete rows missing in source)</option>
+                                                                                                <option class="select-options" value="truncate_and_insert">Truncate &amp; Insert</option>
+                                                                                                <option class="select-options" value="replace_table">Replace table</option>
+                                                                                            </select>
+                                                                                        </div>
+                                                                                        <ng-container *ngIf="!['append','truncate_and_insert','replace_table'].includes(selectedNode?.data?.nodeData?.properties?.strategy?.updateStrategy)">
+                                                                                            <div class="d-flex justify-content-end align-items-center gap-2 mb-3">
+                                                                                                <button class="btn btn-sm btn-primary d-flex align-items-center" ngbTooltip="Add" [triggers]="'hover'"
+                                                                                                    (click)="addNewJoiningColumnforUpdateStrategy()">
+                                                                                                    <i class="fa fa-plus me-1"></i> Add
+                                                                                                </button>
+                                                                                            </div>
+                                                                                            <div class="table-responsive table-responsive-height">
+                                                                                                <table class="table border text-nowrap text-md-nowrap table-striped table-bordered mb-0">
+                                                                                                    <thead class="Result-preview-table-sticky">
+                                                                                                        <tr>
+                                                                                                            <th>#</th>
+                                                                                                            @for(node of updateStrategyHeaders; let index = $index; track index){
+                                                                                                            <th>{{node}}</th>
+                                                                                                            }
+                                                                                                            <th>Action</th>
+                                                                                                        </tr>
+                                                                                        
+                                                                                                    </thead>
+                                                                                                    <tbody>
+                                                                                                        @for(condition of selectedNode.data.nodeData.properties.strategy.joiningConditions;track condition; let i
+                                                                                                        = $index){
+                                                                                                        <tr (click)="selectedAttributeIndex = i" [ngClass]="{ 'selected-row': selectedAttributeIndex === i }">
+                                                                                                            <td>{{ i + 1 }}</td>
+                                                                                                            @for(node of updateStrategyHeaders; let index = $index; track index){
+                                                                                                            <td>
+                                                                                                                <ng-select [items]="updateStrategyDropdown[node]" bindLabel="label" (change)="updateNode('')"
+                                                                                                                    placeholder="Select a Column" [searchable]="true" [(ngModel)]="condition[index]"
+                                                                                                                    [dropdownPosition]="'bottom'">
+                                                                                                                </ng-select>
+                                                                                                            </td>
+                                                                                                            }
+                                                                                                            <td>
+                                                                                                                <button class="btn btn-outline-danger" ngbTooltip="Delete" [triggers]="'hover'"
+                                                                                                                    (click)="deleteJoiningColumnforUpdateStrategy(i)">
+                                                                                                                    <i class="fa fa-trash"></i>
+                                                                                                                </button>
+                                                                                                            </td>
+                                                                                                        </tr>
+                                                                                                        }
+                                                                                                    </tbody>
+                                                                                                </table>
+                                                                                            </div>
+                                                                                        </ng-container>
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
@@ -582,7 +671,7 @@
                                                                             </div>
                                                                         </ng-template>
                                                                     </li>
-                                                                    <li *ngIf="selectedNode?.data?.type === 'source_data_object'" [ngbNavItem]="4" className="nav-link text-start"
+                                                                    <li *ngIf="selectedNode?.data?.type === 'source_data_object' || selectedNode?.data?.type === 'UpdateStrategy'" [ngbNavItem]="4" className="nav-link text-start"
                                                                         id="source-attributes-tab"><a ngbNavLink class="fs-13 fw-semibold">Source Attributes</a>
                                                                         <ng-template ngbNavContent>
                                                                             <div class="tab-pane " id="quarters" role="tabpanel" aria-labelledby="quarters-tab" tabindex="0">
@@ -622,6 +711,14 @@
                                                                     
                                                                                             </thead>
                                                                                             <tbody>
+                                                                                                @if(selectedNode.data.nodeData.sourceAttributes.length === 0){
+                                                                                                <tr>
+                                                                                                    <td colspan="6" class="text-center text-muted py-4">
+                                                                                                        <i class="fa fa-info-circle me-2"></i>
+                                                                                                        No attributes added yet. Click "Select Attribute To Add" button above to add columns.
+                                                                                                    </td>
+                                                                                                </tr>
+                                                                                                }
                                                                                                 @for(sourceAttribute of selectedNode.data.nodeData.sourceAttributes | dataFlowSearchFilter:sourceSearchTerm:'attributeName' ; track sourceAttribute;
                                                                                                 let i = $index){
                                                                                                 <tr (click)="selectedSourceAttributeIndex = i" [ngClass]="{ 'selected-row': selectedSourceAttributeIndex === i }">
@@ -639,7 +736,7 @@
                                                                                                     </td>
                                                                                                     <td>
                                                                                                         <ng-select [items]="sourceAttribute.selectColumnDropdown" bindLabel="label"
-                                                                                                            groupBy="group" (change)="updateNode('groupAttribute')"
+                                                                                                            groupBy="group" (change)="updateNode('')" [compareWith]="compareColumns"
                                                                                                             placeholder="Select a Column" [searchable]="true" appendTo="body"
                                                                                                             [(ngModel)]="sourceAttribute.selectedColumn" [dropdownPosition]="'bottom'">
                                                                                                         </ng-select>
@@ -660,7 +757,7 @@
                                                                             </div>
                                                                         </ng-template>
                                                                     </li>
-                                                                    <li *ngIf="!['Filter', 'target_data_object', 'Rank', 'Pivot', 'Union', 'Router'].includes(selectedNode?.data?.type)" [ngbNavItem]="5"
+                                                                    <li *ngIf="!['Filter', 'target_data_object', 'Rank', 'Pivot', 'Union', 'Router', 'UpdateStrategy'].includes(selectedNode?.data?.type)" [ngbNavItem]="5"
                                                                         className="nav-link text-start" id="attributes-tab"><a ngbNavLink class="fs-13 fw-semibold">Attributes</a>
                                                                         <ng-template ngbNavContent>
                                                                             <div class="tab-pane " id="quarters" role="tabpanel" aria-labelledby="quarters-tab" tabindex="0">
@@ -804,19 +901,12 @@
                                                                         <ng-template ngbNavContent>
                                                                             <div class="tab-pane " id="quarters" role="tabpanel" aria-labelledby="quarters-tab" tabindex="0">
                                                                                 <div class="col-xl-12 col-lg-12 col-md-12">
-                                                                                    <div class="d-flex align-items-center gap-2 mb-3">
-                                                                                        <label for="loadType" class="me-2">Load Type: </label>
-                                                                                        <select name="loadType" id="loadType" class="form-select select-width">
-                                                                                            <option class="select-options" value="insert">Insert</option>
-                                                                                            <!-- <option value="">Update</option>
-                                                                                                                                                                <option value="">Upsert</option>
-                                                                                                                                                                <option value="">Delete</option>
-                                                                                                                                                                <option value="">SCD</option> -->
-                                                                                        </select>
-                                                                                        <!-- <img src="./assets/images/etl/unlink-etl.svg" alt="unlink" ngbTooltip="unlink" class="drawflow-image me-2">
-                                                                                                                                                            <img src="./assets/images/etl/unlinkall-etl.svg" alt="unlinkAll" ngbTooltip="unlinkAll" class="drawflow-image me-2"> -->
-                                                                                        <img src="./assets/images/etl/automap-etl.svg" alt="automap" ngbTooltip="automap"
-                                                                                            class="drawflow-image" (click)="setAttributeAutoMapper()">
+                                                                                    <div class="d-flex align-items-center justify-content-end gap-2 me-2">
+                                                                                        <button class="btn btn-primary rounded-5" (click)="setAttributeAutoMapper()">
+                                                                                            <i class="fa-solid fa-bars me-1"></i> Auto Map
+                                                                                        </button>
+                                                                                        <!-- <img src="./assets/images/etl/automap-etl.svg" alt="automap" ngbTooltip="automap"
+                                                                                            class="drawflow-image" (click)="setAttributeAutoMapper()"> -->
                                                                                     </div>
                                                                                     <div class="mt-3 table-responsive table-responsive-height">
                                                                                         <table class="table border text-nowrap text-md-nowrap table-striped table-bordered mb-0">
@@ -836,7 +926,7 @@
                                                                                                     <td>
                                                                                                         <ng-select [items]="selectedNode.data.nodeData.columnsDropdown" bindLabel="label"
                                                                                                             groupBy="group"
-                                                                                                            (change)="mapper.selectedDataType = mapper.selectedColumn.dataType; updateNode('');"
+                                                                                                            (change)="mapper.selectedDataType = mapper?.selectedColumn?.dataType ?? ''; updateNode('');"
                                                                                                             placeholder="Select a Column" [searchable]="true"
                                                                                                             [(ngModel)]="mapper.selectedColumn" [dropdownPosition]="'bottom'">
                                                                                                         </ng-select>
@@ -1057,9 +1147,14 @@
                                                     </ng-template>
                                                 </li>
                                             </ul>
-                                            <div type="button" class="btn btn-primary" (click)="toggleCollapse()">
-                                                <i *ngIf="isCollapsed" class="fa fa-angle-up small"></i>
-                                                <i *ngIf="!isCollapsed" class="fa fa-angle-down small"></i>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i *ngIf="validatedData?.isValid === false" class="fa fa-exclamation-circle text-danger cursor-pointer fs-5" triggers="hover"
+                                                    [ngbTooltip]="validatedData?.msg">
+                                                </i>
+                                                <button type="button" class="btn btn-primary" (click)="toggleCollapse()">
+                                                    <i *ngIf="isCollapsed" class="fa fa-angle-up small"></i>
+                                                    <i *ngIf="!isCollapsed" class="fa fa-angle-down small"></i>
+                                                </button>
                                             </div>
                                         </div>
                                         <div class="d-flex p-1">
@@ -1074,11 +1169,11 @@
                         <div class="p-0" [ngClass]="isOpen ? 'col-2' : 'd-none'">
                             <div class="card glass-card rounded-0 h-100 position-relative" style="border-left: 1px solid var(--default-border) !important; box-shadow: none;">
                                 <!-- Collapse Button -->
-                                <button class="btn btn-sm border mode-btn toggle-btn ms-1" (click)="isOpen = !isOpen;">
+                                <button class="btn btn-sm border mode-btn toggle-btn ms-1 mt-1" (click)="isOpen = !isOpen;">
                                     <i class="fa-solid" [ngClass]="isOpen ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
                                 </button>
 
-                                <span *ngIf="isRefrshEnable" class="text-danger p-1" style="font-size: 9px;">*Component dragging is disabled since the flowboard is running.</span>
+                                <span *ngIf="isRefrshEnable" class="text-danger p-1" style="font-size: 9px;">*Component dragging is disabled since the DagBoard is running.</span>
 
                                 <span *ngIf="!isOpen" class="vertical-text fw-bold">
                                     COMPONENTS
@@ -1101,9 +1196,9 @@
                                     </div>
                                 
                                     <!-- Custom Tabs (Compact for col-2) -->
-                                    <div class="custom-tabs d-flex align-items-center justify-content-between mb-2">
+                                    <div class="custom-tabs d-flex flex-row gap-1 mb-2">
                                         <!-- <div class="nav-item"> -->
-                                            <button class="rounded-5 nav-link fw-semibold"
+                                            <button class="rounded-5 nav-link fw-semibold m-0"
                                                 [ngClass]="activeTab === 'sources' ? 'tab-active tab-sources' : 'tab-inactive'"
                                                 (click)="activeTab = 'sources'">
                                                 Sources
@@ -1111,7 +1206,7 @@
                                         <!-- </div> -->
 
                                         <!-- <div class="nav-item"> -->
-                                            <button class="rounded-5 nav-link fw-semibold"
+                                            <button class="rounded-5 nav-link fw-semibold m-0"
                                                 [ngClass]="activeTab === 'transforms' ? 'tab-active tab-transforms' : 'tab-inactive'"
                                                 (click)="activeTab = 'transforms'">
                                                 Transforms
@@ -1119,7 +1214,7 @@
                                         <!-- </div> -->
                                 
                                         <!-- <div class="nav-item"> -->
-                                            <button class="rounded-5 nav-link fw-semibold"
+                                            <button class="rounded-5 nav-link fw-semibold m-0"
                                                 [ngClass]="activeTab === 'targets' ? 'tab-active tab-targets' : 'tab-inactive'"
                                                 (click)="activeTab = 'targets'">
                                                 Targets
@@ -1136,12 +1231,17 @@
                                                     class="component-card d-flex align-items-center p-2 mb-2 rounded-4 shadow-sm" [draggable]="!isRefrshEnable"
                                                     (dragstart)="onDragStart($event, item.type, ['source_data_object', 'target_data_object'].includes(item.type) ? connectionList : null, item?.id ?? '')">
                                                     <div class="icon-wrap me-2">
-                                                        <i class="fa-solid" [ngClass]="[
-                                                              item.icon,    
-                                                              activeTab === 'sources' ? 'src-icons' : 
-                                                              activeTab === 'transforms' ? 'transform-icons' : 
-                                                              activeTab === 'targets' ? 'tgt-icons' : ''
-                                                           ]"></i>
+                                                        @if(item.icon){
+                                                        <i [ngClass]="[item.icon, activeTab === 'sources' ? 
+                                                            'src-icons' : activeTab === 'transforms' ? 
+                                                            'transform-icons' : activeTab === 'targets' ? 
+                                                            'tgt-icons' : '' ]"></i>
+                                                        } @else if(item.image){
+                                                        <img [src]="item.image" alt="{{ item.name }}" [ngClass]="[activeTab === 'sources' ? 
+                                                            'src-icons' : activeTab === 'transforms' ? 
+                                                            'transform-icons' : activeTab === 'targets' ? 
+                                                            'tgt-icons' : '' ]"/>
+                                                        }
                                                     </div>
                                                     <div class="flex-grow-1">
                                                         <h6 class="mb-0 fw-semibold text-dark" style="font-size: 7px;">{{ item.name }}</h6>
@@ -1154,12 +1254,17 @@
                                                 <div *ngFor="let item of componentsContent[activeTab]" class="col-6">
                                                     <div class="component-card text-center p-3 rounded-4 shadow-sm" [draggable]="!isRefrshEnable"
                                                         (dragstart)="onDragStart($event, item.type, ['source_data_object', 'target_data_object'].includes(item.type) ? connectionList : null, item?.id ?? '')">
-                                                        <i class="mb-2 fa-solid" [ngClass]="[
-                                                              item.icon,    
-                                                              activeTab === 'sources' ? 'src-icons' : 
-                                                              activeTab === 'transforms' ? 'transform-icons' : 
-                                                              activeTab === 'targets' ? 'tgt-icons' : ''
-                                                           ]"></i>
+                                                        @if(item.icon){
+                                                        <i [ngClass]="[item.icon, activeTab === 'sources' ? 
+                                                            'src-icons' : activeTab === 'transforms' ? 
+                                                            'transform-icons' : activeTab === 'targets' ? 
+                                                            'tgt-icons' : '' ]" class="component-icon"></i>
+                                                        } @else if(item.image){
+                                                        <img [src]="item.image" alt="{{ item.name }}" [ngClass]="[activeTab === 'sources' ? 
+                                                            'src-icons' : activeTab === 'transforms' ? 
+                                                            'transform-icons' : activeTab === 'targets' ? 
+                                                            'tgt-icons' : '' ]" class="component-icon" />
+                                                        }
                                                         <h6 class="mb-0 fw-semibold text-dark" style="font-size: 7px;">{{ item.name }}</h6>
                                                     </div>
                                                 </div>
@@ -1179,7 +1284,7 @@
 <ng-template #connectionList let-modal>
     <div class="modal-header">
         <h6 class="modal-title small">Data Objects</h6>
-        <button type="button" class="btn-close btn-close-white" aria-label="Close" (click)="modal.dismiss('Cross click'); objectType = 'select'; selectedConnection = null; selectedDataObject = null; fileSelectType = 'dataSource'; sourcePath = ''; selectedFile = ''">
+        <button type="button" class="btn-close btn-close-white" aria-label="Close" (click)="modal.dismiss('Cross click'); objectType = 'select'; selectedConnection = null; selectedFileConnection = null; selectedIntegrationConnection = null; selectedDataObject = null; fileSelectType = 'dataSource'; sourcePath = ''; selectedFile = ''">
         </button>
     </div>
     <div class="modal-body">
@@ -1188,44 +1293,56 @@
                 <div *ngIf="type === 2" class="d-flex gap-3 align-items-center small mb-2">
                     <label class="form-check-label fw-semibold">From : </label>
                     <div>
-                      <input class="form-check-input" type="radio" name="fileSelect" id="dataSource" [value]="'dataSource'" [(ngModel)]="fileSelectType" (click)="objectType = 'select'; selectedConnection = null; selectedDataObject = null; fileSelectType = 'dataSource'; sourcePath = ''; selectedFile = ''">
+                      <input class="form-check-input" type="radio" name="fileSelect" id="dataSource" [value]="'dataSource'" [(ngModel)]="fileSelectType" (click)="objectType = 'select'; selectedConnection = null; selectedFileConnection = null; selectedIntegrationConnection = null; selectedDataObject = null; fileSelectType = 'dataSource'; sourcePath = ''; selectedFile = ''">
                       <label class="form-check-label" for="dataSource">Data Source</label>
                     </div>
                     <div>
-                      <input class="form-check-input" type="radio" name="fileSelect" id="server" [value]="'server'" [(ngModel)]="fileSelectType" (click)="objectType = 'select'; selectedConnection = null; selectedDataObject = null; fileSelectType = 'server'; sourcePath = ''; selectedFile = ''">
+                      <input class="form-check-input" type="radio" name="fileSelect" id="server" [value]="'server'" [(ngModel)]="fileSelectType" (click)="objectType = 'select'; selectedConnection = null; selectedFileConnection = null; selectedIntegrationConnection = null; selectedDataObject = null; fileSelectType = 'server'; sourcePath = ''; selectedFile = ''">
                       <label class="form-check-label" for="server">Server</label>
                     </div>
                 </div>
-                <ng-container *ngIf="type === 1 || type === 6 || type === 7 || type === 8">
+                <ng-container *ngIf="[1, 6, 7, 8, 9, 10].includes(type)">
                     <div class="small">
                         <label for="connection" class="fw-semibold">Select connection <span class="text-danger">*</span></label>
                         <ng-select [items]="connectionOptions" bindLabel="display_name" placeholder="Select a connection"
-                            [searchable]="true" [(ngModel)]="selectedConnection" (change)="getDataObjects()" name="connection"
+                            [searchable]="true" [(ngModel)]="selectedConnection" (change)="objectType === 'select' ? getDataObjects() : null;" name="connection"
                             id="connection">
                         </ng-select><br>
                         <div *ngIf="nodeToAdd === 'target_data_object'" class="d-flex gap-3 align-items-center mb-2">
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="objectType" id="selectObject" [(ngModel)]="objectType"
-                                    [value]="'select'" (click)="selectedDataObject = null">
-                                <label class="form-check-label" for="selectObject">Select Object</label>
-                            </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="objectType" id="createObject" [(ngModel)]="objectType"
                                     [value]="'create'" (click)="selectedDataObject = null">
                                 <label class="form-check-label" for="createObject">Create Object</label>
                             </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="objectType" id="selectObject" [(ngModel)]="objectType"
+                                    [value]="'select'" (click)="selectedDataObject = null; getDataObjects();">
+                                <label class="form-check-label" for="selectObject">Select Object</label>
+                            </div>
                         </div>
                         <div *ngIf="objectType === 'select'">
                             <label for="dataObject" class="fw-semibold mt-1">Select Data Object <span class="text-danger">*</span></label>
                             <ng-select [items]="dataObjectOptions" bindLabel="tables" placeholder="Select a Data Object" [searchable]="true"
-                                [(ngModel)]="selectedDataObject" name="dataObject" id="dataObject" [disabled]="!selectedConnection">
+                                [(ngModel)]="selectedDataObject" name="dataObject" id="dataObject" [disabled]="!selectedConnection && !selectedFileConnection && !selectedIntegrationConnection">
                             </ng-select>
                         </div>
                         <div *ngIf="objectType === 'create'">
                             <label for="newObjectName" class="form-label fw-semibold mt-2">New Object Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="newObjectName" [(ngModel)]="selectedDataObject" name="newObjectName"
-                                [disabled]="!selectedConnection" placeholder="Data Object Name">
+                                [disabled]="!selectedConnection && !selectedFileConnection && !selectedIntegrationConnection" placeholder="Data Object Name">
                         </div>
+
+                    </div>
+                </ng-container>
+                <ng-container *ngIf="type === 28">
+                    <div class="small">
+                        <label for="connection" class="fw-semibold">Select Excel Connection <span class="text-danger">*</span></label>
+                        <ng-select [items]="connectionOptions" bindLabel="display_name" placeholder="Select an Excel connection"
+                            [searchable]="true" [(ngModel)]="selectedFileConnection" name="excelConnection" id="excelConnection">
+                        </ng-select>
+                        <small class="text-muted d-block mt-2">
+                            <i class="fa fa-info-circle"></i> You will select sheets in the next step
+                        </small>
                     </div>
                 </ng-container>
                 <ng-container *ngIf="type === 2 && fileSelectType === 'server'">
@@ -1249,24 +1366,24 @@
                     <div class="small">
                         <label for="connection" class="fw-semibold">Select connection <span class="text-danger">*</span></label>
                         <ng-select [items]="connectionOptions" bindLabel="display_name" placeholder="Select a connection"
-                            [searchable]="true" [(ngModel)]="selectedConnection" (change)="getDataObjectsforFile()" name="connection"
-                            id="connection">
+                            [searchable]="true" [(ngModel)]="selectedFileConnection" (change)="getDataObjectsforFile()" name="csvConnection"
+                            id="csvConnection">
                         </ng-select><br>
                     </div>
                 </ng-container>
                 <ng-container *ngIf="type === 3">
                     <label for="connection" class="fw-semibold">Select connection <span class="text-danger">*</span></label>
                     <ng-select [items]="connectionOptions" bindLabel="display_name" placeholder="Select a connection" [searchable]="true"
-                        [(ngModel)]="selectedConnection" name="connection" id="connection">
+                        [(ngModel)]="selectedFileConnection" name="remoteConnection" id="remoteConnection" (change)="remoteFilePath = ''; selectedRemoteServerFile = ''; remoteServerFiles = [];">
                     </ng-select><br>
                     <!-- <label class="fw-semibold">File Type <span class="text-danger">*</span></label><br>
                     <input class="form-control" type="text" [(ngModel)]="remoteFileType" placeholder="eg: csv" [disabled]="!selectedConnection"><br> -->
                     <label class="fw-semibold">File Path <span class="text-danger">*</span></label><br>
                     <div class="input-group">
                         <input class="form-control" type="text" [(ngModel)]="remoteFilePath" placeholder="eg: /abc/folder/file/"
-                            [disabled]="!selectedConnection" />
+                            [disabled]="!selectedFileConnection" (keyup.enter)="getRemoteServerFiles()"/>
                         <button class="btn btn-outline-primary" type="button" (click)="getRemoteServerFiles()"
-                            [disabled]="!selectedConnection || !remoteFilePath">
+                            [disabled]="!selectedFileConnection || !remoteFilePath">
                             <i class="fa-solid fa-arrow-right"></i>
                         </button>
                     </div><br>
@@ -1278,20 +1395,42 @@
                         }
                     </select>
                 </ng-container>
+                <ng-container *ngIf="![1,2,3,6,7,8,9,10,28].includes(type)">
+                    <label for="connection" class="fw-semibold">Select connection <span class="text-danger">*</span></label>
+                    <ng-select [items]="connectionOptions" bindLabel="display_name" placeholder="Select a connection" [searchable]="true"
+                        [(ngModel)]="selectedIntegrationConnection" (change)="selectedIntegrationConnection && ![1,2,3,6,7,8,9,10,28].includes(type) ? (type !== 27 ? getEndPointsList() : getSchemasList(schemaSelection, modal)) : null" name="integrationConnection" id="integrationConnection">
+                    </ng-select><br>
+                    
+                    <ng-container *ngIf="type !== 27">
+                        <label for="endpoint" class="fw-semibold">
+                            Select Endpoint <span class="text-danger">*</span>
+                        </label>
+                        <ng-select id="endpoint" name="endpoint" [items]="endpointOptions" placeholder="Select an endpoint"
+                            [searchable]="true" [(ngModel)]="selectedEndpoint" [multiple]="false"
+                            (change)="selectedEndpoint ? getSchemasList(schemaSelection, modal) : null">
+                        </ng-select>
+                    
+                        <small *ngIf="selectedEndpoint && schemaList?.length === 0 && schemalistNoteMsg" class="text-muted fst-italic d-block mt-2">
+                            {{schemalistNoteMsg}}
+                        </small>
+                    </ng-container>
+                </ng-container>
             </div>
         </div>
     </div>
     <div class="modal-footer">
         <div class="text-right">
             <button type="button" class="btn ripple btn-secondary btn-sm me-2"
-                (click)="modal.close('Cross click'); objectType = 'select'; selectedConnection = null; selectedDataObject = null; fileSelectType = 'dataSource'; sourcePath = ''; selectedFile = ''">Cancel</button>
-            <button type="button" [disabled]="
+                (click)="modal.close('Cross click'); objectType = 'select'; selectedConnection = null; selectedFileConnection = null; selectedIntegrationConnection = null; selectedDataObject = null; fileSelectType = 'dataSource'; sourcePath = ''; selectedFile = ''; selectedEndpoint = null; selectedSchemas.clear(); expandedSchemas.clear();">Cancel</button>
+            <button *ngIf="[1,2,3,6,7,8,9,10].includes(type)" type="button" [disabled]="
               (type === 1 && (!selectedConnection || !selectedDataObject)) ||
               (type === 2 && (
-                (fileSelectType === 'dataSource' && !selectedConnection) ||
+                (fileSelectType === 'dataSource' && !selectedFileConnection) ||
                 (fileSelectType === 'server' && (!sourcePath || !selectedFile))
-              )) || (type === 3 && (!selectedConnection || !remoteFilePath || !selectedRemoteServerFile))" 
-              class="btn ripple btn-primary btn-sm" (click)="addNode(nodeToAdd, posX, posY); modal.dismiss('Save click'); modal.close('save click');">Ok</button>
+              )) || (type === 3 && (!selectedFileConnection || !remoteFilePath || !selectedRemoteServerFile))" 
+              class="btn ripple btn-primary btn-sm" (click)="nodeToAdd === 'UpdateStrategy' ? getTableForUpdateStrategy() : addNode(nodeToAdd, posX, posY); modal.close('save click');">Ok</button>
+            <button *ngIf="type === 28" type="button" [disabled]="!selectedFileConnection" 
+              class="btn ripple btn-primary btn-sm" (click)="getExcelSheets(excelSheetSelection, modal);">Next</button>
         </div>
     </div>
 </ng-template>
@@ -1417,7 +1556,7 @@
                         <!-- Transforms Column -->
                         <td *ngIf="expEditorAddType === 'transforms'" class="align-top col-4">
                             <div class="overflow-y-auto" style="max-height: 145px;">
-                                <div *ngFor="let group of groupedColumns | keyvalue" class="text-break py-1 px-2 hover-bg"
+                                <div *ngFor="let group of groupedColumns | keyvalue" class="text-break py-1 px-2 hover-bg rounded-2"
                                     style="cursor: pointer;" [class.bg-primary]="selectedGroup === group.key"
                                     [class.text-white]="selectedGroup === group.key" (click)="selectedGroup = group.key">
                                     {{ group.key }}
@@ -1428,7 +1567,7 @@
                         <!-- Functions Column -->
                         <td *ngIf="expEditorAddType === 'functions'" class="align-top col-4">
                             <div class="overflow-y-auto" style="max-height: 145px;">
-                                <div *ngFor="let group of functionGroupType" class="text-break py-1 px-2 hover-bg"
+                                <div *ngFor="let group of functionGroupType" class="text-break py-1 px-2 hover-bg rounded-2"
                                     style="cursor: pointer;" [class.bg-primary]="selectedGroup === group.value"
                                     [class.text-white]="selectedGroup === group.value" (click)="selectedGroup = group.value">
                                     {{ group.key }}
@@ -1511,10 +1650,10 @@
         <button type="button" class="btn-close btn-close-white" (click)="modal.dismiss('Cross click')"></button>
     </div>
 
-    <input type="text" [(ngModel)]="attrSelectionSearchTerm" class="form-control small" placeholder="Search..." />
+    <!-- <input type="text" [(ngModel)]="attrSelectionSearchTerm" class="form-control small" placeholder="Search..." /> -->
 
     <div class="modal-body p-2">
-
+        <input type="text" [(ngModel)]="attrSelectionSearchTerm" class="form-control small" placeholder="Search..." />
         <!-- <input type="text" [(ngModel)]="attrSelectionSearchTerm" class="form-control small mb-3" placeholder="Search..." /> -->
 
         <div *ngFor="let group of groupAttributesList" class="mb-3 small">
@@ -1567,6 +1706,96 @@
             <button type="button" [disabled]="!canvasData?.sqlParameters[dataPointIndexForSqlParameter]?.dataPoint" class="btn ripple btn-primary btn-sm" (click)="updateDataPointToNode(); modal.dismiss('Save click')">Ok</button>
         </div>
     </div>
+</ng-template>
+
+<ng-template #schemaSelection let-modal>
+  <div class="modal-header">
+    <h6 class="modal-title small">Schema Selection</h6>
+    <button type="button" class="btn-close btn-close-white" (click)="selectedEndpoint = null; selectedSchemas.clear(); expandedSchemas.clear();modal.dismiss()"></button>
+  </div>
+
+  <div class="modal-body p-0 schema-selection-modal">
+    <div class="schema-list">
+        <ng-container *ngFor="let table of schemaList; let i = index;">
+    
+            <!-- TABLE (OBJECT) ROW -->
+            <div class="schema-row" [class.bg-primary]="isExpanded(table.tables)">
+    
+                <div class="schema-cell checkbox">
+                    <input type="checkbox" class="form-check-input shadow-none" [checked]="isSelected(table.tables)"
+                        (change)="toggleSelect(table.tables)" [disabled]="!this.selectedSchemas.has(schemaList[0].tables) && i !== 0">
+                </div>
+    
+                <div class="schema-cell name">
+                    <div class="d-flex align-items-center">
+                        <span class="me-2" (click)="toggleExpand(table.tables)">
+                            <i class="bi" [class.bi-chevron-down]="isExpanded(table.tables)"
+                                [class.bi-chevron-right]="!isExpanded(table.tables)">
+                            </i>
+                        </span>
+    
+                        <span class="fw-bold">{{ table.tables }}</span>
+                    </div>
+                </div>
+            </div>
+    
+            <!-- COLUMN (PROPERTY) ROWS -->
+            <div *ngFor="let column of table.columns" class="schema-row schema-column" [hidden]="!isExpanded(table.tables)">
+    
+                <div class="schema-cell checkbox"></div>
+    
+                <div class="schema-cell name ps-5">
+                    {{ column.col }}
+                </div>
+    
+                <div class="schema-cell value text-end text-muted pe-3">
+                    {{ column.dtype }}
+                </div>
+            </div>
+    
+        </ng-container>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-danger btn-sm"
+            (click)="selectedEndpoint = null; selectedSchemas.clear(); expandedSchemas.clear();modal.dismiss();">Cancel</button>
+    <button type="button" class="btn btn-primary btn-sm"
+            (click)="addNode(nodeToAdd, posX, posY);modal.close('save click');" [disabled]="selectedSchemas.size === 0">OK</button>
+  </div>
+</ng-template>
+
+<ng-template #excelSheetSelection let-modal>
+  <div class="modal-header">
+    <h6 class="modal-title small">Select Excel Sheets</h6>
+    <button type="button" class="btn-close btn-close-white" (click)="selectedExcelSheets = []; modal.dismiss()"></button>
+  </div>
+
+  <div class="modal-body">
+    <div class="small">
+      <p class="text-muted mb-3">Select one or more sheets from the Excel file to use in this flowboard:</p>
+      
+      <div *ngIf="excelSheets.length === 0" class="text-center text-muted py-3">
+        <i class="fa fa-file-excel fa-3x mb-2"></i>
+        <p>No sheets found in the Excel file</p>
+      </div>
+
+      <div *ngIf="excelSheets.length > 0" class="list-group">
+        <label *ngFor="let sheet of excelSheets; track sheet" class="list-group-item list-group-item-action d-flex align-items-center">
+          <input type="checkbox" class="form-check-input me-3" [value]="sheet" 
+                 [checked]="selectedExcelSheets.includes(sheet)"
+                 (change)="onExcelSheetToggle(sheet, $event)">
+          <span class="fw-semibold">{{ sheet }}</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-danger btn-sm" (click)="selectedExcelSheets = []; modal.dismiss();">Cancel</button>
+    <button type="button" class="btn btn-primary btn-sm" [disabled]="selectedExcelSheets.length === 0"
+            (click)="addExcelNodes(modal);">OK</button>
+  </div>
 </ng-template>
 
   

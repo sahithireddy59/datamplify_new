@@ -50,7 +50,7 @@ td { padding: 5px !important;}
 
 .glass-card:hover {
  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(var(--bs-primary-rgb, 13, 110, 253), 0.25); /* slightly stronger on hover */
+  box-shadow: 0 6px 20px rgba(var(--primary-rgb, 13, 110, 253), 0.25); /* slightly stronger on hover */
 }
 
 /* Input with glass effect */
@@ -211,8 +211,8 @@ h2.fw-500 {
 }
 
 .active {
-  background-color: var(--primary-color);
-  color: var(--custom-white);
+  background-color: var(--primary-color) !important;
+  color: #fff !important;
 }
 
 .skeleton {
@@ -244,9 +244,9 @@ h2.fw-500 {
 }
 
 .toggle-btn {
-  // background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
+  background: var(--glass-bar-bg-color);
+  border: 1px solid var(--primary-color);
+  color: var(--default-text-color);
   border-radius: 50%;
   width: 42px;
   height: 42px;

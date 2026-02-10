@@ -55,6 +55,9 @@ class FileConnections(TimeStampedModel):
     connection_name = models.CharField(max_length=500,null=True,db_column='connection_name')
     uploaded_at = models.DateTimeField(default=timezone.now)
     user_id = models.ForeignKey(UserProfile,on_delete=models.CASCADE,db_column='user_id')
+    # Excel sheet selection fields
+    selected_sheets = models.JSONField(null=True, blank=True, default=list, help_text="List of selected sheet names for Excel files")
+    sheet_relationships = models.JSONField(null=True, blank=True, default=dict, help_text="Parent-child relationships between sheets")
     
     class Meta:
         db_table = 'File_connections'
@@ -82,3 +85,19 @@ class DataObjects(TimeStampedModel):
 
     class Meta:
         db_table = 'DataObjects'
+
+
+
+
+class Integrations(TimeStampedModel):
+    id = models.UUIDField(primary_key = True,default = uuid.uuid4,editable = False)
+    integration_type = models.CharField(max_length=100)
+    connection_name = models.CharField(max_length=500)
+    site_url = models.CharField(max_length=400,null=True)
+    credentials = models.JSONField()
+    token_metadata = models.JSONField()
+    is_active = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'Integrations'
+

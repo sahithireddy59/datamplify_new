@@ -96,7 +96,14 @@ class TaskPlan(APIView):
             task['dag_id'] = Task_data.Task_id
             task['task_name'] = task_name
             task_owner_id = Task_data.user_id.id if hasattr(Task_data.user_id, 'id') else Task_data.user_id
+            from django.utils.encoding import force_str
 
+            user_obj = getattr(Task_data, "user_id", None)
+            if user_obj and hasattr(user_obj, "username"):
+                task['username'] = force_str(user_obj.username)
+            else:
+                task['username'] = ""
+            task['user_id'] = task_owner_id
             configs_dir = f'{settings.config_dir}/TaskPlan/{str(task_owner_id)}'
             file_path = os.path.join(configs_dir, f'{Task_data.Task_id}.json')
             new_file_path = os.path.join(configs_dir, f'{Task_data.Task_id}.json')
@@ -201,8 +208,8 @@ class Task_List(APIView):
         page_size = request.query_params.get(paginator.page_size_query_param, paginator.page_size)
         search = request.query_params.get('search','')
         accessible_user_ids = [user_id]
-        if hasattr(user, 'created_by') and user.created_by:
-            accessible_user_ids.append(user.created_by.id)
+        if user.created_by_id:
+            accessible_user_ids.append(user.created_by_id)
         
 
         try:
@@ -210,15 +217,16 @@ class Task_List(APIView):
             page_size = min(int(page_size), paginator.max_page_size)
         except (ValueError, TypeError):
             return Response({"error": "Invalid pagination parameters"}, status=400)
-        total_records = task_models.TaskPlan.objects.filter(
+        task_data = task_models.TaskPlan.objects.filter(
             user_id__in=accessible_user_ids,
-            Task_name__icontains=search
-        ).count()
-
+        ).order_by('-updated_at')
+        if search:
+            task_data = task_data.filter(Task_name__icontains=search)
+        total_records = task_data.count()
         total_pages = ceil(total_records / page_size)
         offset = (page_number - 1) * page_size
         limit = page_size
-        data = task_models.TaskPlan.objects.filter(user_id__in=accessible_user_ids,Task_name__icontains = search).values('id','Task_name','created_at','updated_at','user_id')[offset:offset + limit]
+        data = task_data.values('id','Task_name','created_at','updated_at','user_id')[offset:offset + limit]
         return Response({'data':data,
                         'total_pages': total_pages,
                         "total_records":total_records,

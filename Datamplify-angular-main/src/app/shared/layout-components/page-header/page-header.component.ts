@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Router } from '@angular/router';
+import { NavigationService } from '../../services/navigation.service';
 
 @Component({
   selector: 'app-page-header',
@@ -20,7 +21,7 @@ export class PageHeaderComponent {
   @Output() btnClickEvent: EventEmitter<any>;
   dashbaordName: any;
 
-constructor(private route:Router,private sanitizer: DomSanitizer){
+constructor(private route:Router,private sanitizer: DomSanitizer, private navigationService: NavigationService){
   this.btnClickEvent = new EventEmitter();
 }
 
@@ -37,7 +38,7 @@ helpRoute(){
   this.route.navigate([`/datamplify/help-guide/${this.moduleId}`])
 }
 routeHome(){
-  this.route.navigate(['/datamplify/home'])
+  this.navigationService.navigate(['datamplify','home']);
 }
 
 toggleSidebar(){

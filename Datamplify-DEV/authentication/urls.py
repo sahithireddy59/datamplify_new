@@ -3,11 +3,19 @@ from oauth2_provider.views import AuthorizationView, TokenView
 from authentication.utils import get_access_token
 from oauth2_provider import urls as oauth2_urls
 from authentication.views import (SignUp,AccountActivate,Login,user_info_view,ForgotPasswordView,ConfirmPasswordView,user_delete,InviteUser,SetPassword,
-                                  EditUser,UsersList,Get_previlages,user_delete,DeleteInviteUser,Activateoldusers)
+                                  EditUser,UsersList,Get_previlages,user_delete,DeleteInviteUser,Activateoldusers,refresh_access_token,User_details,RegisterApplication,validate_oauth_client)
 from authentication.roles import CreateRole,RoleList,RoleDetail
+from oauth2_provider.views import AuthorizationView, TokenView
+from django.contrib.auth.views  import LoginView
 
 urlpatterns = [
-    path('o/',include(oauth2_urls)),
+    path('oauth2/authorize/',AuthorizationView.as_view(),name='Authorize'),
+    path('oauth2/token/',TokenView.as_view(),name='token'),
+    path('oauth2/refresh_token/',refresh_access_token,name='refresh token'),
+    path('oauth2/application',RegisterApplication.as_view(),name='app register'),
+    path('validate/client',validate_oauth_client.as_view(),name='validate client,'),
+    path('accounts/login/',LoginView.as_view(),name='oauth login' ),
+
 
     path('signup/',SignUp.as_view(),name='Registeration'),
 
@@ -17,11 +25,13 @@ urlpatterns = [
 
     path('reset_password/confirm/<token>',ConfirmPasswordView.as_view(), name='Forgot Password Confirm'),
 
-    path("user_delete/<str:email>/",user_delete.as_view(),name = 'user deletion'),
+    # path("user_delete/<str:email>/",user_delete.as_view(),name = 'user deletion'),
 
     path('login/',Login.as_view(),name = 'User Login'),
 
     path('me/', user_info_view), #airflow user data
+
+    path('user',User_details.as_view(),name='User_details'),
 
 
 
@@ -39,14 +49,11 @@ urlpatterns = [
 
     path('invite/password/<token>',SetPassword.as_view(),name='password set'),
 
-
     path('users_list/',UsersList.as_view(),name='list of users'),
 
     path('user/',EditUser.as_view(),name='Edit  user'),
 
     path('user/delete/<id>',DeleteInviteUser.as_view(),name = "delere user"),
-
-    
 
     path('previlages/',Get_previlages.as_view(),name='previlages list'),
 

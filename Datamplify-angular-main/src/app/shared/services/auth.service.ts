@@ -4,7 +4,7 @@ import { AngularFireAuth } from '@angular/fire/compat/auth';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { AngularFirestoreDocument } from '@angular/fire/compat/firestore';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { of } from 'rxjs';
 export interface User {
   uid: string;
@@ -73,41 +73,48 @@ resetPassword(token:any,data:any){
 }
 reactivateEmail(data:any){
   return this.http.post<any>(`${environment.apiUrl}/authentication/re_activation`+'/',data);
-
-}
-getTokenQuickbook(data:any){
-  const currentUser = localStorage.getItem( 'currentUser' );
-  this.accessToken = JSON.parse( currentUser! )['Token'];
-  return this.http.post<any>(`${environment.apiUrl}/quickbooks_token/`+this.accessToken,data); 
-}
-getTokensalesforce(data:any){
-  const currentUser = localStorage.getItem( 'currentUser' );
-  this.accessToken = JSON.parse( currentUser! )['Token'];
-  return this.http.post<any>(`${environment.apiUrl}/callback/`+this.accessToken,data); 
 }
 resendOtpApi(obj:any){
   return this.http.post<any>(`${environment.apiUrl}/authentication/resendotp/`,obj); 
 }
 logOut(){
-  localStorage.removeItem('username');
-         localStorage.removeItem('currentUser');
-        //  this.currentUserSubject.next(this.currentUserValue);
-         localStorage.clear();
-         //this.userSubject.next(null);
-         window.location.reload();
-  
-         this.router.navigate(['/authentication/signin']) 
-        //  .then(() => {
-        //  }); 
-         return of({ success: false });
-  }
+  localStorage.clear();
+  window.location.href = '/authentication/login';
+}
   
   updatePassword(obj:any){
     const currentUser = localStorage.getItem( 'currentUser' );
     this.accessToken = JSON.parse( currentUser! )['Token'];
     return this.http.put<any>(`${environment.apiUrl}/authentication/updatepassword/`+this.accessToken,obj)
   }
-  setPassword(token: any, data: any) {
-    return this.http.put<any>(`${environment.apiUrl}/authentication/setPassword/` + token, data);
+  private buildHeaders(token: string) {
+    const headers = new HttpHeaders({
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    });
+    return headers;
+  }
+  inviteNewUser(object:any){
+    const currentUser = localStorage.getItem('currentUser');
+    this.accessToken = JSON.parse(currentUser!)['Token'];
+    return this.http.post<any>(`${environment.apiUrl}/authentication/invite/user/`, object, { headers: this.buildHeaders(this.accessToken) });
+  }
+  setPassword(token: any, object: any) {
+    return this.http.post<any>(`${environment.apiUrl}/authentication/invite/password/${token}`, object, { headers: this.buildHeaders(this.accessToken) });
+  }
+  getUsersList(page:any, pageSize: any, search: any, role: any){
+    const currentUser = localStorage.getItem('currentUser');
+    this.accessToken = JSON.parse(currentUser!)['Token'];
+    return this.http.get<any>(`${environment.apiUrl}/authentication/users_list/` + `?page=${page}&page_size=${pageSize}` + (search ? `&search=${search}` : ``) + (role ? `&role=${role}` : ``), { headers: this.buildHeaders(this.accessToken) });
+  }
+  editUser(object: any){
+    const currentUser = localStorage.getItem('currentUser');
+    this.accessToken = JSON.parse(currentUser!)['Token'];
+    return this.http.put<any>(`${environment.apiUrl}/authentication/user/`, object, { headers: this.buildHeaders(this.accessToken) });
+  }
+  deleteUser(id: any){
+    const currentUser = localStorage.getItem('currentUser');
+    this.accessToken = JSON.parse(currentUser!)['Token'];
+    return this.http.delete<any>(`${environment.apiUrl}/authentication/user/delete/${id}`, { headers: this.buildHeaders(this.accessToken) });
   }
 }

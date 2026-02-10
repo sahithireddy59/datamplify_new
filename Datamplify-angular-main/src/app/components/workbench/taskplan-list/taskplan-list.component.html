@@ -1,167 +1,8 @@
-<app-page-header title="TaskPlan" moduleId="taskPlanList" title1="Home" activeitem="TaskPlan"></app-page-header>
-
-
-<!-- <div class="main-container container-fluid TopHeader">
-
-    <div class="row" class="card card-padding-top">
-        <div class="col-sm-12 col-lg-12 col-xl-12 p-0">
-            <div class="d-flex justify-content-between px-5">
-                <div class="connect-txt">
-                    <h4 class="card-title mt-2">Saved TaskPlans</h4>
-                </div>
-                <div class="new-data-btn d-flex text-align-center">
-                    <button *ngIf="gridView" type="button" ngbTooltip="Grid View"
-                        class="btn btn-icon btn-outline-primary me-1"><i class="fa fa-th-large"></i></button>
-                    <button *ngIf="gridView" type="button" ngbTooltip="Table View" (click)="gridView=false"
-                        class="btn btn-icon btn-primary-light me-3"><i class="fa fa-th-list"></i></button>
-
-                    <button *ngIf="!gridView" type="button" ngbTooltip="Grid View" (click)="gridView=true"
-                        class="btn btn-icon btn-primary-light me-1"><i class="fa fa-th-large"></i></button>
-                    <button *ngIf="!gridView" type="button" ngbTooltip="Table View"
-                        class="btn btn-icon btn-outline-primary me-3"><i class="fa fa-th-list"></i></button>
-
-
-                    <div class="input-group">
-                        <input type="text" class="form-control border-end-0 " placeholder="Search"
-                            aria-describedby="button-addon2" [(ngModel)]="search" (keyup.enter)="page = 1; getTaskplanList()">
-                        <button class="btn btn-primary border me-2 search-icon-border-radius" type="button" (click)="page = 1; getTaskplanList()"
-                            id="button-addon2"><i class="fe fe-search "></i></button>
-                        <button class="btn btn-primary new-sheet-btn-radius" (click)="goToTaskplan()">
-                            <i class="fe fe-plus me-1"></i>New TaskPlan
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div *ngIf="jobFlowList.length === 0" class="ms-2">
-                No TaskPlans to display!
-            </div>
-            <div *ngIf="jobFlowList.length > 0" class="card-body">
-                @if(!gridView){
-                <div class="table-responsive border table-responsive-height">
-                    <table class="table border text-nowrap text-md-nowrap mb-0">
-                        <thead class="table-primary bg-primary table-primary-position">
-                            <tr>
-                                <th>Title</th>
-                                <th>Created At</th>
-                                <th>Last Modified</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let jobFlow of jobFlowList | paginate : { itemsPerPage: pageSize, currentPage: page, totalItems: totalItems }; let index = index">
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="imgdf">
-                                            <img src="./assets/images/charts/post-tiled-icon.jpg" alt="postgresql job flow"
-                                                class="w-7 h-7 border rounded-3  me-4">
-                                        </div>
-                                            <p class="cursor-pointer fw-bold" style="font-size: 17px;" [ngbTooltip]="jobFlow.Task_name"
-                                                (click)="editTaskplan(jobFlow.id)"> {{jobFlow.Task_name | slice: 0: 15}} </p>
-                                    </div>
-                                </td>
-                                <td> {{jobFlow.created_at | date: 'yyyy-MM-dd HH:mm:ss' }} </td>
-                                <td> {{jobFlow.updated_at | date: 'yyyy-MM-dd HH:mm:ss' }} </td>
-                                <td>
-                                    <div class="hstack gap-2 fs-1">
-                                        <button class="btn btn-icon btn-sm btn-info-light btn-wave waves-effect waves-light"
-                                            (click)="editTaskplan(jobFlow.id)">
-                                            <i class="ri-edit-line"></i>
-                                        </button>
-                                        <button class="btn btn-icon btn-sm btn-danger-light btn-wave waves-effect waves-light"
-                                            (click)="deleteTaskPlan(jobFlow)">
-                                            <i class="ri-delete-bin-7-line"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                }
-                @if(gridView){
-                <div class="row">
-                    <div class="col-md-12 col-xl-3" *ngFor="let jobFlow of jobFlowList | paginate : { itemsPerPage: pageSize, currentPage: page, totalItems: totalItems }; let index = index">
-                        <div class="card card-box-shadow ">
-                            <div class="card-header tiled-header-bg bg-primary tiled-card-header-padding">
-                                <div class="d-sm-flex align-items-center">
-                                    <div class="user-image">
-                                        <span class="avatar avatar rounded-circle">
-                                            <img src="./assets/images/charts/post-tiled-icon.jpg" alt="postgresql job flow"
-                                                class="rounded-circle">
-                                        </span>
-                                    </div>
-                                    <div class="ms-2 mt-sm-0 mt-2">
-                                        <h6 class="mb-1">
-                                            <a [ngbTooltip]="jobFlow.Task_name" class="float-start"
-                                                (click)="editTaskplan(jobFlow.id)"> {{jobFlow.Task_name | slice: 0: 15}} </a>
-                                        </h6>
-                    
-                                    </div>
-                                </div>
-                    
-                                <div class="col-auto">
-                                    <div class="d-flex justify-content-end p-1" ngbDropdown>
-                                        <a href="javascript:void(0);" data-bs-toggle="dropdown" role="button" ngbDropdownToggle
-                                            aria-haspopup="true" aria-expanded="false" class=""><i
-                                                class="fe fe-more-vertical fs-18 text-body-secondary"></i>
-                                        </a>
-                                        <div class="dropdown-menu" ngbDropdownMenu>
-                                            <a class="dropdown-item"><i class="fe fe-edit me-2 d-inline-flex"
-                                                    (click)="editTaskplan(jobFlow.id)"></i>
-                                                edit</a>
-                                            <a class="dropdown-item  btn btn-secondary-light" (click)="deleteTaskPlan(jobFlow)"><i
-                                                    class="fe fe-trash me-2 d-inline-flex"></i>
-                                                delete</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="card-body tiled-card-body-padding">
-                                <div class="row">
-                    
-                                    <div class="col-md-12">
-                                        <div class="row">
-                                            <div class="col-md-5">
-                                                <span class="fw-semibold fs-14">Created On: </span>
-                                            </div>
-                                            <div class="col-md-7">
-                                                <span class="fs-14"> {{jobFlow.created_at | date: 'yyyy-MM-dd HH:mm:ss' }} </span>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-5">
-                                                <span class="fw-semibold fs-14">Last Modified: </span>
-                                            </div>
-                                            <div class="col-md-7">
-                                                <span class="fs-14"> {{jobFlow.updated_at | date: 'yyyy-MM-dd HH:mm:ss' }} </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                }
-                <pagination-controls previousLabel="Prev" nextLabel="Next"
-                    (pageChange)="page = $event; getTaskplanList()"></pagination-controls>
-                <div class="pagination-count">
-                    <select [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()" class="form-control cursor"
-                        [disabled]="!pageSize">
-                        <option value="10"> 10</option>
-                        <option [disabled]="!(totalItems > 10)" value="20"> 20</option>
-                        <option [disabled]="!(totalItems > 20)" value="30"> 30</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-    </div>
-</div> -->
-
+<app-page-header title="TaskRunPlan" moduleId="taskPlanList" title1="Home" activeitem="TaskRunPlan"></app-page-header>
 
 <div class="main-container container-fluid TopHeader container-background p-0">
     <div class="card mb-0 rounded-0" style="min-height: 466px;">
-        <div class="d-flex justify-content-end px-5 mt-2">
+        <div *ngIf="canViewTaskplan" class="d-flex justify-content-end px-5 mt-2">
             <div class="d-flex text-align-center">
                 <button type="button" ngbTooltip="Grid View" triggers="hover" (click)="gridView=true"
                     class="btn btn-icon btn-outline-primary me-1" [ngClass]="gridView ? 'active' : ''"><i
@@ -176,14 +17,14 @@
                             (keyup.enter)="page = 1; getTaskplanList();"
                             class="form-control border-0 bg-transparent ps-3 py-2" />
 
-                        <button type="button" class="btn rounded-pill px-3 border-0 search-btn"
+                        <button type="button" class="btn rounded-pill px-3 border-0 search-btn text-dark"
                             (click)="page = 1; getTaskplanList();">
                             <i class="fe fe-search"></i>
                         </button>
                     </div>
                 </div>
-                <button class="btn mode-btn btn-sm rounded-5" (click)="goToTaskplan()">
-                    <i class="fe fe-plus me-1"></i>New Taskplan
+                <button class="btn mode-btn btn-sm rounded-5" (click)="goToTaskplan()" *appHasPermission="{ id: 16, mode: 'disable' }">
+                    <i class="fe fe-plus me-1"></i>New TaskRunPlan
                 </button>
             </div>
         </div>
@@ -203,7 +44,7 @@
                                     <i class="fa-solid fa-chart-diagram fs-5 text-warning"></i>
                                 </div>
                                 <h6 [ngbTooltip]="jobFlow.Task_name" class="fw-semibold mb-0 text-truncate"
-                                    style="max-width: 200px; cursor: pointer !important;" (click)="editTaskplan(jobFlow.id)">
+                                    style="max-width: 200px; cursor: pointer !important;" (click)="editTaskplan(jobFlow.id)" *appHasPermission="{ id: 15, mode: 'disable' }">
                                     {{ jobFlow.Task_name.length > 18 ? (jobFlow.Task_name | slice:0:16) + '...' : jobFlow.Task_name
                                     }}
                                 </h6>
@@ -212,23 +53,23 @@
                             <!-- Middle: Created Date (fixed width) -->
                             <div class="text-muted small flex-shrink-0" style="width: 180px;">
                                 <span class="fw-semibold">Created:</span>
-                                <span>{{ jobFlow.created_at | date: 'mediumDate' }}</span>
+                                <span>{{ jobFlow.created_at | date:'dd-MM-yyyy, hh:mm a' }}</span>
                             </div>
             
                             <!-- Middle: Modified Date (fixed width) -->
                             <div class="text-muted small flex-shrink-0" style="width: 180px;">
                                 <span class="fw-semibold">Modified:</span>
-                                <span>{{ jobFlow.updated_at | date: 'mediumDate' }}</span>
+                                <span>{{ jobFlow.updated_at | date:'dd-MM-yyyy, hh:mm a' }}</span>
                             </div>
             
                             <!-- Right: Badges + Actions -->
                             <div class="ms-auto d-flex gap-2 align-items-center">
                                 <button class="btn btn-outline-primary-light shadow-sm rounded-4 btn-sm"
-                                    (click)="editTaskplan(jobFlow.id)">
+                                    (click)="editTaskplan(jobFlow.id)" *appHasPermission="{ id: 15, mode: 'disable' }">
                                     <i class="bi bi-pencil"></i>
                                 </button>
                                 <button class="btn btn-outline-danger-light shadow-sm rounded-4 btn-sm"
-                                    (click)="deleteTaskPlan(jobFlow)">
+                                    (click)="deleteTaskPlan(jobFlow)" *appHasPermission="{ id: 18, mode: 'disable' }">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </div>
@@ -286,7 +127,7 @@
                                         </div>
                                         <div>
                                             <h5 [ngbTooltip]="jobFlow.Task_name" class="fw-semibold mb-1" style="font-size: 14px; cursor: pointer !important;"
-                                                (click)="editTaskplan(jobFlow.id)">{{ jobFlow.Task_name | slice: 0: 18 }}
+                                                (click)="editTaskplan(jobFlow.id)" *appHasPermission="{ id: 15, mode: 'disable' }">{{ jobFlow.Task_name | slice: 0: 18 }}
                                             </h5>
                                             <!-- <p class="text-muted small mb-0">{{ connection.subType }}</p> -->
                                         </div>
@@ -305,23 +146,21 @@
             
                                 <div class="d-flex align-items-center justify-content-between">
                                     <span class="small text-muted"> Created On</span>
-                                    <span class="small  text-capitalize"> {{ jobFlow.created_at | date: 'mediumDate'
-                                        }} </span>
+                                    <span class="small  text-capitalize"> {{ jobFlow.created_at | date:'dd-MM-yyyy, hh:mm a' }} </span>
                                 </div>
                                 <div class="d-flex align-items-center justify-content-between mb-2">
                                     <span class="small text-muted">Last Modified</span>
-                                    <span class="small text-capitalize">{{ jobFlow.updated_at | date: 'mediumDate'
-                                        }}</span>
+                                    <span class="small text-capitalize">{{ jobFlow.updated_at | date:'dd-MM-yyyy, hh:mm a' }}</span>
                                 </div>
             
             
                                 <div class="d-flex gap-2">
                                     <button class="btn btn-outline-primary-light p-1 rounded-5 shadow-sm btn-sm flex-fill"
-                                        (click)="editTaskplan(jobFlow.id)">
+                                        (click)="editTaskplan(jobFlow.id)" *appHasPermission="{ id: 15, mode: 'disable' }">
                                         <i class="fe fe-edit me-1"></i> Edit
                                     </button>
                                     <button class="btn btn-outline-danger-light p-1 rounded-5 shadow-sm btn-sm flex-fill"
-                                        (click)="deleteTaskPlan(jobFlow)">
+                                        (click)="deleteTaskPlan(jobFlow)" *appHasPermission="{ id: 18, mode: 'disable' }">
                                         <i class="fe fe-trash me-1"></i> Delete
                                     </button>
                                 </div>
@@ -373,7 +212,7 @@
                 </ng-container>
                 }
                 @if(jobFlowList.length === 0 && !isLoading){
-                <div class="d-flex flex-column align-items-center justify-content-center py-5 text-center text-muted">
+                <div class="d-flex flex-column align-items-center justify-content-center py-5 text-center text-muted" style="min-height: 70vh;">
                     <!-- Icon -->
                     <div class="mb-3">
                         <div class="rounded-circle bg-warning-subtle d-flex align-items-center justify-content-center"
@@ -383,10 +222,17 @@
                     </div>
             
                     <!-- Message -->
-                    <h5 class="fw-semibold text-dark mb-1">No Taskplans Found</h5>
+                    @if (canViewTaskplan) {
+                    <h5 class="fw-semibold text-dark mb-1">No TaskRunPlan Found</h5>
                     <p class="small mb-0" style="max-width: 360px;">
-                        You haven’t created any Taskplans yet. Start by creating a new one to manage your tasks efficiently.
+                        You haven’t created any TaskRunPlan yet. Start by creating a new one to manage your tasks efficiently.
                     </p>
+                    } @else {
+                    <h5 class="fw-semibold text-dark mb-1">Access Restricted</h5>
+                    <p class="small mb-0" style="max-width: 360px;">
+                        You don’t have permission to view TaskRunPlan. Please contact your administrator for access.
+                    </p>
+                    }
                 </div>
                 }
             </div>

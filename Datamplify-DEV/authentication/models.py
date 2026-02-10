@@ -69,7 +69,7 @@ class UserProfile(AbstractUser):
     id = models.UUIDField(primary_key = True,default = uuid.uuid4,editable = False,db_column='user_id')
     username = models.CharField(max_length=100,unique=False)
     roles = models.ManyToManyField(Role, related_name='users', blank=True)
-    email = models.EmailField(db_column='email_id',unique=True)
+    email = models.EmailField(db_column='email_id',unique=True,db_index=True)
     password = models.CharField(max_length=256)
     created_by = models.ForeignKey(   # track who created the user
         'self',

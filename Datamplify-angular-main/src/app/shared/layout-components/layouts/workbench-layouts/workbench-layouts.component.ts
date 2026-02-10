@@ -4,6 +4,7 @@ import { Router, NavigationEnd, RouterModule } from '@angular/router';
 import { filter } from 'rxjs';
 import { SwitcherComponent } from '../../switcher/switcher.component';
 import { SharedModule } from '../../../sharedmodule';
+import { SharedService } from '../../../services/shared.service';
 @Component({
   selector: 'app-workbench-layouts',
   standalone: true,
@@ -16,11 +17,13 @@ export class WorkbenchLayoutsComponent {
   currentRoute:  string | undefined;
   urlData:  string[] | undefined;
   document: any;
+  isEmbedMode: boolean = false;
  constructor(
   private router:Router, 
    public navServices: NavService,
    private elementRef: ElementRef,
    private renderer: Renderer2,
+   private sharedService: SharedService
  ) {
   this.router.events.pipe(
     filter(event => event instanceof NavigationEnd)
@@ -78,6 +81,19 @@ clearToggle() {
  
   document.querySelector('#responsive-overlay')?.classList.remove('active');
 }
+
+  // ngOnInit() {
+  //   this.isEmbedMode = this.sharedService.getEmbedMode();
+  //   if (this.isEmbedMode) {
+  //     const html = document.documentElement;
+
+  //     // Force override after Switcher applies settings
+  //     html.setAttribute('data-menu-styles', 'light');
+  //     html.setAttribute('data-theme-mode', 'light');
+  //     html.setAttribute('data-header-styles', 'light');
+  //     html.setAttribute('data-nav-layout', 'horizontal');
+  //   }
+  // }
 
 
 // ngOnInit(): void {

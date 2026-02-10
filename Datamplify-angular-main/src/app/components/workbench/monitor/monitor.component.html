@@ -4,7 +4,7 @@
     <div *ngIf="!isFullLogView" class="d-flex align-items-center justify-content-between mb-4">
         <!-- Left: Back + Title -->
         <div class="d-flex align-items-center">
-            <button class="btn mode-btn me-3" (click)="goBackToMonitorList()">
+            <button class="btn mode-btn rounded-5 me-3" (click)="goBackToMonitorList()">
                 <i class="fa-solid fa-arrow-left"></i> Back
             </button>
             <div>
@@ -15,7 +15,7 @@
     
         <!-- Right: Refresh Button -->
         <div class="d-flex align-items-center">
-            <button class="btn mode-btn d-flex align-items-center me-2" (click)="refreshMonitorData()">
+            <button class="btn mode-btn rounded-5 d-flex align-items-center me-2" (click)="refreshMonitorData()">
                 <i class="fa-solid fa-rotate-right me-2"></i> Refresh
             </button>
 
@@ -28,7 +28,7 @@
     <div *ngIf="isFullLogView" class="d-flex align-items-center justify-content-between mb-4">
         <!-- Left: Back + Title -->
         <div class="d-flex align-items-center">
-            <button class="btn mode-btn me-3" (click)="isFullLogView = false;">
+            <button class="btn mode-btn rounded-5 me-3" (click)="isFullLogView = false;">
                 <i class="fa-solid fa-arrow-left"></i> Back
             </button>
             <div class="p-1 d-flex align-items-center rounded-3 me-3" 
@@ -87,7 +87,7 @@
                 <div class="text-start">
                     <h6 class="text-muted mb-1">Latest Run</h6>
                     <h6 class="fw-semibold text-primary mb-0">
-                        {{ (latestRunTimestamp | date:'yyyy-MM-dd HH:mm:ss') || 'None' }}
+                        {{ (latestRunTimestamp | date:'dd-MM-yyyy, hh:mm a') || 'None' }}
                     </h6>
                 </div>
             </div>
@@ -101,7 +101,7 @@
                 </div>
                 <div class="text-start">
                     <h6 class="text-muted mb-1">Next Run</h6>
-                    <h6 class="fw-semibold text-dark mb-0">{{ (nextRunTimestamp | date:'yyyy-MM-dd HH:mm:ss') || 'None' }}</h6>
+                    <h6 class="fw-semibold text-dark mb-0">{{ (nextRunTimestamp | date:'dd-MM-yyyy, hh:mm a') || 'None' }}</h6>
                 </div>
             </div>
         </div>
@@ -115,7 +115,7 @@
                 </div>
                 <div class="text-start">
                     <h6 class="text-muted mb-1">Start</h6>
-                    <h6 class="fw-semibold text-dark mb-0">{{ (selectedTask.start_date | date:'yyyy-MM-dd HH:mm:ss') || 'None' }}</h6>
+                    <h6 class="fw-semibold text-dark mb-0">{{ (selectedTask.start_date | date:'dd-MM-yyyy, hh:mm a') || 'None' }}</h6>
                 </div>
             </div>
         </div>
@@ -128,7 +128,7 @@
                 <div class="text-start">
                     <h6 class="text-muted mb-1">End</h6>
                     <h6 class="fw-semibold text-dark mb-0">
-                        {{ (selectedTask.end_date | date:'yyyy-MM-dd HH:mm:ss') || 'None' }}
+                        {{ (selectedTask.end_date | date:'dd-MM-yyyy, hh:mm a') || 'None' }}
                     </h6>
                 </div>
             </div>
@@ -152,7 +152,7 @@
         <div class="nav-item" style="width: 32%;">
             <button class="nav-link fw-semibold w-100"
             [ngClass]="activeTab === 'overview' ? 'tab-active' : 'tab-inactive'"
-            (click)="activeTab = 'overview'; getRunsList(dagId, 14, 1, '', '', '-run_after');">Overview</button>
+            (click)="activeTab = 'overview'; refreshMonitorData();">Overview</button>
         </div>
 
         <div class="nav-item" style="width: 32%;">
@@ -180,7 +180,7 @@
                             <h6 class="fw-semibold text-dark" style="font-size: 15px;">Task Status History</h6>
                             <!-- <p class="text-muted small">5 Runs</p> -->
                             <div class="btn-group me-2" ngbDropdown container="body">
-                                <button type="button" class="btn mode-btn" ngbDropdownToggle>
+                                <button type="button" class="btn mode-btn rounded-5" ngbDropdownToggle>
                                     {{lastXRuns}} Runs
                                 </button>
                                 <ul ngbDropdownMenu>
@@ -222,7 +222,7 @@
                                                               'bg-warning': statusInfo.status === 'upstream_failed'
                                                             }"
                                                     [style.background-color]="statusInfo.status === 'removed' ? '#6c757d' : ''"
-                                                    ngbTooltip="Run: {{statusInfo.runAfter | date:'yyyy-MM-dd HH:mm:ss' }}, Status: {{statusInfo.status}}"
+                                                    ngbTooltip="Run: {{statusInfo.runAfter | date:'dd-MM-yyyy, hh:mm a' }}, Status: {{statusInfo.status}}"
                                                     container="body">
                                 
                                                     <!-- Icons -->
@@ -252,7 +252,7 @@
                         <h6 class="fw-semibold text-dark" style="font-size: 15px;">{{mainChartTitle}}</h6>
                         <!-- Placeholder Bar Chart -->
                         <div class="chart-placeholder d-flex flex-column mt-4">
-                            <div echarts [options]="chartOptions" class="echart"></div>
+                            <div echarts #barChart [options]="chartOptions" class="echart"></div>
 
                             <div class="row g-3 mt-4">
                                 <!-- Avg Duration -->
@@ -295,7 +295,7 @@
                     <!-- </div> -->
                     <div class="d-flex justify-content-end mb-3">
                         <div class="btn-group me-2" ngbDropdown container="body">
-                            <button type="button" class="btn mode-btn" ngbDropdownToggle>
+                            <button type="button" class="btn mode-btn rounded-5" ngbDropdownToggle>
                                 <i class="fa-solid fa-filter"></i> {{ selectedStateFilter }}
                             </button>
                             <ul ngbDropdownMenu>
@@ -307,7 +307,7 @@
                             </ul>
                         </div>
                         <div class="btn-group" ngbDropdown container="body">
-                            <button type="button" class="btn mode-btn" ngbDropdownToggle>
+                            <button type="button" class="btn mode-btn rounded-5" ngbDropdownToggle>
                                <i class="fa-solid fa-tags"></i> {{ selectedRunTypeFilter }}
                             </button>
                             <ul ngbDropdownMenu>
@@ -338,7 +338,7 @@
                                     <!-- Run After -->
                                     <td class="fw-semibold text-primary">
                                         <a class="link-primary fw-medium" style="cursor: pointer;" (click)="getTaskListOfRun(run.dag_id, run.dag_run_id)">
-                                            {{ run.run_after | date:'yyyy-MM-dd HH:mm:ss' }}
+                                            {{ run.run_after | date:'dd-MM-yyyy, hh:mm a' }}
                                         </a>
                                     </td>
                                 
@@ -357,13 +357,13 @@
                                     <td>{{ run.run_type }}</td>
                                 
                                     <!-- Start Date -->
-                                    <td>{{ run.start_date | date:'yyyy-MM-dd HH:mm:ss' }}</td>
+                                    <td>{{ run.start_date | date:'dd-MM-yyyy, hh:mm a' }}</td>
                                 
                                     <!-- Duration -->
                                     <td>{{ run.duration }}</td>
                                 
                                     <!-- End Date -->
-                                    <td>{{ run.end_date ? (run.end_date | date:'yyyy-MM-dd HH:mm:ss') : 'N/A' }}</td>
+                                    <td>{{ run.end_date ? (run.end_date | date:'dd-MM-yyyy, hh:mm a') : 'N/A' }}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -396,13 +396,17 @@
                                                'bg-danger-subtle text-danger': task.state === 'failed',
                                                'bg-info-subtle text-info': task.state === 'running',
                                                'bg-warning-subtle text-warning': task.state === 'upstream_failed',
-                                               'bg-secondary-subtle text-secondary': task.state === 'removed'
-                                             }">
+                                               'bg-secondary-subtle text-secondary': task.state === 'removed',
+                                               'bg-primary-subtle text-primary': task.state === 'scheduled',
+                                               'bg-purple-subtle text-purple': task.state === 'queued'
+                                            }">
                                             <i *ngIf="task.state === 'success'" class="fa-regular fa-circle-check fs-5"></i>
                                             <i *ngIf="task.state === 'failed'" class="fa-solid fa-circle-exclamation fs-5"></i>
                                             <i *ngIf="task.state === 'running'" class="fe fe-activity fs-5"></i>
                                             <i *ngIf="task.state === 'upstream_failed'" class="fa-solid fa-triangle-exclamation fs-5"></i>
                                             <i *ngIf="task.state === 'removed'" class="fa-solid fa-ban fs-5"></i>
+                                            <i *ngIf="task.state === 'scheduled'" class="fa-regular fa-clock fs-5"></i>
+                                            <i *ngIf="task.state === 'queued'" class="fa-solid fa-hourglass-half fs-5"></i>
                                         </div>
                                 
                                         <h6 class="mb-0 fw-semibold text-dark" style="cursor: pointer;">{{ task.task_id }}</h6>
@@ -415,7 +419,9 @@
                                             'bg-danger text-danger-subtle': task.state === 'failed',
                                             'bg-info text-info-subtle': task.state === 'running',
                                             'bg-warning text-warning-subtle': task.state === 'upstream_failed',
-                                            'bg-secondary text-light': task.state === 'removed'
+                                            'bg-secondary text-light': task.state === 'removed',
+                                            'bg-primary-subtle text-primary': task.state === 'scheduled',
+                                            'bg-purple-subtle text-purple': task.state === 'queued'
                                           }">
                                             {{ task.state }}
                                         </span>
@@ -430,11 +436,11 @@
                                 <div class="row small text-dark g-3">
                                     <div class="col">
                                         <p class="mb-0"><strong>Start:</strong></p>
-                                        <p class="mb-0">{{ (task.start_date | date:'yyyy-MM-dd HH:mm:ss') || 'N/A' }}</p>
+                                        <p class="mb-0">{{ (task.start_date | date:'dd-MM-yyyy, hh:mm a') || 'N/A' }}</p>
                                     </div>
                                     <div class="col">
                                         <p class="mb-0"><strong>End:</strong></p>
-                                        <p class="mb-0">{{ (task.end_date | date:'yyyy-MM-dd HH:mm:ss') || 'N/A' }}</p>
+                                        <p class="mb-0">{{ (task.end_date | date:'dd-MM-yyyy, hh:mm a') || 'N/A' }}</p>
                                     </div>
                                     <div class="col">
                                         <p class="mb-0"><strong>Duration:</strong></p>

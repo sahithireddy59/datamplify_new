@@ -116,8 +116,8 @@ class Schedulers(APIView):
         user= request.user
         user_id = user.id
         accessible_user_ids = [user_id]
-        if hasattr(user, 'created_by') and user.created_by:
-            accessible_user_ids.append(user.created_by.id)
+        if user.created_by_id:
+            accessible_user_ids.append(user.created_by_id)
         paginator = CustomPaginator()
         page_number = request.query_params.get(paginator.page_query_param, 1)
         page_size = request.query_params.get(paginator.page_size_query_param, paginator.page_size)
@@ -128,14 +128,21 @@ class Schedulers(APIView):
             page_size = min(int(page_size), paginator.max_page_size)
         except (ValueError, TypeError):
             return Response({"error": "Invalid pagination parameters"}, status=400)
-        total_schedules = Schedule.objects.filter(user_id__in=accessible_user_ids).count()
+        # if status_filter.lower() =='all':
+        schedule_data = Schedule.objects.filter(user_id__in=accessible_user_ids).order_by('-updated_at')
+        if search:
+            schedule_data = schedule_data.filter(source_name__icontains = search)
+
+        if status_filter!='all':
+            schedule_data = schedule_data.filter(status = status_filter)
+
+        total_schedules = schedule_data.count()
         total_pages = ceil(total_schedules / page_size)
         offset = (page_number - 1) * page_size
         limit = page_size
-        if status_filter.lower() =='all':
-            schedules = Schedule.objects.filter(user_id__in=accessible_user_ids,source_name__icontains = search).values().order_by('-updated_at')[offset:offset + limit]
-        else:
-            schedules = Schedule.objects.filter(user_id__in=accessible_user_ids,source_name__icontains = search,status = status_filter).values().order_by('-updated_at')[offset:offset + limit]
+
+        data = schedule_data.values('id','last_run','next_run',
+                                    'status','source_name','source_type','status','schedule_value')[offset:offset + limit]
         # data = []
         # for sched in schedules:
         #     data.append({
@@ -149,7 +156,7 @@ class Schedulers(APIView):
         #         "last_run": sched.last_run,
         #         "status": sched.status
         #     })
-        return Response({"schedules": schedules,'total_pages': total_pages,
+        return Response({"schedules": data,'total_pages': total_pages,
                             "total_records":total_schedules,
                             'page_number': page_number,
                             'page_size': page_size}, status=status.HTTP_200_OK)
@@ -270,8 +277,8 @@ class UpcomingRuns(APIView):
         user= request.user
         user_id = user.id
         accessible_user_ids = [user_id]
-        if hasattr(user, 'created_by') and user.created_by:
-            accessible_user_ids.append(user.created_by.id)
+        if user.created_by_id:
+            accessible_user_ids.append(user.created_by_id)
         paginator = CustomPaginator()
         page_number = request.query_params.get(paginator.page_query_param, 1)
         page_size = request.query_params.get(paginator.page_size_query_param, paginator.page_size)
@@ -282,15 +289,18 @@ class UpcomingRuns(APIView):
             page_size = min(int(page_size), paginator.max_page_size)
         except (ValueError, TypeError):
             return Response({"error": "Invalid pagination parameters"}, status=400)
-        total_schedules = Schedule.objects.filter(user_id__in=accessible_user_ids,status='active').count()
-        # Filter active schedules for user
+        
+        upcoming_schedules = Schedule.objects.filter(user_id__in=accessible_user_ids,status='active').order_by('next_run')
+        if search:
+            upcoming_schedules = upcoming_schedules.filter( status='active',source_name__icontains = search)[offset:offset + limit]
+
+        total_schedules = upcoming_schedules.count()
         total_pages = ceil(total_schedules / page_size)
         offset = (page_number - 1) * page_size
         limit = page_size
-        schedules = Schedule.objects.filter(user_id__in=accessible_user_ids, status='active',source_name__icontains = search).order_by('next_run')[offset:offset + limit]
 
         result = []
-        for sched in schedules:
+        for sched in upcoming_schedules:
             if not sched.next_run:
                 continue
 

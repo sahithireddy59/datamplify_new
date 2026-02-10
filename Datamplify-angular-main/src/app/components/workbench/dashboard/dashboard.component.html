@@ -9,11 +9,11 @@
                 <div class="p-2 rounded-3 icon-wrap kpi-icon" [ngClass]="kpi.color">
                   <i class="{{kpi.icon}} fs-5"></i>
                 </div>
-                <div class="d-inline-flex align-items-center gap-1 small px-2 py-1 rounded-pill kpi-trend"
+                <!-- <div class="d-inline-flex align-items-center gap-1 small px-2 py-1 rounded-pill kpi-trend"
                   [ngClass]="kpi.trend === 'up' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'">
                   <i class="bi bounce-icon" [ngClass]="kpi.trend === 'up' ? 'bi-arrow-up' : 'bi-arrow-down'"></i>
                   <span class="fw-medium">{{kpi.change}}</span>
-                </div>
+                </div> -->
               </div>
               <div>
                 <h3 class="fw-bold text-dark mb-1 display-6 fs-3 kpi-value">{{kpi.value}}</h3>
@@ -62,12 +62,12 @@
                         <div class="d-flex align-items-center gap-1 pe-2">
                             <button type="button" class="btn btn-sm mode-btn" [ngClass]="{'active-btn': chartMode === 'flowboard'}"
                                 (click)="chartMode = 'flowboard'; changeChartMode()">
-                                <i class="fe fe-git-branch"></i> FlowBoard
+                                <i class="fe fe-git-branch"></i> DagBoard
                             </button>
                         
                             <button type="button" class="btn btn-sm mode-btn" [ngClass]="{'active-btn': chartMode === 'taskplan'}"
                                 (click)="chartMode = 'taskplan'; changeChartMode()">
-                                <i class="fa-solid fa-chart-diagram me-1"></i> TaskPlan
+                                <i class="fa-solid fa-chart-diagram me-1"></i> TaskRunPlan
                             </button>
                         </div>
                     </div>
@@ -130,7 +130,7 @@
             <i *ngIf="item.status === 'failed'" class="fa-solid fa-circle-exclamation"></i>
             <i *ngIf="item.status === 'running'" class="fe fe-activity"></i>
           </div>
-          <span class="fw-semibold" style="cursor: pointer !important;" (click)="item.type === 'flowboard' ? goToFlowboard(item?.id) : goToTaskplan(item?.id);">{{ item.name }}</span>
+          <span class="fw-semibold" style="cursor: pointer !important;" (click)="item.type === 'flowboard' ? goToFlowboard(item?.id) : goToTaskplan(item?.id);" *appHasPermission="{ id: item.type === 'flowboard' ? 11 : 17, mode: 'disable' }">{{ item.name }}</span>
         </div>
     
         <!-- Right: Fixed Badge + Date -->
@@ -142,7 +142,7 @@
             }">
             <i *ngIf="item.type === 'flowboard'" class="fe fe-git-branch me-1"></i>
             <i *ngIf="item.type === 'taskplan'" class="fa-solid fa-chart-diagram me-1"></i>
-            {{ item.type }}
+            {{ item.type === 'flowboard' ? 'DagBoard' : 'TaskRunPlan' }}
           </span>
     
           <!-- Date (fixed width, right aligned) -->
@@ -154,7 +154,7 @@
     </div>
     } @else if(flowData.length === 0 && !isLoading) {
     <ng-container>
-      <div class="d-flex flex-column align-items-center justify-content-center text-center text-muted" style="min-height: 35vh;">
+      <div class="d-flex flex-column align-items-center justify-content-center text-center text-muted" style="min-height: 28vh;">
         <!-- Icon -->
         <div class="mb-3">
           <div class="rounded-circle bg-primary-subtle d-flex align-items-center justify-content-center"
@@ -194,7 +194,7 @@
               <!-- Icon + Trend -->
               <div class="d-flex align-items-start justify-content-between mb-3">
                 <div class="skeleton rounded-3" style="width: 36px; height: 36px;"></div>
-                <div class="skeleton rounded-pill" style="width: 70px; height: 20px;"></div>
+                <!-- <div class="skeleton rounded-pill" style="width: 70px; height: 20px;"></div> -->
               </div>
               <!-- Value + Title -->
               <div>

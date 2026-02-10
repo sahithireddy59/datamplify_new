@@ -1,7 +1,8 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, ElementRef, Inject, Renderer2 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
+import { NavigationService } from '../../../shared/services/navigation.service';
 
 @Component({
   selector: 'app-under-maintainance',
@@ -12,10 +13,8 @@ import { RouterModule } from '@angular/router';
 })
 export class UnderMaintainanceComponent {
   
-  constructor(
-    @Inject(DOCUMENT) private document: Document,private elementRef: ElementRef,
-    private renderer: Renderer2,private sanitizer: DomSanitizer
-  ) {}
+  constructor(@Inject(DOCUMENT) private document: Document,private elementRef: ElementRef,
+    private renderer: Renderer2,private sanitizer: DomSanitizer, private router: Router, private navigationService: NavigationService) {}
   public days: unknown;
   public hours: unknown;
   public minutes: unknown;
@@ -44,5 +43,9 @@ export class UnderMaintainanceComponent {
   ngOnDestroy(): void {
     this.renderer.removeClass(this.document.body, 'login-img');
     this.renderer.removeClass(this.document.body, 'ltr');
-}
+  }
+  reloadPage() {
+    // window.location.reload();
+    this.navigationService.navigate(['datamplify','home']);
+  }
 }

@@ -9,11 +9,13 @@ import { WorkbenchService } from '../workbench.service';
 import { ToastrService } from 'ngx-toastr';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { LoaderService } from '../../../shared/services/loader.service';
+import { HasPermissionDirective } from '../../../shared/directives/has-permission.directive';
+import { PermissionService } from '../../../services/permission.service';
 
 @Component({
   selector: 'app-scheduler',
   standalone: true,
-  imports: [CommonModule, SharedModule, FormsModule, NgbModule, NgSelectModule, ReactiveFormsModule, NgxPaginationModule],
+  imports: [CommonModule, SharedModule, FormsModule, NgbModule, NgSelectModule, ReactiveFormsModule, NgxPaginationModule, HasPermissionDirective],
   templateUrl: './scheduler.component.html',
   styleUrl: './scheduler.component.scss'
 })
@@ -51,11 +53,6 @@ export class SchedulerComponent {
   upcomingRuns: any[] = [];
   showForm: boolean = false;
   sourceList: any[] = [];
-  // timezones = Intl.supportedValuesOf('timeZone').map(tz => {
-  //   const displayTz = tz === 'Asia/Calcutta' ? 'Asia/Kolkata' : tz;
-  //   const offset = new Date().toLocaleTimeString('en-US', { timeZone: tz, timeZoneName: 'short' }).split(' ').pop();
-  //   return { label: `(${offset}) ${displayTz}`, value: displayTz };
-  // });
   timezones = [
     { "label": "Africa / Abidjan(GMT)", "value": "Africa/Abidjan" },
     { "label": "Africa / Accra(GMT)", "value": "Africa/Accra" },
@@ -448,8 +445,8 @@ export class SchedulerComponent {
     repeat: '',
     dateTime: '',
     time: '',
-    dayOfMonth: 1,
-    month: '1'
+    dayOfMonth: [] as any,
+    month: [] as any
   };
   newScheduler = {
     scheduler_type: 'preset',
@@ -470,6 +467,10 @@ export class SchedulerComponent {
     { label: 'Fri', value: '5', selected: false },
     { label: 'Sat', value: '6', selected: false }
   ];
+  monthDays = Array.from({ length: 31 }, (_, i) => ({
+    label: String(i + 1),
+    value: i + 1
+  }));
   months = [
     { label: 'January', value: '1' },
     { label: 'February', value: '2' },
@@ -493,12 +494,14 @@ export class SchedulerComponent {
   page: any = 1;
   pageSize: any = 5;
   totalItems: any;
+  canViewScheduler: boolean = false;
 
-  constructor(private workbenchService: WorkbenchService, private toasterService: ToastrService, private loaderService: LoaderService) {
+  constructor(private workbenchService: WorkbenchService, private toasterService: ToastrService, private loaderService: LoaderService, private permissionService: PermissionService) {
   }
 
   ngOnInit(): void {
     this.loaderService.hide();
+    this.canViewScheduler = this.permissionService.hasPermission(25);
     this.getKpisData();
     this.getSchedulerList();
   }
@@ -558,8 +561,16 @@ export class SchedulerComponent {
 
   closeCronEditorModal() {
     this.isCronEditorModalOpen = false;
+    this.resetCustomCron(true);
+  }
+
+  resetCustomCron(isReset?: boolean){
     this.tempCronExpression = '';
-    this.custom = { dateTime: '', dayOfMonth: 1, month: '1', repeat: '', time: '' };
+    if(isReset){
+      this.custom = { dateTime: '', dayOfMonth: [], month: [], repeat: '', time: '' };
+    } else{
+      this.custom = { ...this.custom, dateTime: '', dayOfMonth: [], month: [], time: '' };
+    }
   }
 
   applyCronExpression(){
@@ -582,9 +593,13 @@ export class SchedulerComponent {
         this.isGenerateBtnDisabled = !this.custom.dateTime;
         break;
       case 'daily':
-      case 'monthly':
-      case 'yearly':
         this.isGenerateBtnDisabled = !this.custom.time;
+        break;
+      case 'monthly':
+        this.isGenerateBtnDisabled = this.custom.dayOfMonth.length === 0 || !this.custom.time;
+        break;
+      case 'yearly':
+        this.isGenerateBtnDisabled = this.custom.month.length === 0 || this.custom.dayOfMonth.length === 0 || !this.custom.time;
         break;
       case 'weekly':
         this.isGenerateBtnDisabled = !this.custom.time || !this.weekDays?.some(d => d.selected);
@@ -593,54 +608,6 @@ export class SchedulerComponent {
         this.isGenerateBtnDisabled = true;
     }
   }
-
-  // generateCron() {
-  //   const [hour, minute] = this.custom.time ? this.custom.time.split(':') : ['0', '0'];
-  //   let cronExpression = '';
-  //   let cronPreview = '';
-
-  //   switch (this.custom.repeat) {
-  //     case 'once':
-  //       if (!this.custom.dateTime) return;
-  //       const date = new Date(this.custom.dateTime);
-  //       const sec = date.getSeconds();
-  //       const min = date.getMinutes();
-  //       const hr = date.getHours();
-  //       const day = date.getDate();
-  //       const month = date.getMonth() + 1;
-  //       cronExpression = `${sec} ${min} ${hr} ${day} ${month} *`;
-  //       cronPreview = `Once at ${this.custom.dateTime}`;
-  //       break;
-
-  //     case 'daily':
-  //       cronExpression = `0 ${minute} ${hour} * * *`;
-  //       cronPreview = `Every day at ${this.custom.time}`;
-  //       break;
-
-  //     case 'weekly':
-  //       const selectedDays = this.weekDays.filter(d => d.selected).map(d => d.value);
-  //       if (!selectedDays.length) return;
-  //       cronExpression = `0 ${minute} ${hour} * * ${selectedDays.join(',')}`;
-  //       cronPreview = `Every week on ${selectedDays.map(v => this.weekDays.find(d => d.value === v)?.label).join(', ')} at ${this.custom.time}`;
-  //       break;
-
-  //     case 'monthly':
-  //       cronExpression = `0 ${minute} ${hour} ${this.custom.dayOfMonth} * *`;
-  //       cronPreview = `Every month on day ${this.custom.dayOfMonth} at ${this.custom.time}`;
-  //       break;
-
-  //     case 'yearly':
-  //       cronExpression = `0 ${minute} ${hour} ${this.custom.dayOfMonth} ${this.custom.month} *`;
-  //       cronPreview = `Every year on ${this.months.find(m => m.value === this.custom.month)?.label} ${this.custom.dayOfMonth} at ${this.custom.time}`;
-  //       break;
-
-  //     default:
-  //       return;
-  //   }
-
-  //   this.tempCronExpression = cronExpression;
-  //   this.cronPreview = cronPreview;
-  // }
 
   generateCron() {
     const [hour, minute] = this.custom.time ? this.custom.time.split(':') : ['0', '0'];
@@ -677,15 +644,18 @@ export class SchedulerComponent {
 
       case 'monthly':
         // Every month on a specific date at given time
-        cronExpression = `${minute} ${hour} ${this.custom.dayOfMonth} * *`;
-        cronPreview = `Every month on day ${this.custom.dayOfMonth} at ${this.custom.time}`;
+        const monthlyDays = this.custom.dayOfMonth.join(',');
+        cronExpression = `${minute} ${hour} ${monthlyDays} * *`;
+        cronPreview = `Every month on day ${monthlyDays} at ${this.custom.time}`;
         break;
 
       case 'yearly':
         // Every year on given date and month
-        cronExpression = `${minute} ${hour} ${this.custom.dayOfMonth} ${this.custom.month} *`;
-        cronPreview = `Every year on ${this.months.find(m => m.value === this.custom.month)?.label
-          } ${this.custom.dayOfMonth} at ${this.custom.time}`;
+        const yearlyDays = this.custom.dayOfMonth.join(',');
+        const months = this.custom.month.join(',');
+        cronExpression = `${minute} ${hour} ${yearlyDays} ${months} *`;
+        const monthNames = this.months.filter(m => this.custom.month.includes(m.value)).map(m => m.label).join(', ');
+        cronPreview = `Every year on ${monthNames} ${yearlyDays} at ${this.custom.time}`;
         break;
 
       default:
@@ -696,23 +666,76 @@ export class SchedulerComponent {
     this.cronPreview = cronPreview;
   }
 
+  parseCronExpression(cron: string) {
+    const parts = cron.trim().split(' ');
+    if (parts.length < 5) return {};
+
+    const [minute, hour, dayOfMonth, month, dayOfWeek] = parts;
+    const custom: any = {
+      repeat: '',
+      time: `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`,
+      dayOfMonth: [],
+      month: [],
+      dateTime: '',
+    };
+
+    // --- Identify type ---
+    if (dayOfWeek !== '*' && dayOfMonth === '*' && month === '*') {
+      // weekly
+      custom.repeat = 'weekly';
+      const selectedDays = dayOfWeek.split(',').map(v => +v) as any;
+      // update your weekdays selection state if needed
+      this.weekDays.forEach(d => d.selected = selectedDays.includes(d.value));
+    }
+    else if (dayOfMonth === '*' && month === '*' && dayOfWeek === '*') {
+      // daily
+      custom.repeat = 'daily';
+    }
+    else if (month === '*' && dayOfMonth !== '*') {
+      // monthly
+      custom.repeat = 'monthly';
+      // custom.dayOfMonth = +dayOfMonth;
+      custom.dayOfMonth = dayOfMonth.split(',').map(v => +v).filter(v => !isNaN(v));
+    }
+    else if (month !== '*' && dayOfMonth !== '*') {
+      // yearly
+      custom.repeat = 'yearly';
+      // custom.dayOfMonth = +dayOfMonth;
+      // custom.month = month;
+
+      custom.dayOfMonth = dayOfMonth.split(',').map(v => +v).filter(v => !isNaN(v));
+      custom.month = month.split(',').filter(v => v !== '*');
+    }
+    else {
+      // once case – for one-time date
+      // this one you can detect based on your backend flag or saved dateTime
+      custom.repeat = 'once';
+    }
+
+    return custom;
+  }
+
   getSchedulerList() {
-    this.isLoading = true;
-    this.workbenchService.disableLoaderForNextRequest();
-    this.workbenchService.getSchedulerList(this.page, this.pageSize, this.search, this.stateFilter).subscribe({
-      next: (data: any) => {
-        console.log(data);
-        this.schedules = data.schedules;
-        this.page = data.page_number;
-        this.pageSize = data.page_size;
-        this.totalItems = data.total_records;
-        this.isLoading = false;
-      },
-      error: (error: any) => {
-        console.log(error);
-        this.isLoading = false;
-      }
-    });
+    if (this.canViewScheduler) {
+      this.isLoading = true;
+      this.workbenchService.disableLoaderForNextRequest();
+      this.workbenchService.getSchedulerList(this.page, this.pageSize, this.search, this.stateFilter).subscribe({
+        next: (data: any) => {
+          console.log(data);
+          this.schedules = data.schedules;
+          this.page = data.page_number;
+          this.pageSize = data.page_size;
+          this.totalItems = data.total_records;
+          this.isLoading = false;
+        },
+        error: (error: any) => {
+          console.log(error);
+          this.isLoading = false;
+        }
+      });
+    } else {
+      this.toasterService.info('You don’t have permission to view Schedulers', 'info', { positionClass: 'toast-top-right' });
+    }
   }
 
   saveScheduler(object: any) {
@@ -736,6 +759,8 @@ export class SchedulerComponent {
     if(this.sourceList.length === 0){
       this.getSourceList(object.source_type);
     }
+    const parsedCustom = this.parseCronExpression(object.schedule_value);
+    this.custom = { ...this.custom, ...parsedCustom };
     this.newScheduler = { 
       scheduler_type: object.schedule_type, 
       timezone: object.timezone, 
@@ -769,6 +794,8 @@ export class SchedulerComponent {
         console.log(data);
         this.getSchedulerList();
         this.getKpisData();
+        this.showForm = false;
+        this.isCronEditorModalOpen = false;
       },
       error: (error: any) => {
         this.toasterService.error(error.error.message, 'error', { positionClass: 'toast-top-right' });
@@ -778,22 +805,24 @@ export class SchedulerComponent {
   }
 
   getKpisData(){
-    this.isKpiLoading = true;
-    this.workbenchService.disableLoaderForNextRequest();
-    this.workbenchService.getSchedukerKpisData().subscribe({
-      next: (data: any) => {
-        console.log(data);
-        this.kpiCards[0].value = data.total_schedules;
-        this.kpiCards[1].value = data.active_schedules;
-        this.kpiCards[2].value = data.inactive_schedules;
-        this.isKpiLoading = false;
-      },
-      error: (error: any) => {
-        this.toasterService.error(error.error.message, 'error', { positionClass: 'toast-top-right' });
-        console.log(error);
-        this.isKpiLoading = false;
-      }
-    });
+    if (this.canViewScheduler) {
+      this.isKpiLoading = true;
+      this.workbenchService.disableLoaderForNextRequest();
+      this.workbenchService.getSchedukerKpisData().subscribe({
+        next: (data: any) => {
+          console.log(data);
+          this.kpiCards[0].value = data.total_schedules;
+          this.kpiCards[1].value = data.active_schedules;
+          this.kpiCards[2].value = data.inactive_schedules;
+          this.isKpiLoading = false;
+        },
+        error: (error: any) => {
+          this.toasterService.error(error.error.message, 'error', { positionClass: 'toast-top-right' });
+          console.log(error);
+          this.isKpiLoading = false;
+        }
+      });
+    }
   }
 
   getSchedulerById(id: any){
@@ -801,6 +830,7 @@ export class SchedulerComponent {
       next: (data: any) => {
         console.log(data);
         this.editPreviewScheduler(data);
+        this.isCronEditorModalOpen = false;
       },
       error: (error: any) => {
         this.toasterService.error(error.error.message, 'error', { positionClass: 'toast-top-right' });

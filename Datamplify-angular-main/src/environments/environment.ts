@@ -13,10 +13,19 @@ export const environment = {
     measurementId: "*********************"
   },
   production: false,
-
-   apiUrl: 'http://127.0.0.1:8000/v1',   // ✅ add back; no trailing slash
-  airflowApiUrl: 'http://localhost:8082' // 🔧 drop trailing slash to avoid "//"
+    apiUrl: 'http://127.0.0.1:8000/api/v1',
+    airflowApiUrl: 'http://127.0.0.1:8081',
+    //datamplify dev -- local
+    //datamplify dev -- public
+    //apiUrl: 'http://138.252.68.41:80/v1'
+    //datamplify dev -- private
+    // apiUrl: 'http://172.16.17.158:80/v1'
+    //datamplify QA
+    // apiUrl: 'https://api.qa.datamplify.ai/v1',
+    // airflowApiUrl: 'http://138.252.68.46:8080',
 };
+
+
 /*
  * For easier debugging in development mode, you can import the following file
  * to ignore zone related error stack frames such as `zone.run`, `zoneDelegate.invokeTask`.

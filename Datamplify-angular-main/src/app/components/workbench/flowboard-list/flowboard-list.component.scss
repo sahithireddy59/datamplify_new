@@ -48,7 +48,7 @@ td { padding: 5px !important;}
 
 .glass-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(var(--bs-primary-rgb, 13, 110, 253), 0.25); /* slightly stronger on hover */
+  box-shadow: 0 6px 20px rgba(var(--primary-rgb, 13, 110, 253), 0.25); /* slightly stronger on hover */
 }
 
 /* Input with glass effect */
@@ -213,14 +213,28 @@ h2.fw-500 {
   color: var(--custom-white);
 }
 
+// .mode-btn {
+//   border-radius: 1rem;
+//   background: linear-gradient(90deg, #3b82f6 0%, #9b25f2 70%);
+//   color: #fff;
+//   transition: transform .18s ease, box-shadow .18s ease;
+
+//   &:hover { 
+//     transform: translateY(-2px) scale(1.02);
+//     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08), 
+//     0 6px 12px rgba(14,165,233,0.15);
+//     border: 1px solid #7c5cff !important;
+//     }
+// }
+
 .mode-btn {
-  border-radius: 1rem;
   background: linear-gradient(90deg, #3b82f6 0%, #9b25f2 70%);
   color: #fff;
+  border: none !important;
   transition: transform .18s ease, box-shadow .18s ease;
 
   &:hover { 
-    transform: translateY(-2px) scale(1.02);
+   transform: translateY(-2px) scale(1.02);
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08), 
     0 6px 12px rgba(14,165,233,0.15);
     border: 1px solid #7c5cff !important;

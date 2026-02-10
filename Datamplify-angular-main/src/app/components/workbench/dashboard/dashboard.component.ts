@@ -9,12 +9,14 @@ import type { EChartsOption } from 'echarts';
 import * as echarts from 'echarts';
 import { LoaderService } from '../../../shared/services/loader.service';
 import { Router } from '@angular/router';
+import { HasPermissionDirective } from '../../../shared/directives/has-permission.directive';
+import { NavigationService } from '../../../shared/services/navigation.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   providers: [ { provide: NGX_ECHARTS_CONFIG, useFactory: () => ({ echarts: echarts }), }],
-  imports: [CommonModule, NgApexchartsModule, FormsModule, ReactiveFormsModule, NgxEchartsModule],
+  imports: [CommonModule, NgApexchartsModule, FormsModule, ReactiveFormsModule, NgxEchartsModule, HasPermissionDirective],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
@@ -22,8 +24,8 @@ export class DashboardComponent {
   kpiData = [
     { title: 'Success Rate', value: '0%', change: '0%', trend: 'up', icon: 'fa-regular fa-circle-check', color: 'bg-success-subtle text-success', subTextClass: 'text-success'},
     { title: 'Failure Rate', value: '0%', change: '0%', trend: 'up', icon: 'fa-solid fa-circle-exclamation', color: 'bg-danger-subtle text-danger', subTextClass: 'text-danger'},
-    { title: 'Total Flowboards', value: '0', change: '0', trend: 'up', icon: 'fe fe-git-branch', color: 'bg-info-subtle text-info', subTextClass: 'text-info'},
-    { title: 'Total Taskplans', value: '0', change: '0', trend: 'up', icon: 'fa-solid fa-chart-diagram', color: 'bg-warning-subtle text-warning', subTextClass: 'text-warning'},
+    { title: 'Total DagBoard', value: '0', change: '0', trend: 'up', icon: 'fe fe-git-branch', color: 'bg-info-subtle text-info', subTextClass: 'text-info'},
+    { title: 'Total TaskRunPlan', value: '0', change: '0', trend: 'up', icon: 'fa-solid fa-chart-diagram', color: 'bg-warning-subtle text-warning', subTextClass: 'text-warning'},
   ];
   flowData: any[] = [];
   recentActivity: any = {};
@@ -38,7 +40,7 @@ export class DashboardComponent {
   skeletonKpi = Array(4);
   skeletonFlow = Array(5);
 
-  constructor(private workbenchService: WorkbenchService, private toasterservice: ToastrService, private loaderService: LoaderService, private router: Router) {
+  constructor(private workbenchService: WorkbenchService, private toasterservice: ToastrService, private loaderService: LoaderService, private router: Router, private navigationService: NavigationService) {
   }
 
   ngOnInit() {
@@ -362,10 +364,10 @@ export class DashboardComponent {
 
   goToFlowboard(id:any){
     const encodedId = btoa(id.toString());
-    this.router.navigate(['/datamplify/flowboardList/flowboard/' + encodedId]);
+    this.navigationService.navigate(['datamplify','home','DagBoard',encodedId]);
   }
   goToTaskplan(id:any){
     const encodedId = btoa(id.toString());
-    this.router.navigate(['/datamplify/taskplanList/taskplan/' + encodedId]);
+    this.navigationService.navigate(['datamplify','home','TaskRunPlan',encodedId]);
   }
 }

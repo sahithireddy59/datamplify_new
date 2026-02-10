@@ -13,11 +13,14 @@ import { DataFlowSearchFilterPipe } from '../../../shared/pipes/data-flow-search
 import { ResizableTopDirective } from '../../../shared/directives/resizable-top.directive';
 import { SharedService } from '../../../shared/services/shared.service';
 import Swal from 'sweetalert2';
+import { HasPermissionDirective } from '../../../shared/directives/has-permission.directive';
+import { NavigationService } from '../../../shared/services/navigation.service';
+import { NodeValidationService } from '../../../services/node-validation.service';
 
 @Component({
   selector: 'app-flowboard',
   standalone: true,
-  imports: [NgbModule, CommonModule, NgSelectModule, FormsModule, EtlLoggerViewComponent, DataFlowSearchFilterPipe, ResizableTopDirective],
+  imports: [NgbModule, CommonModule, NgSelectModule, FormsModule, EtlLoggerViewComponent, DataFlowSearchFilterPipe, ResizableTopDirective, HasPermissionDirective],
   templateUrl: './flowboard.component.html',
   styleUrl: './flowboard.component.scss'
 })
@@ -31,6 +34,8 @@ export class FlowboardComponent {
   modal: any;
   connectionOptions: any[] = [];
   selectedConnection: any = null;
+  selectedFileConnection: any = null; // Separate variable for file connections (CSV, Remote, Excel)
+  selectedIntegrationConnection: any = null; // Separate variable for integration connections
   dataObjectOptions: [] = [];
   selectedDataObject: any = null;
   posX: any;
@@ -42,7 +47,7 @@ export class FlowboardComponent {
   dataFlowId!: string;
   nodeName: string = '';
   isRunEnable : boolean = false;
-  objectType : string = 'select';
+  objectType : string = 'create';
   dataFlowStatus : any[] = [];
   runId: string = '';
   nodeLogs: any[] = [];
@@ -87,6 +92,8 @@ export class FlowboardComponent {
   Folders: any[] = [];
   expEditorAddType: string = 'transforms';
   flowId: string = '';
+  excelSheets: string[] = [];
+  selectedExcelSheets: string[] = [];
   functionGroupType: { key: string; value: string }[] = [
     { key: 'All Functions', value: 'allFunctions' },
     { key: 'Analytical', value: 'analytical' },
@@ -341,7 +348,7 @@ export class FlowboardComponent {
     'boolean',
   
     // Date/Time types
-    'date', 'time', 'time without time zone', 'time with time zone', 'timestamp', 'timestamp without time zone', 'timestamp with time zone', 'interval',
+    'date', 'time', 'time without time zone', 'time with time zone', 'timestamp', 'timestamp without time zone', 'timestamp with time zone', 'interval', 'datetime',
   
     // UUID
     'uuid',
@@ -385,51 +392,84 @@ export class FlowboardComponent {
   viewMode: string = 'list';
   componentsContent: any = {
     sources: [
-      { id: 1, name: 'PostgreSQL', icon: 'fa-database', type: 'source_data_object' },
-      { id: 6, name: 'MySQL', icon: 'fa-database', type: 'source_data_object' },
-      { id: 7, name: 'MongoDB', icon: 'fa-leaf', type: 'source_data_object' },
-      { id: 8, name: 'Oracle', icon: 'fa-database', type: 'source_data_object' },
-      { id: 2, name: 'CSV', icon: 'fa-file', type: 'source_data_object' },
-      { id: 3, name: 'Remote', icon: 'fa-server', type: 'source_data_object' },
+      { id: 1, name: 'PostgreSQL', image: './assets/images/icons_new/POSTGRESQL.svg', type: 'source_data_object' },
+      { id: 6, name: 'MongoDB', image: './assets/images/icons_new/MONGODB.svg', type: 'source_data_object' },
+      { id: 2, name: 'CSV', image: "./assets/images/icons_new/CSV.svg", type: 'source_data_object' },
+      { id: 28, name: 'Excel', image: "./assets/images/icons_new/EXCEL.svg", type: 'source_data_object' },
+      { id: 3, name: 'Remote', image: "./assets/images/icons_new/SFTP.png", type: 'source_data_object' },
+      { id: 9, name: 'MySQL', image: './assets/images/icons_new/MYSQL.svg', type: 'source_data_object' },
+      { id: 7, name: 'Oracle', image: './assets/images/icons_new/ORACLE.svg', type: 'source_data_object' },
+      { id: 8, name: 'MicrosoftSQLServer', image: './assets/images/icons_new/MICROSOFTSQLSERVER.svg', type: 'source_data_object' },
+      { id: 10, name: 'Snowflake', image: './assets/images/icons_new/SNOWFLAKE.svg', type: 'source_data_object' },
+      { id: 11, name: 'Ninja', image: './assets/images/icons_new/NINJA.svg', type: 'source_data_object' },
+      { id: 12, name: 'Connectwise', image: './assets/images/icons_new/CONNECTWISE.svg', type: 'source_data_object' },
+      { id: 13, name: 'HaloPSA', image: './assets/images/icons_new/HALOPSA.svg', type: 'source_data_object' },
+      { id: 14, name: 'Shopify', image: './assets/images/icons_new/SHOPIFY.svg', type: 'source_data_object' },
+      { id: 15, name: 'Tally', image: './assets/images/icons_new/TALLY.svg', type: 'source_data_object' },
+      { id: 16, name: 'QuickBooks', image: './assets/images/icons_new/QUICKBOOKS.svg', type: 'source_data_object' },
+      { id: 17, name: 'Salesforce', image: './assets/images/icons_new/SALESFORCE.svg', type: 'source_data_object' },
+      { id: 18, name: 'Jira', image: './assets/images/icons_new/JIRA.svg', type: 'source_data_object' },
+      { id: 19, name: 'HubSpot', image: './assets/images/icons_new/HUBSPOT.svg', type: 'source_data_object' },
+      // { id: 20, name: 'GoogleSheet', image: './assets/images/icons_new/GOOGLE_SHEETS.svg', type: 'source_data_object' },
+      { id: 21, name: 'DBT', image: './assets/images/icons_new/DBT.svg', type: 'source_data_object' },
+      { id: 22, name: 'PAX8', image: './assets/images/icons_new/PAX8.svg', type: 'source_data_object' },
+      { id: 23, name: 'BambooHR', image: './assets/images/icons_new/BAMBOOHR.svg', type: 'source_data_object' },
+      { id: 24, name: 'Zoho_CRM', image: './assets/images/icons_new/ZOHO_CRM.svg', type: 'source_data_object' },
+      { id: 25, name: 'Zoho_Inventory', image: './assets/images/icons_new/ZOHO_INVENTORY.svg', type: 'source_data_object' },
+      { id: 26, name: 'Zoho_Books', image: './assets/images/icons_new/ZOHO_BOOKS.svg', type: 'source_data_object' },
+      { id: 27, name: 'GoogleAnalytics', image: './assets/images/icons_new/GOOGLE_ANALYTICS.svg', type: 'source_data_object' },
     ],
     targets: [
-      { id: 1, name: 'PostgreSQL', icon: 'fa-database', type: 'target_data_object' },
-      { id: 6, name: 'MySQL', icon: 'fa-database', type: 'target_data_object' },
-      { id: 7, name: 'MongoDB', icon: 'fa-leaf', type: 'target_data_object' },
-      { id: 8, name: 'Oracle', icon: 'fa-database', type: 'target_data_object' }
+      { id: 1, name: 'PostgreSQL', image: './assets/images/icons_new/POSTGRESQL.svg', type: 'target_data_object' },
+      { id: 9, name: 'MySQL', image: './assets/images/icons_new/MYSQL.svg', type: 'target_data_object' },
+      { id: 7, name: 'Oracle', image: './assets/images/icons_new/ORACLE.svg', type: 'target_data_object' },
+      { id: 8, name: 'MicrosoftSQLServer', image: './assets/images/icons_new/MICROSOFTSQLSERVER.svg', type: 'target_data_object' },
+      { id: 10, name: 'Snowflake', image: './assets/images/icons_new/SNOWFLAKE.svg', type: 'target_data_object' },
     ],
     transforms: [
-      { name: 'Expression', icon: 'fa-calculator', type: 'Expression' },
-      { name: 'Joiner', icon: 'fa-link', type: 'Joiner' },
-      { name: 'Rollup', icon: 'fa-layer-group', type: 'Rollup' },
-      { name: 'Filter', icon: 'fa-filter', type: 'Filter' },
-      { name: 'Rank', icon: 'fa-sort-numeric-up', type: 'Rank' },
-      { name: 'Pivot', icon: 'fa-table', type: 'Pivot' },
-      { name: 'Union', icon: 'fa-object-group', type: 'Union' },
-      { name: 'Router', icon: 'fa-route', type: 'Router' },
-      { name: 'Update Strategy', icon: 'fa-sync-alt', type: 'UpdateStrategy' }
+      { name: 'Expression', icon: 'fa-solid fa-calculator', type: 'Expression' },
+      { name: 'Joiner', icon: 'fa-solid fa-link', type: 'Joiner' },
+      { name: 'Rollup', icon: 'fa-solid fa-layer-group', type: 'Rollup' },
+      { name: 'Filter', icon: 'fa-solid fa-filter', type: 'Filter' },
+      { name: 'Rank', icon: 'fa-solid fa-sort-numeric-up', type: 'Rank' },
+      { name: 'Pivot', icon: 'fa-solid fa-table', type: 'Pivot' },
+      { name: 'Union', icon: 'fa-solid fa-object-group', type: 'Union' },
+      { name: 'Router', icon: 'fa-solid fa-route'  , type: 'Router' },
+      { name: 'Update Strategy', icon: 'fa-solid fa-sync-alt', type: 'UpdateStrategy' }
     ]
   }
   isFromMonitor: boolean = false;
   remoteFileType: string = 'csv';
   remoteFilePath: string = '';
-  remoteServerFiles: string = '';
+  remoteServerFiles: any[] = [];
   selectedRemoteServerFile: string= '';
   maximumConditionsReached: boolean = false;
   @ViewChild('nameInput') nameInput!: ElementRef;
   private isComponentDestroyed = false;
   private pollingTimeout: any;
   filteredDropdownItems: any[] = [];
+  unionNodesColumnList: { [key: string]: any } = {};
+  updateStrategyDropdown: { [key: string]: any } = {};
+  updateStrategyHeaders: string[] = [];
+  isEmbedMode: boolean = false;
+  endpointOptions: any[] = [];
+  selectedEndpoint: any = null;
+  schemaList: any[] = [];
+  expandedSchemas = new Set<string>();
+  selectedSchemas = new Set<string>();
+  schemalistNoteMsg: string = '';
+  validatedData: any = {};
 
-  constructor(private modalService: NgbModal, private toasterService: ToastrService, private workbechService: WorkbenchService, 
-    private loaderService: LoaderService, private router: Router,private route: ActivatedRoute, private sharedService: SharedService) {
-      
-      if (this.router.url.startsWith('/datamplify/flowboardList/flowboard')) {
+  constructor(private modalService: NgbModal, private toasterService: ToastrService, private workbechService: WorkbenchService, private loaderService: LoaderService, 
+    private router: Router,private route: ActivatedRoute, private sharedService: SharedService, private navigationService: NavigationService, private nodeValidationService: NodeValidationService) {
+      const url = this.navigationService.getNormalizedUrl(this.router.url);
+      if (url.startsWith('/datamplify/DagBoardList/DagBoard') || this.router.url.startsWith('/datamplify/home/DagBoard')
+        || this.router.url.startsWith('/datamplify/TaskRunPlan/DagBoard')) {
         if (route.snapshot.params['id1']) {
           const id = atob(route.snapshot.params['id1']);
           this.dataFlowId = id.toString();
         }
-      } else if (this.router.url.startsWith('/datamplify/monitor/flowboard')) {
+      } else if (url.startsWith('/datamplify/monitor/DagBoard')) {
         if (route.snapshot.params['id1']) {
           const id = atob(route.snapshot.params['id1']);
           this.dataFlowId = id.toString();
@@ -441,6 +481,9 @@ export class FlowboardComponent {
   ngOnInit() {
     this.loaderService.hide();
     this.intializeDrawflow();
+    if(this.sharedService.getEmbedMode()){
+      this.isEmbedMode = true;
+    }
   }
   ngOnDestroy() {
     this.isComponentDestroyed = true;
@@ -448,6 +491,25 @@ export class FlowboardComponent {
       clearTimeout(this.pollingTimeout);
     }
   }
+
+  // Helper method to get the correct connection variable based on type
+  getActiveConnection(): any {
+    const fileTypes = [2, 3, 28]; // CSV, Remote, Excel
+    return fileTypes.includes(Number(this.type)) ? this.selectedFileConnection : this.selectedIntegrationConnection;
+  }
+
+  // Helper method to set the correct connection variable based on type
+  setActiveConnection(value: any): void {
+    const fileTypes = [2, 3, 28]; // CSV, Remote, Excel
+    if (fileTypes.includes(Number(this.type))) {
+      this.selectedFileConnection = value;
+    } else {
+      this.selectedIntegrationConnection = value;
+    }
+    // Also update the legacy selectedConnection for backward compatibility
+    this.selectedConnection = value;
+  }
+
   intializeDrawflow() {
     setTimeout(() => {
       const container = document.getElementById('drawflow')!;
@@ -495,26 +557,58 @@ export class FlowboardComponent {
         const outputNode = data[output_id];
         const inputPort = inputNode.inputs[input_class];
         const nodeType = inputNode.data.type;
-        if(outputNode.data.type === 'Router'){
-          this.selectedNode = outputNode;
-          this.selectedNode.data.nodeData.properties.router.conditions[output_class.charAt(output_class.length - 1)-1].targetNodes.push(inputNode);
-          this.selectedNode.data.nodeData.properties.router.conditions[output_class.charAt(output_class.length - 1)-1].isVisible = true;
-          this.updateNode('');
-        }
-        if (!['Joiner', 'Union'].includes(nodeType) && inputPort.connections.length > 1) {
+
+        if (this.validateParentNode(outputNode)) {
+          if (outputNode.data.type === 'Router') {
+            this.selectedNode = outputNode;
+            this.selectedNode.data.nodeData.properties.router.conditions[output_class.charAt(output_class.length - 1) - 1].targetNodes.push(inputNode);
+            this.selectedNode.data.nodeData.properties.router.conditions[output_class.charAt(output_class.length - 1) - 1].isVisible = true;
+            this.updateNode('');
+          }
+          if (!['Joiner', 'Union'].includes(nodeType) && inputPort.connections.length > 1) {
+            const lastConnection = inputPort.connections[inputPort.connections.length - 1];
+            this.drawflow.removeSingleConnection(lastConnection.node, input_id, lastConnection.input, input_class);
+            this.toasterService.info('Connection limit exceeded!', 'info', { positionClass: 'toast-top-right' });
+          }
+          if (nodeType === 'Union' && inputPort.connections.length > 4) {
+            const lastConnection = inputPort.connections[inputPort.connections.length - 1];
+            this.drawflow.removeSingleConnection(lastConnection.node, input_id, lastConnection.input, input_class);
+            this.toasterService.info('Connection limit exceeded!', 'info', { positionClass: 'toast-top-right' });
+          }
+          if (nodeType === 'Joiner') {
+            this.getConnectionData(connection);
+          }
+          this.getDropdownColumnsData(this.drawflow.getNodeFromId(input_id));
+          if (nodeType === 'UpdateStrategy') {
+            const node = inputNode;
+            this.selectedNode = node;
+            this.openAttributesSelection(null);
+            this.groupAttributesList.forEach((group: any) => {
+              group.isChecked = true;
+              this.toggleGroup(group);
+            });
+            this.isSourceClicked = true;
+            this.applySelectedAttributes();
+          }
+          if (nodeType === 'Union') {
+            this.selectedNode = inputNode;
+            this.selectedNode.data.nodeData.properties.union.sourceNodes = this.getConnectedInputNodes(this.selectedNode);
+            this.selectedNode.data.nodeData.properties.union.sourceNodes.forEach((sourceNode: any) => {
+              const key = sourceNode.data.nodeData.general.name;
+              if (!this.unionNodesColumnList[key]) {
+                this.unionNodesColumnList[key] = null;
+              }
+              this.unionNodesColumnList[key] = [...this.getColumnsFromNode(sourceNode, this.selectedNode.data.nodeData.dataObject)];
+            });
+            this.updateNode('');
+          }
+          if(nodeType === 'target_data_object'){
+            this.validateParentNode(inputNode);
+          }
+        } else {
           const lastConnection = inputPort.connections[inputPort.connections.length - 1];
           this.drawflow.removeSingleConnection(lastConnection.node, input_id, lastConnection.input, input_class);
-          this.toasterService.info('Connection limit exceeded!', 'info', { positionClass: 'toast-top-right' });
         }
-        if (nodeType === 'Union' && inputPort.connections.length > 4) {
-          const lastConnection = inputPort.connections[inputPort.connections.length - 1];
-          this.drawflow.removeSingleConnection(lastConnection.node, input_id, lastConnection.input, input_class);
-          this.toasterService.info('Connection limit exceeded!', 'info', { positionClass: 'toast-top-right' });
-        }
-        if(nodeType === 'Joiner') {
-          this.getConnectionData(connection);
-        }
-        this.getDropdownColumnsData(this.drawflow.getNodeFromId(input_id));
       });
       this.drawflow.on('connectionSelected', (connection: any) => {
         // this.getConnectionData(connection);
@@ -562,6 +656,9 @@ export class FlowboardComponent {
             });
           }
           this.selectedNode.data.nodeData.properties.truncate = false;
+          this.selectedNode.data.nodeData.properties.target = { updateStrategy: 'append', joiningConditions: [] };
+          this.updateStrategyDropdown = {};
+          this.updateStrategyHeaders = [];
         } else if(this.selectedNode.data.type === 'Expression'){
           this.selectedNode.data.nodeData.attributes = [];
         } else if(this.selectedNode.data.type === 'Rollup'){
@@ -579,6 +676,15 @@ export class FlowboardComponent {
           this.selectedNode.data.nodeData.properties.pivot = { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' };
         } else if(this.selectedNode.data.type === 'Union'){
           this.selectedNode.data.nodeData.properties.union = { sourceNodes: [], columnMappings: [], type: 'UNION' };
+          this.unionNodesColumnList[sourceNode.data.nodeData.general.name] = null;
+          this.selectedNode.data.nodeData.properties.union.sourceNodes = this.getConnectedInputNodes(this.selectedNode);
+          this.selectedNode.data.nodeData.properties.union.sourceNodes.forEach((sourceNode: any) => {
+            const key = sourceNode.data.nodeData.general.name;
+            if (!this.unionNodesColumnList[key]) {
+              this.unionNodesColumnList[key] = null;
+            }
+            this.unionNodesColumnList[key] = [...this.getColumnsFromNode(sourceNode, this.selectedNode.data.nodeData.dataObject)];
+          });
         } else if(this.selectedNode.data.type === 'Router'){
           this.selectedNode.data.nodeData.properties.router.conditions = [
             { conditionName: `condition_1`, condition: '', isVisible: false, targetNodes: [] },
@@ -586,6 +692,10 @@ export class FlowboardComponent {
             { conditionName: `condition_3`, condition: '', isVisible: false, targetNodes: [] },
             { conditionName: `condition_4`, condition: '', isVisible: false, targetNodes: [] }
           ];
+        } else if(this.selectedNode.data.type === 'UpdateStrategy'){
+          this.selectedNode.data.nodeData.properties.strategy = { updateStrategy: 'append', joiningConditions: [], selectedTable: {} , selectedTableColumns: {} };
+          this.updateStrategyDropdown = {};
+          this.updateStrategyHeaders = [];
         }
         this.getDropdownColumnsData(this.selectedNode);
         if(this.selectedNode.hasOwnProperty('data')){
@@ -595,7 +705,8 @@ export class FlowboardComponent {
         const outputNode = this.drawflow.getNodeFromId(output_id);
         if(outputNode.data.type === 'Router'){
           this.selectedNode = outputNode;
-          this.selectedNode.data.nodeData.properties.router.conditions[output_class.charAt(output_class.length - 1)-1] = { conditionName: `condition_${output_class.charAt(output_class.length - 1)}`, condition: '', isVisible: false, targetNodes: [] };
+          // this.selectedNode.data.nodeData.properties.router.conditions[output_class.charAt(output_class.length - 1)-1] = { conditionName: `condition_${output_class.charAt(output_class.length - 1)}`, condition: '', isVisible: false, targetNodes: [] };
+          this.selectedNode.data.nodeData.properties.router.conditions[output_class.charAt(output_class.length - 1)-1].targetNodes = this.selectedNode.data.nodeData.properties.router.conditions[output_class.charAt(output_class.length - 1)-1].targetNodes.filter((node: any) => node.id != input_id);
           this.updateNode('');
         }
       });
@@ -610,18 +721,26 @@ export class FlowboardComponent {
             this.getSelectedNodeData(node);
             if(this.selectedNode.data.type === 'Union'){
               this.selectedNode.data.nodeData.properties.union.sourceNodes = this.getConnectedInputNodes(node);
+              this.selectedNode.data.nodeData.properties.union.sourceNodes.forEach((sourceNode: any) => {
+                const key = sourceNode.data.nodeData.general.name;
+                if (!this.unionNodesColumnList[key]) {
+                  this.unionNodesColumnList[key] = null;
+                }
+                this.unionNodesColumnList[key] = [...this.getColumnsFromNode(sourceNode, this.selectedNode.data.nodeData.dataObject)];
+              });
             }
             if(this.selectedNode.data.type === 'Joiner'){
               this.updateDropdownList(this.selectedNode);
             }
+            if(this.selectedNode.data.type === 'target_data_object' && !this.selectedNode.data.nodeData.properties.create){
+              this.getColumnsForUpdateStrategy(this.selectedNode);
+            }
+            if(this.selectedNode.data.type === 'UpdateStrategy' && this.selectedNode?.data?.nodeData?.properties?.strategy?.selectedTable?.display_name && this.selectedNode?.data?.nodeData?.properties?.strategy?.selectedTableColumns?.tables){
+              this.getColumnsForUpdateStrategy(this.selectedNode);
+            }
           });
         }
       });
-
-      // this.drawflow.on('nodeUnselected', () => {
-      //   this.selectedNode = {data: {type: '', nodeData: {general: {name: this.etlName}}}};
-      //   this.isNodeSelected = true;
-      // });
 
       const allNodes = this.drawflow.drawflow.drawflow[this.drawflow.module].data;
       Object.entries(allNodes).forEach(([id, node]) => {
@@ -726,8 +845,9 @@ export class FlowboardComponent {
   onDragStart(event: DragEvent, nodeType: string, modal: any, sourceOrTargetType:any) {
     this.nodeToAdd = nodeType;
     this.modal = modal;
-    this.type = sourceOrTargetType;
-    console.log(`🎯 FlowBoard: Dragging ${nodeType}, type set to: ${sourceOrTargetType}`);
+    // Ensure type is always a valid number, default to 1 if undefined or invalid
+    this.type = sourceOrTargetType && !isNaN(Number(sourceOrTargetType)) ? Number(sourceOrTargetType) : 1;
+    console.log('onDragStart - nodeType:', nodeType, 'sourceOrTargetType:', sourceOrTargetType, 'this.type:', this.type);
   }
 
   onDragOver(event: DragEvent) {
@@ -747,8 +867,8 @@ export class FlowboardComponent {
         windowClass: 'animate__animated animate__zoomIn',
         modalDialogClass: 'modal-md'
       });
-      // Always get all connections regardless of which source/target was dragged
       this.getConnections();
+      this.objectType = this.nodeToAdd === 'source_data_object' ? 'select' : 'create';
     } else {
       this.addNode(this.nodeToAdd, this.posX, this.posY);
     }
@@ -769,11 +889,11 @@ export class FlowboardComponent {
   addNode(name: string, posX: number, posY: number) {
     let data = { 
       type: '', 
-      source: { type: '',  fileSelectFrom: '', path: '', file: '' },
+      source: { type: '',  fileSelectFrom: '', path: '', file: '', endpoint: '', tablesList: [] as any[], schemaList: [] as any[], selectedSheets: [] as string[] },
       nodeData: { 
         general: { name: '' }, 
         connection: {}, dataObject: {}, 
-        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], updateStrategy: 'append', keyColumns: [],
+        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], 
           rank:{ rankType: '', orderByCols: [], partitionByCols: [], rankColumnName: '', sortType: 'top', records: '' },
           pivot: { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' },
           union: { sourceNodes: [], columnMappings: [], type: 'UNION' },
@@ -784,8 +904,10 @@ export class FlowboardComponent {
               { conditionName: `condition_3`, condition: '', isVisible: false, targetNodes: [] },
               { conditionName: `condition_4`, condition: '', isVisible: false, targetNodes: [] }
             ]
-          }
-         }, 
+          },
+          target: { updateStrategy: 'append', joiningConditions: [] },
+          strategy: { updateStrategy: 'append', joiningConditions: [], selectedTable: {} , selectedTableColumns: {} }
+        }, 
         attributes: [], 
         groupAttributes: [],
         sourceAttributes: [],
@@ -799,41 +921,56 @@ export class FlowboardComponent {
     let outputNodeCount = 1;
 
     if (baseName === 'source_data_object') {
-      // Use the database type from the selected connection instead of this.type
-      const connectionDbType = this.selectedConnection?.dbType || this.type;
-      
-      if (connectionDbType === 1) {
-        iconPath = './assets/images/etl/PostgreSQL-etl.svg';
-        altText = 'PostgreSQL';
-        data.source = {type: connectionDbType, fileSelectFrom: this.fileSelectType, path: this.sourcePath, file: this.selectedFile};
-      } else if(connectionDbType === 2){
-        iconPath = './assets/images/etl/File-etl.svg';
-        altText = 'file';
-        data.source = {type: connectionDbType, fileSelectFrom: this.fileSelectType, path: this.sourcePath, file: this.selectedFile};
-      } else if(connectionDbType === 3){
-        iconPath = './assets/images/icons_new/SFTP.png';
-        altText = 'sftp';
-        data.source = {type: connectionDbType, fileSelectFrom: '', path: this.remoteFilePath, file: this.selectedRemoteServerFile};
-      } else if(connectionDbType === 6){
-        iconPath = './assets/images/icons_new/MYSQL.svg';
-        altText = 'MySQL';
-        data.source = {type: connectionDbType, fileSelectFrom: this.fileSelectType, path: this.sourcePath, file: this.selectedFile};
-      } else if(connectionDbType === 7){
-        iconPath = './assets/images/etl/MongoDB-etl.svg'; // You may need to create this icon
-        altText = 'MongoDB';
-        data.source = {type: connectionDbType, fileSelectFrom: this.fileSelectType, path: this.sourcePath, file: this.selectedFile};
-      } else if(connectionDbType === 8){
-        iconPath = './assets/images/icons_new/ORACLE.svg';
-        altText = 'Oracle';
-        data.source = {type: connectionDbType, fileSelectFrom: this.fileSelectType, path: this.sourcePath, file: this.selectedFile};
+      const sourceData = this.componentsContent.sources.find((item: any) => item.id === this.type);
+      iconPath = sourceData.image ?? '';
+      altText = sourceData.name ?? '';
+      data.source = {type: this.type, fileSelectFrom: this.fileSelectType, path: this.sourcePath, file: this.selectedFile, endpoint: '', tablesList: [], schemaList: [], selectedSheets: []};
+      if(this.type === 3){
+        if (this.remoteFilePath?.endsWith('/')) {
+          this.remoteFilePath = this.remoteFilePath.slice(0, -1);
+        }
+        data.source = {type: this.type, fileSelectFrom: '', path: this.remoteFilePath, file: this.selectedRemoteServerFile, endpoint: '', tablesList: [], schemaList: [], selectedSheets: []};
+      } else if (this.type === 28) {
+        // Excel file with sheet selection
+        data.source = {
+          type: this.type, 
+          fileSelectFrom: this.fileSelectType, 
+          path: this.sourcePath, 
+          file: this.selectedFile, 
+          endpoint: '', 
+          tablesList: this.selectedExcelSheets, 
+          schemaList: [],
+          selectedSheets: this.selectedExcelSheets
+        };
+        // For Excel, we'll fetch the schema for the first selected sheet
+        // The backend will handle multiple sheets
+        this.selectedDataObject = {
+          tables: this.selectedExcelSheets[0] || 'Sheet1',
+          columns: []
+        };
+      } else if (![1, 2, 3, 6, 7, 8, 9, 10, 28].includes(this.type)) {
+        const selectedSchemasArray = Array.from(this.selectedSchemas);
+        const selectedSchemasObjectArray = this.schemaList.filter((schema: any) => selectedSchemasArray.includes(schema.tables));
+        this.selectedDataObject = {
+          tables: this.schemaList[0].tables,
+          columns: selectedSchemasObjectArray.flatMap((schema: any) => schema.columns)
+        };
+        this.selectedDataObject.columns = this.selectedDataObject.columns.map((col: any) => ({
+          col: col.col,
+          dtype: col.dtype === 'null' || col.dtype == null ? 'string' : col.dtype
+        }));
+        this.modal.close('save click');
+        data.source = { type: this.type, fileSelectFrom: this.fileSelectType, path: this.sourcePath, file: this.selectedFile, endpoint: this.selectedEndpoint, tablesList: selectedSchemasArray, schemaList: selectedSchemasObjectArray, selectedSheets: [] };
       }
       data.type = name;
-      // data.source = {type: this.type, fileSelectFrom: this.fileSelectType, path: this.sourcePath, file: this.selectedFile};
+      const tableName = this.selectedDataObject?.tables || 'source';
+      const uniqueName = this.getAutoName('SRC', tableName);
+      const activeConnection = this.getActiveConnection();
       data.nodeData = { 
-        connection: this.selectedConnection, 
+        connection: activeConnection, 
         dataObject: this.selectedDataObject, 
-        general: { name: 'SRC_' + this.selectedDataObject?.tables }, 
-        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], updateStrategy: 'append', keyColumns: [],
+        general: { name: uniqueName }, 
+        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [],
           rank:{ rankType: '', orderByCols: [], partitionByCols: [], rankColumnName: '', sortType: 'top', records: '' },
           pivot: { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' },
           union: { sourceNodes: [], columnMappings: [], type: 'UNION' },
@@ -844,7 +981,9 @@ export class FlowboardComponent {
               { conditionName: `condition_3`, condition: '', isVisible: false, targetNodes: [] },
               { conditionName: `condition_4`, condition: '', isVisible: false, targetNodes: [] }
             ]
-          }
+          },
+          target: { updateStrategy: 'append', joiningConditions: [] },
+          strategy: { updateStrategy: 'append', joiningConditions: [], selectedTable: {} , selectedTableColumns: {} }
          }, 
         attributes:[], 
         groupAttributes:[],
@@ -855,31 +994,18 @@ export class FlowboardComponent {
       outputNodeCount = 1;
     }
     else if (baseName === 'target_data_object') {
-      // Use the database type from the selected connection instead of this.type
-      const connectionDbType = this.selectedConnection?.dbType || this.type;
-      
-      if (connectionDbType === 1) {
-        iconPath = './assets/images/etl/PostgreSQL-etl.svg';
-        altText = 'PostgreSQL';
-      } else if(connectionDbType === 2){
-        iconPath = './assets/images/etl/File-etl.svg';
-        altText = 'file';
-      } else if(connectionDbType === 6){
-        iconPath = './assets/images/icons_new/MYSQL.svg';
-        altText = 'MySQL';
-      } else if(connectionDbType === 7){
-        iconPath = './assets/images/etl/MongoDB-etl.svg'; // You may need to create this icon
-        altText = 'MongoDB';
-      } else if(connectionDbType === 8){
-        iconPath = './assets/images/icons_new/ORACLE.svg';
-        altText = 'Oracle';
-      }
+      const sourceData = this.componentsContent.targets.find((item: any) => item.id === this.type);
+      iconPath = sourceData.image ?? '';
+      altText = sourceData.name ?? '';
       data.type = name;
+      const tgtName = (this.objectType === 'select' ? this.selectedDataObject?.tables : this.selectedDataObject) || 'target';
+      const uniqueName = this.getAutoName('TGT', tgtName);
+      const activeConnection = this.getActiveConnection();
       data.nodeData = { 
-        connection: this.selectedConnection, 
+        connection: activeConnection, 
         dataObject: this.selectedDataObject, 
-        general: { name: 'TGT_' + (this.objectType === 'select' ? this.selectedDataObject?.tables : this.selectedDataObject) }, 
-        properties: { truncate: false, create: this.objectType === 'select' ? false : true, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], updateStrategy: 'append', keyColumns: [],
+        general: { name: uniqueName }, 
+        properties: { truncate: false, create: this.objectType === 'select' ? false : true, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [],
           rank:{ rankType: '', orderByCols: [], partitionByCols: [], rankColumnName: '', sortType: 'top', records: '' },
           pivot: { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' },
           union: { sourceNodes: [], columnMappings: [], type: 'UNION' },
@@ -890,7 +1016,9 @@ export class FlowboardComponent {
               { conditionName: `condition_3`, condition: '', isVisible: false, targetNodes: [] },
               { conditionName: `condition_4`, condition: '', isVisible: false, targetNodes: [] }
             ]
-          }
+          },
+          target: { updateStrategy: 'append', joiningConditions: [] },
+          strategy: { updateStrategy: 'append', joiningConditions: [], selectedTable: {} , selectedTableColumns: {} }
          }, 
         attributes:[], 
         groupAttributes:[],
@@ -917,11 +1045,12 @@ export class FlowboardComponent {
       altText = 'Expression';
       data.type = baseName;
       this.nodeTypeCounts[baseName] = (this.nodeTypeCounts[baseName] || 0) + 1;
+      const uniqueName = this.getAutoName('expression');
       data.nodeData = { 
         connection: {}, 
         dataObject: {}, 
-        general: { name: `expression_${this.nodeTypeCounts[baseName]}` }, 
-        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], updateStrategy: 'append', keyColumns: [],
+        general: { name: uniqueName }, 
+        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [],
           rank:{ rankType: '', orderByCols: [], partitionByCols: [], rankColumnName: '', sortType: 'top', records: '' },
           pivot: { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' },
           union: { sourceNodes: [], columnMappings: [], type: 'UNION' },
@@ -932,7 +1061,9 @@ export class FlowboardComponent {
               { conditionName: `condition_3`, condition: '', isVisible: false, targetNodes: [] },
               { conditionName: `condition_4`, condition: '', isVisible: false, targetNodes: [] }
             ]
-          }
+          },
+          target: { updateStrategy: 'append', joiningConditions: [] },
+          strategy: { updateStrategy: 'append', joiningConditions: [], selectedTable: {} , selectedTableColumns: {} }
          }, 
         attributes:[], 
         groupAttributes:[],
@@ -945,11 +1076,12 @@ export class FlowboardComponent {
       altText = 'Joiner';
       data.type = baseName;
       this.nodeTypeCounts[baseName] = (this.nodeTypeCounts[baseName] || 0) + 1;
+      const uniqueName = this.getAutoName('joiner');
       data.nodeData = { 
         connection: {}, 
         dataObject: {}, 
-        general: { name: `joiner_${this.nodeTypeCounts[baseName]}` }, 
-        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], updateStrategy: 'append', keyColumns: [],
+        general: { name: uniqueName }, 
+        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [],
           rank:{ rankType: '', orderByCols: [], partitionByCols: [], rankColumnName: '', sortType: 'top', records: '' },
           pivot: { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' },
           union: { sourceNodes: [], columnMappings: [], type: 'UNION' },
@@ -960,7 +1092,9 @@ export class FlowboardComponent {
               { conditionName: `condition_3`, condition: '', isVisible: false, targetNodes: [] },
               { conditionName: `condition_4`, condition: '', isVisible: false, targetNodes: [] }
             ]
-          }
+          },
+          target: { updateStrategy: 'append', joiningConditions: [] },
+          strategy: { updateStrategy: 'append', joiningConditions: [], selectedTable: {} , selectedTableColumns: {} }
          }, 
         attributes:[], 
         groupAttributes:[],
@@ -973,11 +1107,12 @@ export class FlowboardComponent {
       altText = 'Rollup';
       data.type = baseName;
       this.nodeTypeCounts[baseName] = (this.nodeTypeCounts[baseName] || 0) + 1;
+      const uniqueName = this.getAutoName('rollup');
       data.nodeData = { 
         connection: {}, 
         dataObject: {}, 
-        general: { name: `rollup_${this.nodeTypeCounts[baseName]}` }, 
-        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], updateStrategy: 'append', keyColumns: [],
+        general: { name: uniqueName }, 
+        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [],
           rank:{ rankType: '', orderByCols: [], partitionByCols: [], rankColumnName: '', sortType: 'top', records: '' },
           pivot: { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' },
           union: { sourceNodes: [], columnMappings: [], type: 'UNION' },
@@ -988,7 +1123,9 @@ export class FlowboardComponent {
               { conditionName: `condition_3`, condition: '', isVisible: false, targetNodes: [] },
               { conditionName: `condition_4`, condition: '', isVisible: false, targetNodes: [] }
             ]
-          }
+          },
+          target: { updateStrategy: 'append', joiningConditions: [] },
+          strategy: { updateStrategy: 'append', joiningConditions: [], selectedTable: {} , selectedTableColumns: {} }
          }, 
         attributes:[], 
         groupAttributes:[],
@@ -1001,11 +1138,12 @@ export class FlowboardComponent {
       altText = 'Filter';
       data.type = baseName;
       this.nodeTypeCounts[baseName] = (this.nodeTypeCounts[baseName] || 0) + 1;
+      const uniqueName = this.getAutoName('filter');
       data.nodeData = { 
         connection: {}, 
         dataObject: {}, 
-        general: { name: `filter_${this.nodeTypeCounts[baseName]}` }, 
-        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], updateStrategy: 'append', keyColumns: [],
+        general: { name: uniqueName }, 
+        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [],
           rank:{ rankType: '', orderByCols: [], partitionByCols: [], rankColumnName: '', sortType: 'top', records: '' },
           pivot: { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' },
           union: { sourceNodes: [], columnMappings: [], type: 'UNION' },
@@ -1016,7 +1154,9 @@ export class FlowboardComponent {
               { conditionName: `condition_3`, condition: '', isVisible: false, targetNodes: [] },
               { conditionName: `condition_4`, condition: '', isVisible: false, targetNodes: [] }
             ]
-          }
+          },
+          target: { updateStrategy: 'append', joiningConditions: [] },
+          strategy: { updateStrategy: 'append', joiningConditions: [], selectedTable: {} , selectedTableColumns: {} }
          }, 
         attributes:[], 
         groupAttributes:[],
@@ -1029,11 +1169,12 @@ export class FlowboardComponent {
       altText = 'Rank';
       data.type = baseName;
       this.nodeTypeCounts[baseName] = (this.nodeTypeCounts[baseName] || 0) + 1;
+      const uniqueName = this.getAutoName('rank');
       data.nodeData = { 
         connection: {}, 
         dataObject: {}, 
-        general: { name: `rank_${this.nodeTypeCounts[baseName]}` }, 
-        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], updateStrategy: 'append', keyColumns: [],
+        general: { name: uniqueName }, 
+        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [],
           rank:{ rankType: '', orderByCols: [], partitionByCols: [], rankColumnName: '', sortType: 'top', records: '' },
           pivot: { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' },
           union: { sourceNodes: [], columnMappings: [], type: 'UNION' },
@@ -1044,7 +1185,9 @@ export class FlowboardComponent {
               { conditionName: `condition_3`, condition: '', isVisible: false, targetNodes: [] },
               { conditionName: `condition_4`, condition: '', isVisible: false, targetNodes: [] }
             ]
-          }
+          },
+          target: { updateStrategy: 'append', joiningConditions: [] },
+          strategy: { updateStrategy: 'append', joiningConditions: [], selectedTable: {} , selectedTableColumns: {} }
          }, 
         attributes:[], 
         groupAttributes:[],
@@ -1057,11 +1200,12 @@ export class FlowboardComponent {
       altText = 'Pivot';
       data.type = baseName;
       this.nodeTypeCounts[baseName] = (this.nodeTypeCounts[baseName] || 0) + 1;
+      const uniqueName = this.getAutoName('pivot');
       data.nodeData = { 
         connection: {}, 
         dataObject: {}, 
-        general: { name: `pivot${this.nodeTypeCounts[baseName]}` }, 
-        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], updateStrategy: 'append', keyColumns: [],
+        general: { name: uniqueName }, 
+        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [],
           rank:{ rankType: '', orderByCols: [], partitionByCols: [], rankColumnName: '', sortType: 'top', records: '' },
           pivot: { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' },
           union: { sourceNodes: [], columnMappings: [], type: 'UNION' },
@@ -1072,7 +1216,9 @@ export class FlowboardComponent {
               { conditionName: `condition_3`, condition: '', isVisible: false, targetNodes: [] },
               { conditionName: `condition_4`, condition: '', isVisible: false, targetNodes: [] }
             ]
-          }
+          },
+          target: { updateStrategy: 'append', joiningConditions: [] },
+          strategy: { updateStrategy: 'append', joiningConditions: [], selectedTable: {} , selectedTableColumns: {} }
          }, 
         attributes:[], 
         groupAttributes:[],
@@ -1085,11 +1231,12 @@ export class FlowboardComponent {
       altText = 'Union';
       data.type = baseName;
       this.nodeTypeCounts[baseName] = (this.nodeTypeCounts[baseName] || 0) + 1;
+      const uniqueName = this.getAutoName('union');
       data.nodeData = { 
         connection: {}, 
         dataObject: {}, 
-        general: { name: `union_${this.nodeTypeCounts[baseName]}` }, 
-        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], updateStrategy: 'append', keyColumns: [],
+        general: { name: uniqueName }, 
+        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [],
           rank:{ rankType: '', orderByCols: [], partitionByCols: [], rankColumnName: '', sortType: 'top', records: '' },
           pivot: { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' },
           union: { sourceNodes: [], columnMappings: [], type: 'UNION' },
@@ -1100,7 +1247,9 @@ export class FlowboardComponent {
               { conditionName: `condition_3`, condition: '', isVisible: false, targetNodes: [] },
               { conditionName: `condition_4`, condition: '', isVisible: false, targetNodes: [] }
             ]
-          }
+          },
+          target: { updateStrategy: 'append', joiningConditions: [] },
+          strategy: { updateStrategy: 'append', joiningConditions: [], selectedTable: {} , selectedTableColumns: {} }
          }, 
         attributes:[], 
         groupAttributes:[],
@@ -1113,11 +1262,12 @@ export class FlowboardComponent {
       altText = 'Router';
       data.type = baseName;
       this.nodeTypeCounts[baseName] = (this.nodeTypeCounts[baseName] || 0) + 1;
+      const uniqueName = this.getAutoName('router');
       data.nodeData = { 
         connection: {}, 
         dataObject: {}, 
-        general: { name: `router_${this.nodeTypeCounts[baseName]}` }, 
-        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], updateStrategy: 'append', keyColumns: [],
+        general: { name: uniqueName }, 
+        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [],
           rank:{ rankType: '', orderByCols: [], partitionByCols: [], rankColumnName: '', sortType: 'top', records: '' },
           pivot: { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' },
           union: { sourceNodes: [], columnMappings: [], type: 'UNION' },
@@ -1128,7 +1278,9 @@ export class FlowboardComponent {
               { conditionName: `condition_3`, condition: '', isVisible: false, targetNodes: [] },
               { conditionName: `condition_4`, condition: '', isVisible: false, targetNodes: [] }
             ]
-          }
+          },
+          target: { updateStrategy: 'append', joiningConditions: [] },
+          strategy: { updateStrategy: 'append', joiningConditions: [], selectedTable: {} , selectedTableColumns: {} }
          }, 
         attributes:[], 
         groupAttributes:[],
@@ -1142,11 +1294,12 @@ export class FlowboardComponent {
       altText = 'Update Strategy';
       data.type = baseName;
       this.nodeTypeCounts[baseName] = (this.nodeTypeCounts[baseName] || 0) + 1;
+      const uniqueName = this.getAutoName('update_strategy');
       data.nodeData = { 
         connection: {}, 
         dataObject: {}, 
-        general: { name: `update_strategy_${this.nodeTypeCounts[baseName]}` }, 
-        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [], updateStrategy: 'append', keyColumns: [],
+        general: { name: uniqueName }, 
+        properties: { truncate: false, create: false, havingClause: '', filterCondition: '', whereClause: '', nodeNamesDropdown: [], primaryObject: null, joinList: [],
           rank:{ rankType: '', orderByCols: [], partitionByCols: [], rankColumnName: '', sortType: 'top', records: '' },
           pivot: { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' },
           union: { sourceNodes: [], columnMappings: [], type: 'UNION' },
@@ -1157,15 +1310,15 @@ export class FlowboardComponent {
               { conditionName: `condition_3`, condition: '', isVisible: false, targetNodes: [] },
               { conditionName: `condition_4`, condition: '', isVisible: false, targetNodes: [] }
             ]
-          }
+          },
+          target: { updateStrategy: 'append', joiningConditions: [] },
+          strategy: { updateStrategy: 'append', joiningConditions: [], selectedTable: {} , selectedTableColumns: {} }
          }, 
-        attributes: [], 
-        groupAttributes: [],
+        attributes:[], 
+        groupAttributes:[],
         sourceAttributes: [],
-        attributeMapper: [] as any[]
-      };
-      inputNodeCount = 1;
-      outputNodeCount = 1;
+        attributeMapper: []
+      }
     }
     data.nodeData.general.name = data.nodeData.general.name.replace(/ /g, '_');
     let displayName = data.nodeData.general.name;
@@ -1182,12 +1335,20 @@ export class FlowboardComponent {
     // this.drawflow.registerNode(name, html);
     const nodeId = this.drawflow.addNode(name, inputNodeCount, outputNodeCount, posX, posY, name, data, html.innerHTML);
 
+    // Reset all connection variables
     this.selectedConnection = null;
+    this.selectedFileConnection = null;
+    this.selectedIntegrationConnection = null;
     this.selectedDataObject = null;
     this.objectType = 'select';
     this.fileSelectType = 'dataSource'; 
     this.sourcePath = ''; 
     this.selectedFile = '';
+    this.remoteFilePath = '';
+    this.selectedRemoteServerFile = '';
+    this.selectedEndpoint = null; 
+    this.selectedSchemas.clear(); 
+    this.expandedSchemas.clear();
     const allNodes = this.drawflow.drawflow.drawflow[this.drawflow.module].data;
     Object.entries(allNodes).forEach(([id, node]) => {
       console.log('Node ID:', id, 'Node Data:', node);
@@ -1229,14 +1390,14 @@ export class FlowboardComponent {
       }
       nodeId = this.selectedNode.id;
       if(['target_data_object'].includes(this.selectedNode.data.type) && this.selectedNode.data.nodeData.properties.create){
-        let currentDataObject;
-        currentDataObject = general.name;
+        // let currentDataObject;
+        // currentDataObject = general.name;
         data = {
           ...this.selectedNode.data,
           nodeData: {
             ...this.selectedNode.data.nodeData,
             general: general,
-            dataObject: currentDataObject
+            // dataObject: currentDataObject
           }
         };
       } else{
@@ -1250,8 +1411,8 @@ export class FlowboardComponent {
       }
 
       let displayName = general.name;
-      if (displayName.length > 5) {
-        displayName = displayName.substring(0, 5) + '..';
+      if (displayName.length > 10) {
+        displayName = displayName.substring(0, 10) + '..';
       }
       this.selectedNode.data.nodeData.general.name = general.name;
       const nodeElement = document.querySelector(`#node-${nodeId}`);
@@ -1307,10 +1468,12 @@ export class FlowboardComponent {
       Object.entries(allNodes).forEach(([id, node]) => {
         this.getDropdownColumnsData(node);
       });
+      console.log(allNodes);
+      if (this.selectedNode.data.type === 'Joiner') {
+        this.updateDropdownList(this.selectedNode);
+      }
     }
-    if (this.selectedNode.data.type === 'Joiner') {
-      this.updateDropdownList(this.selectedNode);
-    }
+    this.validateParentNode(this.selectedNode);
     console.log(this.drawflow.drawflow.drawflow[this.drawflow.module]);
   }
 
@@ -1434,10 +1597,36 @@ export class FlowboardComponent {
     this.isNodeSelected = true;
     this.selectedNode = node;
     this.nodeName = this.selectedNode.data.nodeData.general.name;
-    console.log(this.selectedNode);
+    console.log('Node selected:', this.selectedNode);
     this.selectedAttributeIndex = null;
     this.selectedGroupAttributeIndex = null;
     this.selectedSourceAttributeIndex = null;
+    
+    // For Excel source nodes, check if schema is loaded
+    if (this.selectedNode.data.type === 'source_data_object' && 
+        this.selectedNode.data.source.type === 28) {
+      console.log('[getSelectedNodeData] Excel node selected');
+      
+      // Check if schema is already loaded in schemaList
+      const schemaList = this.selectedNode.data.source.schemaList;
+      const dataObject = this.selectedNode.data.nodeData.dataObject;
+      
+      console.log('[getSelectedNodeData] schemaList:', schemaList);
+      console.log('[getSelectedNodeData] dataObject:', dataObject);
+      
+      if (schemaList && schemaList.length > 0 && schemaList[0].columns && schemaList[0].columns.length > 0) {
+        console.log('[getSelectedNodeData] Schema already loaded in schemaList, columns:', schemaList[0].columns.length);
+        // Schema is already loaded, no need to fetch again
+      } else if (dataObject.columns && dataObject.columns.length > 0) {
+        console.log('[getSelectedNodeData] Schema already loaded in dataObject, columns:', dataObject.columns.length);
+        // Schema is already loaded in dataObject
+      } else {
+        console.log('[getSelectedNodeData] No schema found, fetching...');
+        const sheetName = dataObject.tables;
+        this.fetchExcelSheetSchema(this.selectedNode.id, sheetName);
+      }
+    }
+    
     if(this.isRefrshEnable && !['success', 'failed'].includes(this.dataFlowRunStatus)){
       this.tableTypeTabId = 2;
       this.getDataFlowLogs(this.nodeName);
@@ -1447,54 +1636,39 @@ export class FlowboardComponent {
   }
 
   getConnections() {
-    // Get all connections without specifying a type (this will get all types)
-    console.log('🔍 FlowBoard: Getting all connections...');
-    
-    this.workbechService.getConnectionsForEtl(null).subscribe({
+    console.log('getConnections called with type:', this.type);
+    // let object = {};
+    this.workbechService.getConnectionsForEtl(this.type).subscribe({
       next: (data) => {
-        console.log('📊 FlowBoard connections response:', data);
-        console.log(`🎯 Total connections found: ${data.data?.length || 0}`);
-        
-        if (data.data) {
-          data.data.forEach((conn: any, index: number) => {
-            console.log(`   ${index + 1}. ${conn.display_name} (${conn.server_type})`);
-          });
-        }
-        
-        this.connectionOptions = data.data || [];
+        console.log(data);
+        this.connectionOptions = data.data;
       },
       error: (error: any) => {
-        console.error('❌ Error getting connections:', error);
-        this.toasterService.error(error.error?.message || 'Failed to load connections', 'error', { positionClass: 'toast-top-right' });
-        this.connectionOptions = [];
+        console.log(error);
+        this.toasterService.error(error.error.message, 'error', { positionClass: 'toast-top-right' });
       }
     });
   }
   getDataObjects() {
-    if (this.selectedConnection?.hierarchy_id) {
-      console.log('🔍 Getting data objects for connection:', this.selectedConnection);
-      console.log('🔗 API call: Server_tables/' + this.selectedConnection.hierarchy_id);
-      this.workbechService.getTablesForDataTransformation(this.selectedConnection.hierarchy_id).subscribe({
+    const activeConnection = this.getActiveConnection();
+    if (activeConnection?.hierarchy_id) {
+      this.workbechService.getTablesForDataTransformation(activeConnection.hierarchy_id).subscribe({
         next: (data) => {
-          console.log('📊 Data objects response:', data);
+          console.log(data);
           this.dataObjectOptions = data?.tables;
-          console.log('📋 Available data objects:', this.dataObjectOptions);
-          
-          if (!this.dataObjectOptions || this.dataObjectOptions.length === 0) {
-            console.log('⚠️ No data objects found - check if MongoDB collections are being returned');
-          }
         },
         error: (error) => {
-          console.error('❌ Error getting data objects:', error);
-          console.error('❌ Error details:', error.error);
+          console.log(error);
           this.toasterService.error(error.error.message, 'error', { positionClass: 'toast-top-right' });
         }
       });
     }
+    this.selectedDataObject = null;
   }
   getDataObjectsforFile(){
-    if (this.selectedConnection?.hierarchy_id) {
-      this.workbechService.getDataObjectsForFile(this.selectedConnection.hierarchy_id).subscribe({
+    const activeConnection = this.getActiveConnection();
+    if (activeConnection?.hierarchy_id) {
+      this.workbechService.getDataObjectsForFile(activeConnection.hierarchy_id).subscribe({
         next: (data) => {
           console.log(data);
           this.selectedDataObject = data?.tables[0];
@@ -1506,6 +1680,256 @@ export class FlowboardComponent {
       });
     }
   }
+  
+  getExcelSheets(sheetSelectionModal: any, currentModal: any) {
+    const activeConnection = this.getActiveConnection();
+    if (activeConnection?.hierarchy_id) {
+      this.workbechService.getExcelSheets(activeConnection.hierarchy_id).subscribe({
+        next: (data) => {
+          console.log('Excel sheets:', data);
+          this.excelSheets = data?.available_sheets || [];
+          this.selectedExcelSheets = data?.selected_sheets || [];
+          
+          // Close the connection modal and open sheet selection modal
+          currentModal.close('save click');
+          this.modalService.open(sheetSelectionModal, {
+            centered: true,
+            windowClass: 'animate__animated animate__zoomIn',
+            modalDialogClass: 'modal-md'
+          });
+        },
+        error: (error) => {
+          console.log(error);
+          this.toasterService.error(error.error.message || 'Failed to fetch Excel sheets', 'error', { positionClass: 'toast-top-right' });
+        }
+      });
+    }
+  }
+  
+  onExcelSheetToggle(sheet: string, event: any) {
+    if (event.target.checked) {
+      if (!this.selectedExcelSheets.includes(sheet)) {
+        this.selectedExcelSheets.push(sheet);
+      }
+    } else {
+      const index = this.selectedExcelSheets.indexOf(sheet);
+      if (index > -1) {
+        this.selectedExcelSheets.splice(index, 1);
+      }
+    }
+  }
+
+  addExcelNodes(modal: any) {
+    // Create one node per selected Excel sheet
+    if (this.selectedExcelSheets.length === 0) {
+      this.toasterService.error('Please select at least one sheet', 'Error', { positionClass: 'toast-top-right' });
+      return;
+    }
+
+    const activeConnection = this.getActiveConnection();
+    const connectionName = activeConnection?.connection_name || 'Excel';
+    const connectionId = activeConnection?.hierarchy_id;
+    
+    if (!connectionId) {
+      this.toasterService.error('No connection found', 'Error', { positionClass: 'toast-top-right' });
+      return;
+    }
+
+    console.log('Creating nodes for sheets:', this.selectedExcelSheets);
+    console.log('Connection ID:', connectionId);
+    
+    // Update the connection with selected sheets first
+    this.workbechService.updateExcelSheets(connectionId, this.selectedExcelSheets).subscribe({
+      next: (response: any) => {
+        console.log('Excel sheets updated successfully:', response);
+        
+        // Now create nodes for each selected sheet
+        this.selectedExcelSheets.forEach((sheetName, index) => {
+          // Calculate position for each node (offset them horizontally)
+          const offsetX = index * 200; // 200px horizontal spacing between nodes
+          const nodeX = this.posX + offsetX;
+          const nodeY = this.posY;
+          
+          // Create a node for this sheet
+          this.addExcelSheetNode(sheetName, nodeX, nodeY, connectionName);
+        });
+        
+        // Close modal and reset
+        modal.close('save click');
+        this.selectedExcelSheets = [];
+      },
+      error: (error: any) => {
+        console.error('Error updating Excel sheets:', error);
+        this.toasterService.error('Failed to update Excel sheets', 'Error', { positionClass: 'toast-top-right' });
+      }
+    });
+  }
+
+  addExcelSheetNode(sheetName: string, posX: number, posY: number, connectionName: string) {
+    const sourceData = this.componentsContent.sources.find((item: any) => item.id === this.type);
+    const iconPath = sourceData?.image ?? '';
+    const altText = sourceData?.name ?? '';
+    
+    // Create node data structure
+    let data: any = {
+      type: 'source_data_object',
+      source: {
+        type: this.type,
+        fileSelectFrom: this.fileSelectType,
+        path: this.sourcePath,
+        file: this.selectedFile,
+        endpoint: '',
+        tablesList: [sheetName], // Single sheet for this node
+        schemaList: [],
+        selectedSheets: [sheetName] // Store the sheet name
+      },
+      nodeData: {
+        general: { name: '' },
+        connection: {},
+        dataObject: { tables: sheetName, columns: [] },
+        properties: {
+          truncate: false,
+          create: false,
+          havingClause: '',
+          filterCondition: '',
+          whereClause: '',
+          nodeNamesDropdown: [],
+          primaryObject: null,
+          joinList: [],
+          rank: { rankType: '', orderByCols: [], partitionByCols: [], rankColumnName: '', sortType: 'top', records: '' },
+          pivot: { groupByCols: [], pivotCol: null, valueCols: [], pivotValues: [], aggregation: '' },
+          union: { sourceNodes: [], columnMappings: [], type: 'UNION' },
+          router: {
+            conditions: [
+              { conditionName: `condition_1`, condition: '', isVisible: false, targetNodes: [] },
+              { conditionName: `condition_2`, condition: '', isVisible: false, targetNodes: [] },
+              { conditionName: `condition_3`, condition: '', isVisible: false, targetNodes: [] },
+              { conditionName: `condition_4`, condition: '', isVisible: false, targetNodes: [] }
+            ]
+          },
+          target: { updateStrategy: 'append', joiningConditions: [] },
+          strategy: { updateStrategy: 'append', joiningConditions: [], selectedTable: {}, selectedTableColumns: {} }
+        },
+        attributes: [],
+        groupAttributes: [],
+        sourceAttributes: [],
+        attributeMapper: []
+      }
+    };
+
+    // Generate unique name for this sheet node
+    const uniqueName = this.getAutoName('SRC', `${connectionName}_${sheetName}`);
+    data.nodeData.general.name = uniqueName.replace(/ /g, '_');
+    
+    // Set connection data
+    const activeConnection = this.getActiveConnection();
+    data.nodeData.connection = activeConnection;
+
+    // Create display name (truncate if too long)
+    let displayName = data.nodeData.general.name;
+    if (displayName.length > 10) {
+      displayName = displayName.substring(0, 10) + '..';
+    }
+
+    // Create HTML for the node
+    var html = document.createElement('div');
+    html.innerHTML = `<div class="d-flex flex-column align-items-center">
+      <img src="${iconPath}" class="node-icon" alt="${altText}" />
+      <div class="node-label" title="${data.nodeData.general.name}">${displayName}</div>
+      <div class="node-status" style="display: none;"></div>
+    </div>`;
+
+    // Add the node to the canvas
+    const nodeId = this.drawflow.addNode(
+      'source_data_object',
+      0, // input count
+      1, // output count
+      posX,
+      posY,
+      'source_data_object',
+      data,
+      html.innerHTML
+    );
+
+    console.log(`Created Excel node for sheet "${sheetName}" with ID: ${nodeId}`);
+
+    // Fetch schema for this specific sheet (don't set selectedNode here to avoid conflicts)
+    this.fetchExcelSheetSchema(nodeId, sheetName);
+  }
+
+  fetchExcelSheetSchema(nodeId: number, sheetName: string) {
+    const activeConnection = this.getActiveConnection();
+    const connectionId = activeConnection?.hierarchy_id;
+
+    if (!connectionId) {
+      console.error('No connection ID found for fetching Excel sheet schema');
+      return;
+    }
+
+    console.log(`[fetchExcelSheetSchema] Fetching schema for sheet "${sheetName}" from connection ${connectionId}`);
+
+    // Call the file_schema endpoint which now handles Excel sheets
+    this.workbechService.getDataObjectsForFile(connectionId).subscribe({
+      next: (response: any) => {
+        console.log('[fetchExcelSheetSchema] Excel schema response:', response);
+        console.log('[fetchExcelSheetSchema] Response tables:', response?.tables);
+        
+        // Find the schema for this specific sheet
+        const tables = response?.tables || [];
+        console.log(`[fetchExcelSheetSchema] Looking for sheet "${sheetName}" in ${tables.length} tables`);
+        tables.forEach((table: any, index: number) => {
+          console.log(`[fetchExcelSheetSchema] Table ${index}:`, table.tables, 'columns:', table.columns?.length);
+        });
+        
+        const sheetSchema = tables.find((table: any) => table.tables === sheetName);
+        
+        if (sheetSchema) {
+          console.log(`[fetchExcelSheetSchema] Found schema for sheet "${sheetName}":`, sheetSchema);
+          
+          // Update the node with the schema
+          const node = this.drawflow.getNodeFromId(nodeId);
+          if (node) {
+            console.log('[fetchExcelSheetSchema] Node before update:', JSON.parse(JSON.stringify(node.data)));
+            
+            // Store schema in the format expected by openAttributesSelection
+            // For Excel (type 28), it expects schemaList in node.data.source.schemaList
+            node.data.source.schemaList = [{
+              tables: sheetName,
+              columns: sheetSchema.columns || []
+            }];
+            
+            // Also update dataObject for backward compatibility
+            node.data.nodeData.dataObject = {
+              tables: sheetName,
+              columns: sheetSchema.columns || []
+            };
+            
+            // Update the node in drawflow
+            this.drawflow.updateNodeDataFromId(nodeId, node.data);
+            
+            console.log(`[fetchExcelSheetSchema] Updated node ${nodeId} with ${sheetSchema.columns?.length || 0} columns`);
+            console.log('[fetchExcelSheetSchema] Node data after update:', JSON.parse(JSON.stringify(node.data)));
+            console.log('[fetchExcelSheetSchema] schemaList:', node.data.source.schemaList);
+            console.log('[fetchExcelSheetSchema] dataObject:', node.data.nodeData.dataObject);
+            console.log('[fetchExcelSheetSchema] dataObject.columns:', node.data.nodeData.dataObject.columns);
+            
+            console.log(`[fetchExcelSheetSchema] Schema loaded successfully for node ${nodeId} (${sheetName})`);
+          } else {
+            console.error(`[fetchExcelSheetSchema] Node ${nodeId} not found`);
+          }
+        } else {
+          console.warn(`No schema found for sheet "${sheetName}" in response:`, tables);
+          this.toasterService.warning(`Sheet "${sheetName}" not found in Excel file`, 'Warning', { positionClass: 'toast-top-right' });
+        }
+      },
+      error: (error: any) => {
+        console.error(`Error fetching schema for sheet "${sheetName}":`, error);
+        this.toasterService.error(`Failed to load schema for sheet "${sheetName}"`, 'Error', { positionClass: 'toast-top-right' });
+      }
+    });
+  }
+  
+  
   getFilesforServer() {
     this.workbechService.getFilesForServer(this.sourcePath).subscribe({
       next: (data) => {
@@ -1527,6 +1951,84 @@ export class FlowboardComponent {
       next: (data) => {
         console.log(data);
         this.selectedDataObject = data?.tables[0];
+      },
+      error: (error) => {
+        console.log(error);
+        this.toasterService.error(error.error.message, 'error', { positionClass: 'toast-top-right' });
+      }
+    });
+  }
+  getEndPointsList(){
+    console.log('=== getEndPointsList CALLED ===');
+    console.log('this.type:', this.type, 'typeof:', typeof this.type);
+    console.log('this.nodeToAdd:', this.nodeToAdd);
+    
+    // Get the correct connection based on type
+    const activeConnection = this.getActiveConnection();
+    console.log('activeConnection:', activeConnection);
+    console.log('selectedFileConnection:', this.selectedFileConnection);
+    console.log('selectedIntegrationConnection:', this.selectedIntegrationConnection);
+    
+    // Don't fetch integration endpoints for file types (CSV=2, Remote=3, Excel=28)
+    // Also check for database types that should be excluded
+    const fileTypes = [2, 3, 28];
+    const databaseTypes = [1, 6, 7, 8, 9, 10]; // PostgreSQL, MongoDB, etc.
+    const excludedTypes = [...fileTypes, ...databaseTypes];
+    
+    // CRITICAL: Check if type is in excluded list
+    const typeAsNumber = Number(this.type);
+    console.log('typeAsNumber:', typeAsNumber, 'is in excludedTypes?', excludedTypes.includes(typeAsNumber));
+    
+    if (excludedTypes.includes(typeAsNumber)) {
+      console.log('✅ SKIPPING integration endpoints for excluded type:', this.type);
+      return;
+    }
+    
+    // Additional safety check - if type is not a valid integration type, don't proceed
+    if (!this.type || this.type === 'undefined' || this.type === null) {
+      console.log('✅ SKIPPING - Invalid type:', this.type);
+      return;
+    }
+    
+    console.log('⚠️ WARNING: About to call integration endpoint for type:', this.type);
+    
+    if (activeConnection?.hierarchy_id) {
+      console.log('🔴 CALLING getIntegrationEndpoints API');
+      this.workbechService.getIntegrationEndpoints(activeConnection.hierarchy_id).subscribe({
+        next: (data) => {
+          console.log(data);
+          this.endpointOptions = data?.endpoints;
+        },
+        error: (error) => {
+          console.log(error);
+          this.toasterService.error(error.error.message, 'error', { positionClass: 'toast-top-right' });
+        }
+      });
+    }
+    this.selectedEndpoint = null;
+  }
+  getSchemasList(modal: any, sourceModal: any){
+    const activeConnection = this.getActiveConnection();
+    let object = {
+      id: activeConnection?.hierarchy_id,
+      endpoint: this.type !== 27 ? this.selectedEndpoint : activeConnection?.display_name
+    }
+    this.workbechService.getIntegrationSchemaList(object).subscribe({
+      next: (data) => {
+        console.log(data);
+        this.schemaList = data?.tables;
+        if(this.schemaList.length > 0){
+          const firstSchema = this.schemaList[0].tables;
+          this.selectedSchemas.add(firstSchema);
+          this.modal = sourceModal;
+          this.modalService.open(modal, {
+            centered: true,
+            windowClass: 'animate__animated animate__zoomIn',
+            modalDialogClass: 'modal-md'
+          });
+        } else {
+          this.schemalistNoteMsg = 'No schemas found for the selected endpoint';
+        }
       },
       error: (error) => {
         console.log(error);
@@ -1658,7 +2160,22 @@ export class FlowboardComponent {
           console.log(data);
           this.isRunEnable = true;
           this.dataFlowId = data.Flow_Board_id;
-          this.toasterService.success(data.message, 'success', { positionClass: 'toast-top-right' });
+          this.toasterService.success('DagBoard Updated Successfully', 'success', { positionClass: 'toast-top-right' });
+
+          Object.entries(this.drawflow.drawflow.drawflow[this.drawflow.module].data).forEach(([id, node]) => {
+            const nodeElement = document.querySelector(`#node-${id}`);
+            if (nodeElement) {
+              const statusDiv = nodeElement.querySelector('.node-status') as HTMLElement;
+              if (statusDiv) {
+                statusDiv.textContent = '';
+                statusDiv.style.display = 'none';
+                statusDiv.className = 'node-status'; // remove any previous status class
+              }
+            }
+          });
+          if (!this.validateDagBoard()) {
+            return;
+          }
         },
         error: (error: any) => {
           this.isRunEnable = false;
@@ -1670,11 +2187,10 @@ export class FlowboardComponent {
       this.workbechService.saveEtl(formData).subscribe({
         next: (data: any) => {
           console.log(data);
-          this.isRunEnable = true;
           this.dataFlowId = data.Flow_Board_id;
           const encodedId = btoa(this.dataFlowId.toString());
-          this.router.navigate(['/datamplify/flowboardList/flowboard/'+encodedId]);
-          this.toasterService.success('Flowboard Saved Successfully', 'success', { positionClass: 'toast-top-right' });
+          this.navigationService.navigate(['datamplify','DagBoardList','DagBoard',encodedId]);
+          this.toasterService.success('DagBoard Saved Successfully', 'success', { positionClass: 'toast-top-right' });
         },
         error: (error: any) => {
           this.isRunEnable = false;
@@ -1685,6 +2201,9 @@ export class FlowboardComponent {
     }
   }
   runDataFlow() {
+    if (!this.validateDagBoard()) {
+      return;
+    }
     this.workbechService.runEtl(this.flowId, 'flowboard').subscribe({
       next: (data: any) => {
         console.log(data);
@@ -1814,6 +2333,9 @@ export class FlowboardComponent {
         const array = [atrr.attributeName, atrr.dataType, atrr.expression];
         attr.push(array);
       });
+      task.source_table_name = nodes[nodeId].data.nodeData.dataObject.tables;
+      task.attributes = attr;
+      task.source_attributes = sourceAttr;
       if (nodes[nodeId].data?.source?.type === 1) {
         task.format = 'database',
         task.hierarchy_id = nodes[nodeId].data.nodeData.connection.hierarchy_id;
@@ -1831,23 +2353,32 @@ export class FlowboardComponent {
         task.format = 'remote_server';
         task.hierarchy_id = nodes[nodeId].data.nodeData.connection.hierarchy_id;
         task.path = `${nodes[nodeId].data.source.path}/${nodes[nodeId].data.source.file}`;
+      } else if (nodes[nodeId].data?.source?.type === 6) {
+        task.format = 'database',
+        task.hierarchy_id = nodes[nodeId].data.nodeData.connection.hierarchy_id;
+        task.path = '';
+      } else if(![1,2,3,6,7,8,9,10].includes(nodes[nodeId].data?.source?.type)){
+        task.format = 'integrations'
+        task.hierarchy_id = nodes[nodeId].data.nodeData.connection.hierarchy_id;
+        task.path = '';
+        task.tables_list = nodes[nodeId].data.source.tablesList || [];
+        task.source_table_name = nodes[nodeId].data.source.endpoint.replace(/\//g, '_');
       } else{
         task.format = 'database';
         task.hierarchy_id = nodes[nodeId].data.nodeData.connection.hierarchy_id;
         task.path = '';
       }
-      task.source_table_name = nodes[nodeId].data.nodeData.dataObject.tables;
-      task.attributes = attr;
-      task.source_attributes = sourceAttr;
     } else {
       if (nodes[nodeId].data.type === 'target_data_object') {
         if(!nodes[nodeId].data.nodeData.properties.create){
           let attrMapper: any[] = [];
           nodes[nodeId].data.nodeData.attributeMapper.forEach((atrr: any) => {
-            const array = [atrr.column, atrr.dataType, atrr.selectedColumn.label, atrr.selectedDataType];
+            const array = [atrr.column, atrr.dataType, `${atrr.selectedColumn.group}.${atrr.selectedColumn.label}`, atrr.selectedDataType];
             attrMapper.push(array);
           });
           task.attribute_mapper = attrMapper;
+          task.strategy = nodes[nodeId].data.nodeData.properties?.target?.updateStrategy ?? 'append';
+          task.join_keys = nodes[nodeId].data.nodeData.properties?.target?.joiningConditions.map((cond:any)=> { return { source: cond[0].label, target: cond[1  ].label } }) ?? [];
         }
         task.format = 'database',
         task.hierarchy_id = nodes[nodeId].data.nodeData.connection.hierarchy_id,
@@ -1855,11 +2386,6 @@ export class FlowboardComponent {
         task.target_table_name = nodes[nodeId].data.nodeData.properties.create ? nodes[nodeId].data.nodeData.dataObject : nodes[nodeId].data.nodeData.dataObject.tables;
         task.truncate = nodes[nodeId].data.nodeData.properties.truncate;
         task.create = nodes[nodeId].data.nodeData.properties.create;
-        task.update_strategy = nodes[nodeId].data.nodeData.properties.updateStrategy || 'append';
-        task.key_columns = (nodes[nodeId].data.nodeData.properties.keyColumns || []).map((c: any) => c.label || c);
-      } else if(nodes[nodeId].data.type === 'UpdateStrategy'){
-        task.update_strategy = nodes[nodeId].data.nodeData.properties.updateStrategy || 'append';
-        task.key_columns = (nodes[nodeId].data.nodeData.properties.keyColumns || []).map((c: any) => c.label || c);
       } else if(nodes[nodeId].data.type === 'Rollup'){
         let grp : any[] = [];
         nodes[nodeId].data.nodeData.groupAttributes.forEach((atrr:any)=>{
@@ -1917,6 +2443,17 @@ export class FlowboardComponent {
         task.union_type = nodes[nodeId].data.nodeData.properties.union.type || 'UNION';
       } else if(nodes[nodeId].data.type === 'Router'){
         task.conditions = nodes[nodeId].data.nodeData.properties.router.conditions.filter((conn:any)=>conn.isVisible).map((condition:any)=> [condition.condition, condition.conditionName]) || [];
+      } else if(nodes[nodeId].data.type === 'UpdateStrategy'){
+        task.connection_id = nodes[nodeId].data.nodeData.properties.strategy.selectedTable.hierarchy_id;
+        task.strategy_table_name = nodes[nodeId].data.nodeData.properties.strategy.selectedTableColumns.tables;
+        task.strategy = nodes[nodeId].data.nodeData.properties.strategy.updateStrategy;
+        task.join_keys = nodes[nodeId].data.nodeData.properties.strategy.joiningConditions.map((cond:any)=> { return { source: cond[0].label, target: cond[1  ].label } }) || [];
+        let sourceAttr: any[] = [];
+        nodes[nodeId].data.nodeData.sourceAttributes.forEach((atrr: any) => {
+          const array = [atrr.attributeName, atrr.dataType, atrr.selectedColumn.label, atrr.selectedColumn.dataType];
+          sourceAttr.push(array);
+        });
+        task.source_attributes = sourceAttr;
       }
 
       const inputConnections = nodes[nodeId].inputs?.input_1?.connections || [];
@@ -1952,6 +2489,7 @@ export class FlowboardComponent {
     let count = this.selectedNode.data.nodeData.attributes.length+1;
     let attribute = {attributeName: 'ATTR_NAME_'+count, dataType: 'varchar', expression: ''}
     this.selectedNode.data.nodeData.attributes.push(attribute);
+    this.updateNode('attribute');
   }
   deleteAttribute(index:number){
     this.selectedNode.data.nodeData.attributes.splice(index, 1);
@@ -1960,6 +2498,7 @@ export class FlowboardComponent {
   addNewGroupAttribute(){
     let attribute = {aliasName: '', selectColumnDropdown: this.selectedNode.data.nodeData.dataObject, selectedColumn: null, dataType: '',}
     this.selectedNode.data.nodeData.groupAttributes.push(attribute);
+    this.updateNode('groupattribute');
   }
   deleteGroupAttribute(index:number){
     this.selectedNode.data.nodeData.groupAttributes.splice(index, 1);
@@ -1998,8 +2537,10 @@ export class FlowboardComponent {
     let childGrpAttributes: any = {};
     let childSourceAttributes: any = {};
     let childColumnMappings: any = {};
+    let rankColumn: any = {};
     const nodeNames: any[] = [];
     const nodeTypes: any[] = [];
+    const routerConditions: any = {};
 
 
     childrenList.forEach(childId => {
@@ -2008,7 +2549,7 @@ export class FlowboardComponent {
         childDataObjects.push(childNode.data.nodeData.dataObject);
         childAttributes.push(childNode.data.nodeData.attributes);
         const nodeName = childNode.data.nodeData.general.name;
-        if(childNode.data.type === 'source_data_object'){
+        if(childNode.data.type === 'source_data_object' || childNode.data.type === 'UpdateStrategy'){
           childSourceAttributes[nodeName] = childNode.data.nodeData.sourceAttributes;
         }
         if(childNode.data.type === 'Rollup'){
@@ -2016,6 +2557,12 @@ export class FlowboardComponent {
         }
         if(childNode.data.type === 'Union'){
           childColumnMappings[nodeName] = childNode.data.nodeData.properties.union.columnMappings;
+        }
+        if(childNode.data.type === 'Rank'){
+          rankColumn[nodeName] = childNode.data.nodeData.properties.rank.rankColumnName;
+        }
+        if(childNode.data.type === 'Router'){
+          routerConditions[nodeName] = childNode.data.nodeData.properties.router.conditions;
         }
         nodeNames.push(nodeName);
         nodeTypes.push(childNode.data.type);
@@ -2036,7 +2583,7 @@ export class FlowboardComponent {
 
       let items = [];
 
-      if(nodeType === 'source_data_object'){
+      if(nodeType === 'source_data_object' || nodeType === 'UpdateStrategy'){
         const attr = childSourceAttributes[nodeName] || [];
         if(attr.length > 0){
           for (const atr of attr) {
@@ -2044,22 +2591,43 @@ export class FlowboardComponent {
             items.push({...atr.selectedColumn, group: nodeName, label: atr.attributeName, value: atr.attributeName, dataType: atr.dataType});
           }
         }
-      } 
-      else if(!['Rollup', 'Expression', 'Joiner', 'Union'].includes(nodeType)){
+      } else if (nodeType === 'Router') {
+        const dataObjects = JSON.parse(JSON.stringify(childDataObjects[i]));
+
+        const conditions = routerConditions[nodeName] || [];
+
+        dataObjects.forEach((object: any) => {
+          // Find which condition routes to this object
+          const matchedCondition = conditions.find((cond: any) =>
+            cond.isVisible === true &&
+            cond.targetNodes?.some(
+              (target: any) => target.id === node.id
+            )
+          );
+
+          if (matchedCondition) {
+            object.group = matchedCondition.conditionName;
+          }
+        });
+
+        items = dataObjects;
+
+      } else if(!['Rollup', 'Expression', 'Joiner', 'Union'].includes(nodeType)){
         let dataObjects = JSON.parse(JSON.stringify(childDataObjects[i]));
         dataObjects.forEach((object:any)=>{
           object.group = nodeName;
         });
         items = dataObjects;
       }
-       if(nodeType === 'Rollup'){
+
+      if (nodeType === 'Rollup') {
         const attr = childGrpAttributes[nodeName] || [];
-        if(attr.length > 0){
+        if (attr.length > 0) {
           for (const atr of attr) {
             items.push({
               label: atr.aliasName,
               value: atr.aliasName,
-              column: atr.selectedColumn,
+              dataType: atr.dataType,
               group: nodeName
             });
           }
@@ -2070,9 +2638,18 @@ export class FlowboardComponent {
         items = (childColumnMappings[nodeName] || []).map((object: any) => ({
           label: object.aliasName,
           value: object.aliasName,
-          dataType: object.columns?.[0]?.dtype,
+          dataType: object.columns?.[0]?.dtype ?? object.columns?.[0]?.dataType,
           group: nodeName
         }));
+      }
+
+      if (nodeType === 'Rank') {
+        items.push({
+          label: rankColumn[nodeName],
+          value: rankColumn[nodeName],
+          dataType: 'integer',
+          group: nodeName
+        });
       }
 
       for (const attr of attributes) {
@@ -2105,10 +2682,39 @@ export class FlowboardComponent {
             grp.selectedColumn = '';
           }
         });
+      } else if(node.data.type === 'UpdateStrategy'){
+        node.data.nodeData.columnsDropdown = this.currentNodeColumns;
       }
       this.drawflow.updateNodeDataFromId(node.id, node.data);
     } else if(node.data.type === 'target_data_object'){
       node.data.nodeData.columnsDropdown = this.currentNodeColumns;
+      this.drawflow.updateNodeDataFromId(node.id, node.data);
+    }
+
+    if (node.data.type === 'Union') {
+      node.data.nodeData.properties.union.sourceNodes.forEach((sourceNode: any) => {
+        const key = sourceNode.data.nodeData.general.name;
+        if (!this.unionNodesColumnList[key]) {
+          this.unionNodesColumnList[key] = null;
+        }
+        this.unionNodesColumnList[key] = [...this.getColumnsFromNode(sourceNode, node.data.nodeData.dataObject)];
+      });
+    }
+
+    // if(node?.data?.type === 'target_data_object' && !node?.data?.nodeData?.properties?.create){
+    //   this.getColumnsForUpdateStrategy(this.selectedNode);
+    // }
+
+    // if (node?.data?.type === 'UpdateStrategy' && node?.data?.nodeData?.properties?.strategy?.selectedTable?.display_name && node?.data?.nodeData?.properties?.strategy?.selectedTableColumns?.tables) {
+    //   this.getColumnsForUpdateStrategy(this.selectedNode);
+    // }
+
+    if(node?.data?.type === 'Router'){
+      node.data.nodeData.properties.router.conditions.forEach((cond: any) => {
+        cond.targetNodes = cond.targetNodes.map((t: any) =>
+          this.drawflow.getNodeFromId(t.id)
+        );
+      });
       this.drawflow.updateNodeDataFromId(node.id, node.data);
     }
 
@@ -2119,7 +2725,17 @@ export class FlowboardComponent {
   }
 
   openAttributesSelection(modal: any) {
+    console.log('[openAttributesSelection] Called');
+    console.log('[openAttributesSelection] Selected node:', this.selectedNode);
+    console.log('[openAttributesSelection] Selected node ID:', this.selectedNode?.id);
+    console.log('[openAttributesSelection] Selected node type:', this.selectedNode?.data?.type);
+    console.log('[openAttributesSelection] Selected node source type:', this.selectedNode?.data?.source?.type);
+    console.log('[openAttributesSelection] isSourceClicked:', this.isSourceClicked);
+    
     const dataObject = this.selectedNode.data.nodeData.dataObject || [];
+    console.log('[openAttributesSelection] dataObject:', dataObject);
+    console.log('[openAttributesSelection] dataObject.columns:', dataObject.columns);
+    console.log('[openAttributesSelection] schemaList:', this.selectedNode.data.source.schemaList);
   
     let flatList = [];
   
@@ -2138,13 +2754,61 @@ export class FlowboardComponent {
         isChecked: false
       }));
     } else if (this.selectedNode.data.type === 'source_data_object') {
+      console.log('[openAttributesSelection] Processing source_data_object');
       const columns = dataObject.columns || [];
-      flatList = columns.map((col: any) => {
+      console.log('[openAttributesSelection] dataObject.columns:', columns);
+      let items: any[] = [];
+      if (![1, 2, 3, 6, 7, 8, 9, 10].includes(this.selectedNode.data.source.type)) {
+        console.log('[openAttributesSelection] Processing non-standard source type (Excel, etc.)');
+        console.log('[openAttributesSelection] Source type:', this.selectedNode.data.source.type);
+        const schemaList = this.selectedNode.data.source.schemaList || [];
+        console.log('[openAttributesSelection] schemaList:', schemaList);
+
+        schemaList.forEach((tableObj: any) => {
+          const tableName = tableObj.tables;
+          console.log(`[openAttributesSelection] Processing table: ${tableName}, columns:`, tableObj.columns);
+
+          (tableObj.columns || []).forEach((col: any) => {
+            items.push({
+              label: col.col,
+              value: col.col,
+              dataType: col.dtype,
+              group: tableName
+            });
+          });
+        });
+        flatList = items;
+        console.log('[openAttributesSelection] flatList for Excel:', flatList);
+      } else {
+        console.log('[openAttributesSelection] Processing standard source type');
+        flatList = columns.map((col: any) => {
+          const attr = {
+            label: col.col,
+            value: col.col,
+            dataType: col.dtype,
+            group: this.selectedNode.data.nodeData.general.name,
+          };
+
+          if (this.isSourceClicked) {
+            const selectedSources = this.selectedNode.data.nodeData.sourceAttributes || [];
+            const matched = selectedSources.find((grp: any) => grp.selectedColumn?.value === attr.value);
+            return {
+              ...attr,
+              isChecked: !!matched
+            };
+          } else {
+            return {
+              ...attr,
+              isChecked: false
+            };
+          }
+        });
+      }
+    } else if (this.selectedNode.data.type === 'UpdateStrategy') {
+      flatList = dataObject.map((srcAttr: any) => {
         const attr = {
-          label: col.col,
-          value: col.col,
-          dataType: col.dtype,
-          group: this.selectedNode.data.nodeData.general.name,
+          ...srcAttr,
+          isChecked: false
         };
 
         if (this.isSourceClicked) {
@@ -2180,6 +2844,8 @@ export class FlowboardComponent {
     });
   
     this.groupAttributesList = grouped;
+    console.log('[openAttributesSelection] Final groupAttributesList:', this.groupAttributesList);
+    console.log('[openAttributesSelection] Number of groups:', this.groupAttributesList.length);
   
     if(modal !== null){
       this.modalService.open(modal, {
@@ -2201,11 +2867,20 @@ export class FlowboardComponent {
   }
 
   applySelectedAttributes() {
-    const flatSelected = this.groupAttributesList
+    console.log('[applySelectedAttributes] Called');
+    console.log('[applySelectedAttributes] groupAttributesList:', this.groupAttributesList);
+    
+    let flatSelected = this.groupAttributesList
       .flatMap(g => g.attributes)
       .filter(attr => attr.isChecked);
+
+    console.log('[applySelectedAttributes] flatSelected (checked attributes):', flatSelected);
+    
+    flatSelected = flatSelected.map(({ isChecked, ...rest }) => rest);
   
-    const dataObject = this.selectedNode.data.nodeData.dataObject;
+    let dataObject = this.selectedNode.data.nodeData.dataObject;
+    console.log('[applySelectedAttributes] dataObject:', dataObject);
+    console.log('[applySelectedAttributes] selectedNode.data.type:', this.selectedNode.data.type);
   
     if (this.selectedNode.data.type === 'Rollup') {
       this.selectedNode.data.nodeData.groupAttributes = flatSelected.map(attr => ({
@@ -2246,22 +2921,63 @@ export class FlowboardComponent {
       this.selectedNode.data.nodeData.attributes = [...existingAttributes, ...newAttributes];
       this.updateNode('');
     } else if(this.selectedNode.data.type === 'source_data_object'){
+      console.log('[applySelectedAttributes] Processing source_data_object');
+      console.log('[applySelectedAttributes] isSourceClicked:', this.isSourceClicked);
+      
       if(this.isSourceClicked){
         let items : any[] = [];
-        for (const col of dataObject.columns) {
-          items.push({
-            label: col.col,
-            value: col.col,
-            dataType: col.dtype,
-            group: this.selectedNode.data.nodeData.general.name
+        console.log('[applySelectedAttributes] source.type:', this.selectedNode.data.source.type);
+        
+        if (![1, 2, 3, 6, 7, 8, 9, 10].includes(this.selectedNode.data.source.type)) {
+          console.log('[applySelectedAttributes] Using schemaList for non-standard source');
+          const schemaList = this.selectedNode.data.source.schemaList || [];
+          console.log('[applySelectedAttributes] schemaList:', schemaList);
+
+          schemaList.forEach((tableObj: any) => {
+            const tableName = tableObj.tables;
+
+            (tableObj.columns || []).forEach((col: any) => {
+              items.push({
+                label: col.col,
+                value: col.col,
+                dataType: col.dtype,
+                group: tableName
+              });
+            });
           });
+        } else {
+          console.log('[applySelectedAttributes] Using dataObject.columns for standard source');
+          for (const col of dataObject.columns) {
+            items.push({
+              label: col.col,
+              value: col.col,
+              dataType: col.dtype,
+              group: this.selectedNode.data.nodeData.general.name
+            });
+          }
         }
-        this.selectedNode.data.nodeData.sourceAttributes = flatSelected.map(attr => ({
-          attributeName: attr.label,
-          selectColumnDropdown: items,
-          selectedColumn: attr,
-          dataType: attr.dataType || attr.column.dataType
-        }));
+        console.log('[applySelectedAttributes] items:', items);
+        
+        const nameCount = new Map<string, number>();
+        this.selectedNode.data.nodeData.sourceAttributes = flatSelected.map(attr => {
+          const baseName = attr.label;
+          const count = nameCount.get(baseName) ?? 0;
+          nameCount.set(baseName, count + 1);
+
+          return {
+            attributeName: count === 0 ? baseName : `${baseName}_${count}`,
+            selectColumnDropdown: items,
+            selectedColumn: attr,
+            dataType: attr.dataType || attr.column.dataType
+          };
+        });
+
+        // this.selectedNode.data.nodeData.sourceAttributes = flatSelected.map(attr => ({
+        //   attributeName: attr.label,
+        //   selectColumnDropdown: items,
+        //   selectedColumn: attr,
+        //   dataType: attr.dataType || attr.column.dataType
+        // }));
       } else{
         const usedNames: { [key: string]: number } = {};
         const existingNames = new Set<string>();
@@ -2306,6 +3022,25 @@ export class FlowboardComponent {
 
       }
       this.updateNode('');
+    } else if (this.selectedNode.data.type === 'UpdateStrategy') {
+      if (this.isSourceClicked) {
+        let items: any[] = [];
+        for (const col of dataObject) {
+          items.push({
+            label: col.label,
+            value: col.value,
+            dataType: col.dataType,
+            group: col.group
+          });
+        }
+        this.selectedNode.data.nodeData.sourceAttributes = flatSelected.map(attr => ({
+          attributeName: attr.label,
+          selectColumnDropdown: items,
+          selectedColumn: attr,
+          dataType: attr.dataType || attr.column.dataType
+        }));
+        this.updateNode('');
+      }
     }
   }
 
@@ -2328,12 +3063,31 @@ export class FlowboardComponent {
         const columns = nodeData.dataObject.columns || [];
         const group = this.selectedNode.data.nodeData.general.name;
 
-        dataObject = columns.map((col: any) => ({
-          label: col.col,
-          value: col.col,
-          dataType: col.dtype,
-          group: group
-        }));
+        let items : any[] = [];
+        if (![1, 2, 3, 6, 7, 8, 9, 10].includes(this.selectedNode.data.source.type)) {
+          const schemaList = this.selectedNode.data.source.schemaList || [];
+
+          schemaList.forEach((tableObj: any) => {
+            const tableName = tableObj.tables;
+
+            (tableObj.columns || []).forEach((col: any) => {
+              items.push({
+                label: col.col,
+                value: col.col,
+                dataType: col.dtype,
+                group: tableName
+              });
+            });
+          });
+          dataObject = items;
+        } else {
+          dataObject = columns.map((col: any) => ({
+            label: col.col,
+            value: col.col,
+            dataType: col.dtype,
+            group: group
+          }));
+        }
       } else {
         dataObject = nodeData.dataObject || [];
       }
@@ -2491,10 +3245,10 @@ export class FlowboardComponent {
         this.drawflow.import(drawFlowJson);
         console.log(drawFlowJson);
         this.validateFlowName(this.etlName);
-        if (data?.flow_plan?.tasks.length > 0) {
-          this.isRunEnable = data?.flow_plan?.tasks.some((task: any) => task.type === 'target_data_object');
-        }
-        // this.isRunEnable = true;
+        // if (data?.flow_plan?.tasks.length > 0) {
+        //   this.isRunEnable = data?.flow_plan?.tasks.some((task: any) => task.type === 'target_data_object');
+        // }
+        this.isRunEnable = true;
         this.canvasData = drawFlowJson.drawflow.Home.canvasData ? drawFlowJson.drawflow.Home.canvasData : {parameters: [], sqlParameters: []};
         console.log(this.canvasData);
         this.isNodeSelected = true;
@@ -2507,6 +3261,9 @@ export class FlowboardComponent {
             const type = node.data?.type;
             if (type && !['source_data_object', 'target_data_object'].includes(type)) {
               this.nodeTypeCounts[type] = (this.nodeTypeCounts[type] || 0) + 1;
+            }
+            if(type === 'target_data_object'){
+              node.data.nodeData.properties.hasOwnProperty('target') ? null : node.data.nodeData.properties['target'] = {updateStrategy: 'append', joiningConditions: []};
             }
             let displayName = (node.data?.nodeData?.general?.name || '');
             if(displayName.length > 10){
@@ -2531,6 +3288,9 @@ export class FlowboardComponent {
               }
             }
           });
+          if (!this.validateDagBoard()) {
+            return;
+          }
           if(this.isFromMonitor){
             this.runDataFlow();
           }
@@ -2565,6 +3325,7 @@ export class FlowboardComponent {
         }
       });
       this.drawflow.updateNodeDataFromId(this.selectedNode.id, this.selectedNode.data);
+      this.validateParentNode(this.selectedNode);
     }
   }
 
@@ -2717,7 +3478,7 @@ export class FlowboardComponent {
   }
 
   goBackToDataflowList() {
-    this.router.navigate(['/datamplify/flowboardList']);
+    this.navigationService.navigate(['datamplify','DagBoardList']);
   }
 
   onTypeChange() {
@@ -2759,15 +3520,8 @@ export class FlowboardComponent {
     return childIds;
   }
 
-  getColumnsFromNode(nodeId: number): string[] {
-    const node = this.drawflow.getNodeFromId(nodeId);
-    const dataObject = node.data.nodeData?.dataObject || {};
-    return dataObject.columns?.map((col: any) => ({
-      label: col.col,
-      value: col.col,
-      dataType: col.dtype,
-      group: node.data.nodeData.general.name
-    })) || [];
+  getColumnsFromNode(node: any, dataObject:any []): any[] {
+    return dataObject.filter(col => col.group === node.data.nodeData.general.name) ?? [];
   }
 
   validateFlowName(value: string) {
@@ -2776,7 +3530,7 @@ export class FlowboardComponent {
   }
 
   createNewFlowboard(){
-    this.router.navigate(['/datamplify/flowboardList/flowboard']);
+    this.navigationService.navigate(['datamplify','DagBoardList','DagBoard']);
   }
 
   clearFlowboard(){
@@ -2833,6 +3587,16 @@ export class FlowboardComponent {
 
     // Reassign back (in case it's reactive)
     this.selectedNode.data.nodeData.properties.union.columnMappings = mappings;
+
+    this.selectedNode.data.nodeData.properties.union.sourceNodes.forEach((sourceNode: any) => {
+      const key = sourceNode.data.nodeData.general.name;
+      if (!this.unionNodesColumnList[key]) {
+        this.unionNodesColumnList[key] = null;
+      }
+      this.unionNodesColumnList[key] = [...this.getColumnsFromNode(sourceNode, this.selectedNode.data.nodeData.dataObject)];
+    });
+
+    console.log(this.unionNodesColumnList);
 
     // Update drawflow node
     this.updateNode('');
@@ -2932,10 +3696,11 @@ export class FlowboardComponent {
   }
 
   getRemoteServerFiles() {
+    const activeConnection = this.getActiveConnection();
     let object = {
       type: this.remoteFileType,
       path: this.remoteFilePath,
-      conn_id: this.selectedConnection.hierarchy_id
+      conn_id: activeConnection?.hierarchy_id
     };
     this.workbechService.getRemoteServerFiles(object).subscribe({
       next: (data) => {
@@ -2950,8 +3715,9 @@ export class FlowboardComponent {
   }
 
   getRemoteServerFileData() {
+    const activeConnection = this.getActiveConnection();
     let object = {
-      conn_id: this.selectedConnection.hierarchy_id,
+      conn_id: activeConnection?.hierarchy_id,
       path: this.remoteFilePath+'/'+this.selectedRemoteServerFile 
     };
     this.workbechService.getRemoteServerFileData(object).subscribe({
@@ -3020,11 +3786,353 @@ export class FlowboardComponent {
       this.sharedService.clearDuplicatedFlow();
       Swal.fire({
         icon: 'info',
-        title: 'Flowboard Duplicated',
-        text: 'Flowboard duplicated successfully. If you refresh the page without saving, the duplicate data will be lost.',
+        title: 'DagBoard Duplicated',
+        text: 'DagBoard duplicated successfully. If you refresh the page without saving, the duplicate data will be lost.',
         confirmButtonText: 'Got it',
         width: '400px'
       });
     }, 100);
   }
+
+  getColumnsForUpdateStrategy(node: any) {
+    this.updateStrategyDropdown = {};
+    const sourceNodesData = node.data.nodeData.columnsDropdown || [];
+    sourceNodesData.forEach((item: any) => {
+      const group = item.group || "Source";
+      if (!this.updateStrategyDropdown[group]) {
+        this.updateStrategyDropdown[group] = [];
+      }
+      this.updateStrategyDropdown[group].push(item);
+    });
+
+    if (node?.data?.type === 'target_data_object') {
+      let targetNodeData = node.data.nodeData.dataObject || [];
+      const targetGroupName = node.data.nodeData.general.name;
+      const formattedTargetColumns = targetNodeData.columns.map((col: any) => ({
+        label: col.col,
+        value: col.col,
+        dataType: col.dtype,
+        group: targetGroupName
+      }));
+
+      if (!this.updateStrategyDropdown[targetGroupName]) {
+        this.updateStrategyDropdown[targetGroupName] = [];
+      }
+
+      this.updateStrategyDropdown[targetGroupName].push(...formattedTargetColumns);
+    } else if(node?.data?.type === 'UpdateStrategy') {
+      let targetNodeData = node.data.nodeData.properties.strategy.selectedTableColumns || [];
+      const targetGroupName = node.data.nodeData.general.name;
+      const formattedTargetColumns = targetNodeData.columns.map((col: any) => ({
+        label: col.col,
+        value: col.col,
+        dataType: col.dtype,
+        group: targetGroupName
+      }));
+
+      if (!this.updateStrategyDropdown[targetGroupName]) {
+        this.updateStrategyDropdown[targetGroupName] = [];
+      }
+
+      this.updateStrategyDropdown[targetGroupName].push(...formattedTargetColumns);
+    }
+    this.updateStrategyHeaders = Object.keys(this.updateStrategyDropdown);
+    console.log(this.updateStrategyDropdown);
+    console.log(this.updateStrategyHeaders);
+  }
+  addNewJoiningColumnforUpdateStrategy() {
+    const newCondition: any = [];
+    if(this.selectedNode?.data?.type === 'target_data_object'){
+      this.selectedNode.data.nodeData.properties.target.joiningConditions.push(newCondition);
+    } else if(this.selectedNode?.data?.type === 'UpdateStrategy'){
+      this.selectedNode.data.nodeData.properties.strategy.joiningConditions.push(newCondition);
+    }
+    this.getColumnsForUpdateStrategy(this.selectedNode);
+    this.updateNode('');
+  }
+
+  deleteJoiningColumnforUpdateStrategy(index: any) {
+    if (this.selectedNode?.data?.type === 'target_data_object') {
+      this.selectedNode.data.nodeData.properties.target.joiningConditions.splice(index, 1);
+    } else if (this.selectedNode?.data?.type === 'UpdateStrategy') {
+      this.selectedNode.data.nodeData.properties.strategy.joiningConditions.splice(index, 1);
+    }
+    this.getColumnsForUpdateStrategy(this.selectedNode);
+    this.updateNode('');
+  }
+
+  getTableForUpdateStrategy(){
+    this.selectedNode.data.nodeData.properties.strategy.selectedTable = {...this.selectedConnection};
+    this.selectedNode.data.nodeData.properties.strategy.selectedTableColumns = {...this.selectedDataObject};
+    this.selectedConnection = null;
+    this.selectedDataObject = null;
+    this.updateNode('');
+    this.getColumnsForUpdateStrategy(this.selectedNode);
+  }
+
+  openConnectionPopup(modal: any) {
+    this.type = 1;
+    this.nodeToAdd = 'UpdateStrategy';
+    this.getConnections();
+    this.modalService.open(modal, {
+      centered: true,
+      windowClass: 'animate__animated animate__zoomIn',
+      modalDialogClass: 'modal-md'
+    });
+    if(this.selectedNode?.data?.nodeData?.properties?.strategy?.selectedTable?.display_name && this.selectedNode?.data?.nodeData?.properties?.strategy?.selectedTableColumns?.tables){
+      this.selectedConnection = {...this.selectedNode.data.nodeData.properties.strategy.selectedTable};
+      this.selectedDataObject = {...this.selectedNode.data.nodeData.properties.strategy.selectedTableColumns};
+    } else {
+      this.selectedConnection = null;
+      this.selectedDataObject = null;
+    }
+  }
+
+  getAutoName(prefix: string, mainName?: string): string {
+    const base = mainName ? `${prefix}_${mainName}` : prefix;
+    return this.getUniqueNodeName(base);
+  }
+
+  getUniqueNodeName(baseName: string): string {
+    const allNodes = this.drawflow.drawflow.drawflow['Home'].data;
+    const existingNames = new Set(
+      Object.values(allNodes).map((node: any) => node.data.nodeData.general.name)
+    );
+    if (!existingNames.has(baseName)) {
+      return baseName;
+    }
+    let counter = 1;
+    let newName = `${baseName}_${counter}`;
+    while (existingNames.has(newName)) {
+      counter++;
+      newName = `${baseName}_${counter}`;
+    }
+    return newName;
+  }
+
+  validateParentNode(node: any, hideToaster?: boolean): boolean {
+    const nodeValidateData = this.nodeValidationService.nodeValidation(node, node?.data?.type);
+    const parameterValidateData = this.nodeValidationService.parametersValidation(this.canvasData);
+
+    const isNodeValid = nodeValidateData?.isValid !== false;
+    const isParameterValid = parameterValidateData?.isValid !== false;
+
+    if (nodeValidateData?.isValid === false && node?.data) {
+      this.validatedData = nodeValidateData;
+      this.highlightErrorNode(node.id);
+    } else if (node?.data) {
+      this.removeErrorNode(node.id);
+    }
+
+    if (parameterValidateData?.isValid === false) {
+      this.validatedData = parameterValidateData;
+
+      if (!hideToaster) {
+        this.toasterService.info(parameterValidateData.msg, `${parameterValidateData.msg.includes('DependentJobName') ? 'SQL Parameter' : 'Parameter'} Error`,
+          { positionClass: 'toast-top-right' }
+        );
+      }
+    }
+
+    if (isNodeValid && isParameterValid) {
+      this.validatedData = {};
+    }
+
+    this.isRunEnable = isNodeValid && isParameterValid;
+    return this.isRunEnable;
+  }
+
+  highlightErrorNode(nodeId: number) {
+    const nodeEl = document.querySelector(`#node-${nodeId}`);
+    if (!nodeEl) return;
+
+    if (!nodeEl.classList.contains('node-error')) {
+      nodeEl.classList.add('node-error');
+    }
+  }
+
+  removeErrorNode(nodeId: number) {
+    const nodeEl = document.querySelector(`#node-${nodeId}`);
+    if (!nodeEl) return;
+
+    if (nodeEl.classList.contains('node-error')) {
+      nodeEl.classList.remove('node-error');
+    }
+  }
+
+  getTopologicallySortedNodes(): any[] {
+    const flowData = this.drawflow.drawflow.drawflow[this.drawflow.module].data;
+
+    const inDegree = new Map<string, number>();
+    const graph = new Map<string, string[]>();
+
+    // Initialize
+    Object.keys(flowData).forEach((id) => {
+      inDegree.set(id, 0);
+      graph.set(id, []);
+    });
+
+    // Build graph from connections
+    Object.entries(flowData).forEach(([id, node]: any) => {
+      const outputs = node.outputs || {};
+
+      Object.values(outputs).forEach((output: any) => {
+        output.connections?.forEach((conn: any) => {
+          const targetId = conn.node;
+          graph.get(id)?.push(targetId);
+          inDegree.set(targetId, (inDegree.get(targetId) || 0) + 1);
+        });
+      });
+    });
+
+    // Kahn’s Algorithm
+    const queue: string[] = [];
+    inDegree.forEach((deg, id) => {
+      if (deg === 0) queue.push(id);
+    });
+
+    const sortedNodes: any[] = [];
+
+    while (queue.length) {
+      const id = queue.shift()!;
+      sortedNodes.push(flowData[id]);
+
+      graph.get(id)?.forEach((childId) => {
+        inDegree.set(childId, inDegree.get(childId)! - 1);
+        if (inDegree.get(childId) === 0) {
+          queue.push(childId);
+        }
+      });
+    }
+
+    console.log(sortedNodes);
+    return sortedNodes;
+  }
+
+  checkOrphanNodesByPorts(): any[] {
+    const flowData = this.drawflow.drawflow.drawflow[this.drawflow.module].data;
+    const orphanNodes: any[] = [];
+
+    Object.entries(flowData).forEach(([id, node]: any) => {
+      const inputs = node.inputs || {};
+      const outputs = node.outputs || {};
+
+      const hasInputPorts = Object.keys(inputs).length > 0;
+      const hasOutputPorts = Object.keys(outputs).length > 0;
+
+      let hasIncomingConnection = false;
+      let hasOutgoingConnection = false;
+
+      // check incoming
+      Object.values(inputs).forEach((input: any) => {
+        if (input.connections && input.connections.length > 0) {
+          hasIncomingConnection = true;
+        }
+      });
+
+      // check outgoing
+      Object.values(outputs).forEach((output: any) => {
+        if (output.connections && output.connections.length > 0) {
+          hasOutgoingConnection = true;
+        }
+      });
+
+      // validation rules
+      const invalid =
+        (hasInputPorts && !hasIncomingConnection) ||
+        (hasOutputPorts && !hasOutgoingConnection);
+
+      if (invalid) {
+        orphanNodes.push(id);
+      }
+    });
+
+    return orphanNodes;
+  }
+
+  validateDagBoard(): boolean {
+    const orphanNodes = this.checkOrphanNodesByPorts();
+    if (orphanNodes.length > 0) {
+      this.isRunEnable = false;
+      this.toasterService.info('Some nodes are not properly connected. Please fix the highlighted nodes.', 'Validation Failed', { positionClass: 'toast-top-right' });
+      orphanNodes.forEach(id => this.highlightErrorNode(id));
+      return false;
+    }
+
+    const sortedNodes = this.getTopologicallySortedNodes();
+    let hasError = false;
+    const hasTargetNode = sortedNodes.some(
+      (node: any) => node?.data?.type === 'target_data_object'
+    );
+    if (hasTargetNode) {
+      sortedNodes.forEach((node: any) => {
+        const isValid = this.validateParentNode(node, true);
+        if (!isValid) {
+          hasError = true;
+        }
+      });
+    } else {
+      this.isRunEnable = false;
+      hasError = true;
+    }
+
+    if (hasError) {
+      const msg = hasTargetNode ? 'DagBoard validation failed. Please fix the highlighted nodes' : 'Please Configure the Target';
+      this.toasterService.info(msg, 'Validation Failed', { positionClass: 'toast-top-right' });
+      return false;
+    }
+
+    return true;
+  }
+  getIngrationSchemas(){
+    let object = {
+      id: "e86f8d8c-186d-4d53-b374-bdae7458df00",
+      endpoint: "queries/antivirus-status"
+    };
+    this.workbechService.getIntegrationSchemaList(object).subscribe({
+      next: (data) => {
+        console.log(data);
+      },
+      error: (error: any) => {
+        console.log(error);
+        this.toasterService.error(error.error.message, 'error', { positionClass: 'toast-top-right' });
+      }
+    });
+  }
+
+  toggleExpand(schema: string) {
+    this.expandedSchemas.has(schema)
+      ? this.expandedSchemas.delete(schema)
+      : this.expandedSchemas.add(schema);
+  }
+
+  toggleSelect(schema: string) {
+    const firstSchema = this.schemaList[0]?.tables;
+
+    if (schema === firstSchema) {
+      if (this.selectedSchemas.has(schema)) {
+        this.selectedSchemas.clear();
+      } else {
+        this.selectedSchemas.add(schema);
+      }
+      return;
+    }
+
+    this.selectedSchemas.has(schema) ? this.selectedSchemas.delete(schema): this.selectedSchemas.add(schema);
+    console.log(this.selectedSchemas);
+  }
+
+  isExpanded(schema: string): boolean {
+    return this.expandedSchemas.has(schema);
+  }
+
+  isSelected(schema: string): boolean {
+    return this.selectedSchemas.has(schema);
+  }
+
+  compareColumns = (a: any, b: any) => {
+    return a && b &&
+      a.value === b.value &&
+      a.group === b.group;
+  };
 }

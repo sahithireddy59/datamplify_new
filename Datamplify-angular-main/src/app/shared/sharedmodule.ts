@@ -19,6 +19,7 @@ import { AuthenticationLayoutComponent } from './layout-components/layouts/authe
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FooterComponent } from './layout-components/footer/footer.component';
 import { TabToTopComponent } from './layout-components/tab-to-top/tab-to-top.component';
+import { HasPermissionDirective } from './directives/has-permission.directive';
 
 @NgModule({
   declarations: [
@@ -44,6 +45,7 @@ import { TabToTopComponent } from './layout-components/tab-to-top/tab-to-top.com
     NgbModule,
     ColorPickerModule,
     FormsModule, ReactiveFormsModule,
+    HasPermissionDirective
   ],
   providers: [SwitcherComponent],
 

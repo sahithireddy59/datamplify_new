@@ -21,7 +21,7 @@
 
 .glass-card:hover {
  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(var(--bs-primary-rgb, 13, 110, 253), 0.25); /* slightly stronger on hover */
+  box-shadow: 0 6px 20px rgba(var(--primary-rgb, 13, 110, 253), 0.25); /* slightly stronger on hover */
 }
 .form-card {
   border: 1px solid rgba(var(--primary-rgb, 13, 110, 253), 0.4); /* lighter primary */
@@ -43,8 +43,8 @@
 .form-height{
   // min-height: 415px;
   // max-height: 415px;
-  min-height: 571px;
-  max-height: 571px;
+  min-height: 610px;
+  max-height: 610px;
   overflow: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(0,0,0,0.3) transparent;
@@ -71,6 +71,7 @@
   background: 0 4px 12px rgba(var(--primary-rgb, 13, 110, 253), 0.15)!important;
   border: 1px solid rgba(var(--primary-rgb, 13, 110, 253), 0.4) !important;
   // border-radius: 0.5rem !important;
+  color: var(--default-text-color);
 }
 
 .glass-light:focus {
@@ -110,16 +111,21 @@
   display: inline-block;
   animation: bounce 5s infinite;
 }
+// @keyframes bounce {
+//   0%, 20%, 50%, 80%, 100% {
+//     transform: translateY(0);
+//   }
+//   40% {
+//     transform: translateY(-6px);
+//   }
+//   60% {
+//     transform: translateY(-3px);
+//   }
+// }
+
 @keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(-6px);
-  }
-  60% {
-    transform: translateY(-3px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
 }
 
 .card-icon {
@@ -189,17 +195,22 @@
     }
 }
 
-.list-type-btn {
-  border: 1px solid #7c5cff;
-  color: #7c5cff;
-  transition: transform .18s ease, box-shadow .18s ease;
-}
+// .list-type-btn {
+//   border: 1px solid #7c5cff;
+//   color: #7c5cff;
+//   transition: transform .18s ease, box-shadow .18s ease;
+// }
 
-.list-type-btn-active {
-  background: linear-gradient(90deg,#3b82f6 0%, #7c5cff 100%);
-  border: 1px solid #7c5cff;
-  color: #fff;
-  transition: transform .18s ease, box-shadow .18s ease;
+// .list-type-btn-active {
+//   background: linear-gradient(90deg,#3b82f6 0%, #7c5cff 100%);
+//   border: 1px solid #7c5cff;
+//   color: #fff;
+//   transition: transform .18s ease, box-shadow .18s ease;
+// }
+
+.active {
+  background-color: var(--primary-color);
+  color: var(--custom-white);
 }
 
 .split-view .list-group-item,
@@ -208,9 +219,13 @@
 }
 
 .split-view h6,
-.split-view h5, .split-view p {
+.split-view h5 {
   max-width: 140px !important;
-  font-size: 90% !important;
+  font-size: 80% !important;
+}
+
+.split-view p {
+  font-size: 65% !important;
 }
 
 select.form-select {
@@ -223,9 +238,9 @@ select.form-select {
 }
 
 .disabled {
-  background-color: #e9ecef4f !important;
+  // background-color: #e9ecef4f !important;
   // color: #6c757d !important;
-  border-color: #dee2e6 !important;
+  // border-color: #dee2e6 !important;
   opacity: 0.5;
   pointer-events: none;
 }
@@ -236,35 +251,202 @@ select.form-select {
   right: 10px;
 }
 
+.new-connection-scroll{
+  height: 100vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.3) transparent;
+}
+
+.cat-border{
+  border-right: 1px solid rgba(var(--primary-rgb, 13, 110, 253), 0.15);
+}
+
 
 /* ----------- For 90% Resolution (Large screens) ----------- */
 @media (min-width: 1420px) and (max-width: 1560px) {
   .form-height {
-    min-height: 571px;
-    max-height: 571px;
+    min-height: 610px;
+    max-height: 610px;
   }
 }
 
 /* ----------- For 100% Resolution (Standard desktop) ----------- */
 @media (min-width: 1280px) and (max-width: 1419px) {
   .form-height {
-    min-height: 571px;
-    max-height: 571px;
+    min-height: 610px;
+    max-height: 610px;
   }
 }
 
 /* ----------- For 110% Resolution (Slight zoom) ----------- */
 @media (min-width: 1163px) and (max-width: 1279px) {
   .form-height {
-    min-height: 510px;
-    max-height: 510px;
+    min-height: 520px;
+    max-height: 520px;
   }
 }
 
 /* ----------- For 125% Resolution (Zoomed or smaller screens) ----------- */
 @media (min-width: 1024px) and (max-width: 1162px) {
   .form-height {
-    min-height: 510px;
-    max-height: 510px;
+    min-height: 520px;
+    max-height: 520px;
+  }
+}
+
+
+::ng-deep .modal-content {
+  background: var(--custom-white);   /* dark semi-solid background */
+  backdrop-filter: blur(8px);           /* subtle blur */
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  color: var(--default-text-color);                      /* light text */
+}
+
+::ng-deep .modal-header,
+::ng-deep .modal-footer {
+  border: none;                         /* cleaner look */
+  background: transparent;
+  color: var(--default-text-color);
+}
+
+// --- Stepper Styles ---
+.stepper-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 200px;
+
+  .step-item {
+    position: relative;
+    z-index: 2;
+    border-radius: 50%;
+    
+    .step-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--glass-bar-bg-color);
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    &.active .step-circle {
+      background: var(--primary-color);
+      color: #fff;
+      box-shadow: 0 0 0 4px rgba(0,0,0,0.1);
+    }
+    
+    &.completed .step-circle {
+      background: var(--primary-color);
+      color: #fff;
+    }
+  }
+
+  .step-line {
+    flex-grow: 1;
+    height: 2px;
+    background: var(--glass-bar-bg-color);
+    transition: background 0.3s ease;
+    
+    &.filled {
+      background: var(--primary-color);
+    }
+  }
+}
+
+// --- Step 1: Cards ---
+.selection-card {
+  background: var(--glass-bar-bg-color);
+  border: 1px solid var(--glass-bar-border-color);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 100%;
+
+  &:hover {
+    background: #9178fa;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    border-color: var(--primary-color);
+    color: #fff;
+  }
+
+  &.selected {
+    border: 2px solid var(--primary-color);
+    background: var(--primary-color);
+    color: #fff;
+  }
+}
+
+// --- Step 2: List Items ---
+.selection-item {
+  background: var(--glass-bar-bg-color);
+  border: 1px solid var(--glass-bar-border-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--primary-color);
+
+  &:hover {
+    background: #9278fad3;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    border: 1px solid var(--primary-color);
+    color: #fff !important;
+  }
+
+  &.selected-item {
+    border: 1px solid var(--primary-color);
+    background: var(--primary-color);
+    color: #fff;
+    position: relative;
+  }
+}
+
+// --- Step 3: Info Box ---
+.info-box {
+  background-color: var(--glass-bar-bg-color);
+  border: 1px solid var(--glass-bar-border-color);
+}
+
+.max-height-scroll {
+  min-height: 250px;
+  max-height: 250px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.3) transparent;
+}
+
+.viewport {
+  height: 250px;
+  width: 100%;
+}
+
+// --- General Utils ---
+.fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// Bootstrap Overrides
+.form-control {
+  padding: 0.6rem 0.75rem;
+  border-color: #dee2e6;
+  &:focus {
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+    border-color: var(--primary-color);
   }
 }

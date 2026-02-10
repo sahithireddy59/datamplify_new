@@ -11,6 +11,7 @@ import { SwitcherComponent } from '../../../shared/layout-components/switcher/sw
 import { CustomThemeService } from '../../../services/custom-theme.service';
 import { LoaderService } from '../../../shared/services/loader.service';
 import { ToastrService } from 'ngx-toastr';
+import { PermissionService } from '../../../services/permission.service';
 
 @Component({
   selector: 'app-login',
@@ -47,7 +48,7 @@ toggleVisibility1() {
   constructor(
     @Inject(DOCUMENT) private document: Document,private elementRef: ElementRef,private router: Router,private switcherComponent: SwitcherComponent,private themeService : CustomThemeService,
     private renderer: Renderer2, private rolesService : RolespriviledgesService, private sanitizer: DomSanitizer,private formBuilder:FormBuilder,private authService:AuthService,private loaderService : LoaderService,
-    private toastr: ToastrService
+    private toastr: ToastrService, private permissionService: PermissionService
   ) {
     const currentUser = localStorage.getItem('currentUser');
     if (currentUser) {
@@ -80,10 +81,11 @@ this.authService.login(this.f['email'].value,this.f['password'].value)
     console.log(data);   
     const userToken = { Token: data.accessToken,};
     const userName = { userName: data.username};
-    const userId = data.user_id;
     localStorage.setItem('currentUser', JSON.stringify(userToken));
     localStorage.setItem('username', JSON.stringify(userName));
-    localStorage.setItem('userId', userId);  
+    const permissions: any[] = data?.permissions ?? [];
+    this.permissionService.setPermissions(permissions || []);
+    localStorage.setItem('permissions', JSON.stringify(permissions || []));
     if(data.previlages){
       this.rolesService.setRoleBasedPreviledges(data.previlages);
     }

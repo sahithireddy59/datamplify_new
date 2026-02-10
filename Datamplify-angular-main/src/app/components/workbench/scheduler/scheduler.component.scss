@@ -29,7 +29,8 @@
 
 .glass-card:hover {
     transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+    // box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 6px 20px rgba(var(--primary-rgb, 13, 110, 253), 0.25);
 }
 
 @keyframes bounce {
@@ -97,18 +98,32 @@
     color: #fff;
 }
 
-.mode-btn {
-    border-radius: 1rem;
-    background: linear-gradient(90deg, #3b82f6 0%, #9b25f2 70%);
-    color: #fff;
-    transition: transform .18s ease, box-shadow .18s ease;
+// .mode-btn {
+//     border-radius: 1rem;
+//     background: linear-gradient(90deg, #3b82f6 0%, #9b25f2 70%);
+//     color: #fff;
+//     transition: transform .18s ease, box-shadow .18s ease;
 
-    &:hover {
-        transform: translateY(-2px) scale(1.02);
-        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08),
-            0 6px 12px rgba(14, 165, 233, 0.15);
-        border: 1px solid #7c5cff !important;
-    }
+//     &:hover {
+//         transform: translateY(-2px) scale(1.02);
+//         box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08),
+//             0 6px 12px rgba(14, 165, 233, 0.15);
+//         border: 1px solid #7c5cff !important;
+//     }
+// }
+
+.mode-btn {
+  background: linear-gradient(90deg, #3b82f6 0%, #9b25f2 70%);
+  color: #fff;
+  border: none !important;
+  transition: transform .18s ease, box-shadow .18s ease;
+
+  &:hover { 
+   transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08), 
+    0 6px 12px rgba(14,165,233,0.15);
+    border: 1px solid #7c5cff !important;
+  }
 }
 
 .dropdown-menu{

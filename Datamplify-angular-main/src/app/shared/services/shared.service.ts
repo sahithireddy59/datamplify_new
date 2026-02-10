@@ -18,6 +18,8 @@ export class SharedService {
   private duplicatedFlow: any = null;
   isFlowboardCopied: boolean = false;
 
+  private isEmbedMode: boolean = false;
+
   setDuplicatedFlow(flowData: any): void {
     this.duplicatedFlow = flowData;
     this.isFlowboardCopied = true;
@@ -29,6 +31,14 @@ export class SharedService {
   clearDuplicatedFlow(): void {
     this.duplicatedFlow = null;
     this.isFlowboardCopied = false;
+  }
+
+  setEmbedMode(isEmbed: boolean): void {
+    this.isEmbedMode = isEmbed;
+  }
+
+  getEmbedMode(): boolean {
+    return this.isEmbedMode;
   }
 
   setValue(newValue: string): void {

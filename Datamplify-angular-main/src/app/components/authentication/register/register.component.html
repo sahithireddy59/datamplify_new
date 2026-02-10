@@ -90,7 +90,7 @@
               <i [ngClass]="showPassword1 ? 'ri-eye-off-line' : 'ri-eye-line'"></i>
             </button>
           </div>
-          @if(confirmPasswordError){
+          @if(confirmPasswordError && signupForm.get('confirm_password')?.value){
           <div class="text-danger">Password didn't match</div>
           }
         </div>

@@ -1,22 +1,22 @@
-<app-page-header title="" moduleId="scheduler" title1="Home" activeitem="scheduler"></app-page-header>
+<app-page-header title="Scheduler" moduleId="scheduler" title1="Home" activeitem="scheduler"></app-page-header>
 
 <div class="main-container container-fluid TopHeader container-background p-0" >
     <div class="card mb-0 rounded-0" style="min-height: 100vh;">
         <div class="card-body d-flex flex-column">
 
-            <div class="d-flex justify-content-between mb-3">
-                <div>
+            <div *ngIf="canViewScheduler" class="d-flex justify-content-end mb-3">
+                <!-- <div>
                     <h5 class="fw-semibold mb-0 text-dark">Scheduler</h5>
                     <p class="text-muted mb-0">Manage automated task scheduling and execution</p>
-                </div>
+                </div> -->
                 <div>
-                    <button class="btn mode-btn rounded-5" (click)="clearFormData(); showForm = true; isEditPreview = false;">
+                    <button class="btn mode-btn rounded-5" (click)="clearFormData(); showForm = true; isEditPreview = false;" *appHasPermission="{ id: 26, mode: 'disable' }">
                         <i class="fas fa-plus me-2"></i> Create Schedule
                     </button>
                 </div>
             </div>
             
-            <div *ngIf="!isKpiLoading" class="row g-3 mb-4">
+            <div *ngIf="!isKpiLoading && canViewScheduler" class="row g-3 mb-4">
                 <div class="col-4" *ngFor="let card of kpiCards">
                     <div class="card glass-card mb-0 rounded-4 border-0">
                         <div class="card-body">
@@ -56,7 +56,7 @@
                 </div>
             </ng-container>
             
-            <div class="row">
+            <div class="row" *ngIf="canViewScheduler">
                 <!-- Left Section (Schedulers List) -->
                 <div [class.col-12]="!showForm" [class.col-md-6]="showForm">
                     <div class="custom-tabs d-flex justify-content-between mb-2">
@@ -112,7 +112,7 @@
                                                 <div class="d-flex justify-content-between align-items-center">
                                                     <span class="badge rounded-pill px-3 py-2 me-1" style="width: 90px;"
                                                         [ngClass]="item.source_type === 'flowboard' ? 'bg-info-subtle text-info' : 'bg-warning-subtle text-warning'">
-                                                        {{ item.source_type === 'flowboard' ? 'Flowboard' : 'Taskplan' }}
+                                                        {{ item.source_type === 'flowboard' ? 'DagBoard' : 'TaskRunPlan' }}
                                                     </span>
                                                 
                                                     <span class="badge rounded-pill px-3 py-2" [ngClass]="{
@@ -140,11 +140,11 @@
                                         </div>
                                         <div class="col-md-4 text-start">
                                             <div class="text-muted small">Next Run</div>
-                                            <div class="fw-medium text-dark">{{ item.next_run | date:'yyyy-MM-dd HH:mm:ss' }}</div>
+                                            <div class="fw-medium text-dark">{{ item.next_run | date:'dd-MM-yyyy, hh:mm a' }}</div>
                                         </div>
                                         <div class="col-md-4 text-start">
                                             <div class="text-muted small">Last Run</div>
-                                            <div class="fw-medium text-dark">{{ item?.last_run | date:'yyyy-MM-dd HH:mm:ss' }}</div>
+                                            <div class="fw-medium text-dark">{{ item?.last_run | date:'dd-MM-yyyy, hh:mm a' }}</div>
                                         </div>
                                         <!-- <div class="col-md-3 text-start">
                                                                             <div class="text-muted small">Pipeline</div>
@@ -170,10 +170,10 @@
                                             <i *ngIf="item.status === 'inactive'" class="fe fe-play me-2"></i>
                                             {{item.status === 'active' ? 'In Active' : 'Active'}}
                                         </button>
-                                        <button class="btn mode-btn rounded-5" (click)="getSchedulerById(item.id)">
+                                        <button class="btn mode-btn rounded-5" (click)="getSchedulerById(item.id)" *appHasPermission="{ id: 27, mode: 'disable' }">
                                             <i class="fe fe-settings me-2"></i>Edit
                                         </button>
-                                        <button class="btn btn-danger rounded-5" (click)="deleteScheduler(item.id)">
+                                        <button class="btn btn-danger rounded-5" (click)="deleteScheduler(item.id)" *appHasPermission="{ id: 28, mode: 'disable' }">
                                             <i class="fe fe-trash-2 me-2"></i>Delete
                                         </button>
                                     </div>
@@ -241,7 +241,7 @@
                                             <!-- <div class="text-muted small">{{ run.pipeline }}</div> -->
                                         </div>
                                         <div class="text-end">
-                                            <div class="fw-semibold text-dark">{{ run.next_run | date:'HH:mm' }}</div>
+                                            <div class="fw-semibold text-dark">{{ run.next_run | date:'HH:mm a' }}</div>
                                             <div class="text-muted small">{{ run.next_run | date:'MMM d, y' }}</div>
                                         </div>
                                     </div>
@@ -305,8 +305,8 @@
                                  <select class="form-select bg-transparent border-dark" [ngClass]="{ 'disabled':isEditPreview }" [disabled]="isEditPreview"
                                     [(ngModel)]="newScheduler.source_type" name="source_type" required (change)="getSourceList(newScheduler.source_type)">
                                     <option value="" selected disabled>Source Type</option>
-                                    <option class="select-options" value="flowboard">Flowboard</option>
-                                    <option class="select-options" value="taskplan">Taskplan</option>
+                                    <option class="select-options" value="flowboard" *appHasPermission="{ id: 14, mode: 'hide' }">DagBoard</option>
+                                    <option class="select-options" value="taskplan" *appHasPermission="{ id: 20, mode: 'hide' }">TaskRunPlan</option>
                                 </select>
                             </div>
                 
@@ -342,8 +342,8 @@
                                         <select class="form-select bg-transparent border-dark" [(ngModel)]="tempCronExpression" name="cron_preset" required
                                             (change)="newScheduler.cron_tab = tempCronExpression">
                                             <option value="" selected disabled>Select Preset</option>
-                                            <option value="None" class="select-options">None</option>
-                                            <option value="@once" class="select-options">Once</option>
+                                            <!-- <option value="None" class="select-options">None</option> -->
+                                            <!-- <option value="@once" class="select-options">Once</option> -->
                                             <option value="@hourly" class="select-options">Hourly</option>
                                             <option value="@daily" class="select-options">Daily (midnight)</option>
                                             <option value="@weekly" class="select-options">Weekly (Sun 00:00)</option>
@@ -374,7 +374,8 @@
                 
                             <div class="d-flex justify-content-end gap-2 pt-5">
                                 <button type="button" class="btn btn-danger rounded-5" (click)="clearFormData()">Cancel</button>
-                                <button type="submit" class="btn mode-btn" [disabled]="!newScheduler.source_type || !newScheduler.source_id || !newScheduler.scheduler_type || !newScheduler.cron_tab || !newScheduler.timezone"> {{isEditPreview ? 'Update' : 'Save'}} </button>
+                                <button type="submit" class="btn mode-btn rounded-5" [disabled]="!newScheduler.source_type || !newScheduler.source_id || !newScheduler.scheduler_type || !newScheduler.cron_tab || !newScheduler.timezone"
+                                *appHasPermission="{ id: isEditPreview ? 27 : 26, mode: 'disable' }"> {{isEditPreview ? 'Update' : 'Save'}} </button>
                             </div>
                         </form>
                     </div>
@@ -388,9 +389,9 @@
                                 <div class="mb-3">
                                     <label class="form-label text-dark">Repeat</label>
                                     <select class="form-select bg-transparent border-dark" [(ngModel)]="custom.repeat" name="repeat"
-                                        required (ngModelChange)="updateGenerateBtnState()">
+                                        required (ngModelChange)="resetCustomCron(); updateGenerateBtnState()">
                                         <option class="select-options" value="" disabled selected>Select repeat type</option>
-                                        <option class="select-options" value="once">Once</option>
+                                        <!-- <option class="select-options" value="once">Once</option> -->
                                         <option class="select-options" value="daily">Daily</option>
                                         <option class="select-options" value="weekly">Weekly</option>
                                         <option class="select-options" value="monthly">Monthly</option>
@@ -429,25 +430,40 @@
                                 <!-- Monthly -->
                                 <div *ngIf="custom.repeat === 'monthly'" class="mb-3">
                                     <label class="form-label text-dark">Day of Month</label>
-                                    <input type="number" min="1" max="31" class="form-control bg-transparent border-dark"
-                                        [(ngModel)]="custom.dayOfMonth" name="dayOfMonth" (ngModelChange)="updateGenerateBtnState()">
+                                    <!-- <input type="number" min="1" max="31" class="form-control bg-transparent border-dark"
+                                        [(ngModel)]="custom.dayOfMonth" name="dayOfMonth" (ngModelChange)="updateGenerateBtnState()"> -->
+
+                                    <ng-select class="bg-transparent" [items]="monthDays" bindLabel="label" bindValue="value" [multiple]="true"
+                                        [closeOnSelect]="false" placeholder="Select days" [(ngModel)]="custom.dayOfMonth" name="monthlyDays"
+                                        (change)="updateGenerateBtnState()">
+                                    </ng-select>
+
                                     <label class="form-label text-dark mt-2">Time</label>
                                     <input type="time" class="form-control bg-transparent border-dark" [(ngModel)]="custom.time"
-                                        name="monthlyTime" (ngModelChange)="updateGenerateBtnState()">
+                                        name="monthlyTime" [disabled]="custom.dayOfMonth.length === 0" (ngModelChange)="updateGenerateBtnState()">
                                 </div>
                     
                                 <!-- Yearly -->
                                 <div *ngIf="custom.repeat === 'yearly'" class="mb-3">
                                     <label class="form-label text-dark">Month</label>
-                                    <select class="form-select bg-transparent border-dark" [(ngModel)]="custom.month" name="month" (ngModelChange)="updateGenerateBtnState()">
+                                    <!-- <select class="form-select bg-transparent border-dark" [(ngModel)]="custom.month" name="month" (ngModelChange)="updateGenerateBtnState()">
                                         <option *ngFor="let m of months" [value]="m.value" class="select-options">{{ m.label }}</option>
-                                    </select>
+                                    </select> -->
+                                    <ng-select class="bg-transparent" [items]="months" bindLabel="label" bindValue="value" [multiple]="true"
+                                        [closeOnSelect]="false" placeholder="Select Months" [(ngModel)]="custom.month" name="months"
+                                        (change)="updateGenerateBtnState()">
+                                    </ng-select>
                                     <label class="form-label text-dark mt-2">Day</label>
-                                    <input type="number" min="1" max="31" class="form-control bg-transparent border-dark"
-                                        [(ngModel)]="custom.dayOfMonth" name="yearlyDay" (ngModelChange)="updateGenerateBtnState()">
+                                    <!-- <input type="number" min="1" max="31" class="form-control bg-transparent border-dark"
+                                        [(ngModel)]="custom.dayOfMonth" name="yearlyDay" (ngModelChange)="updateGenerateBtnState()"> -->
+
+                                    <ng-select class="bg-transparent" [items]="monthDays" bindLabel="label" bindValue="value" [multiple]="true"
+                                        [closeOnSelect]="false" placeholder="Select days" [(ngModel)]="custom.dayOfMonth" name="yearlyDays" [disabled]="custom.month.length === 0"
+                                        (change)="updateGenerateBtnState()">
+                                    </ng-select>
                                     <label class="form-label text-dark mt-2">Time</label>
                                     <input type="time" class="form-control bg-transparent border-dark" [(ngModel)]="custom.time"
-                                        name="yearlyTime" (ngModelChange)="updateGenerateBtnState()">
+                                        name="yearlyTime" [disabled]="custom.dayOfMonth.length === 0" (ngModelChange)="updateGenerateBtnState()">
                                 </div>
                     
                                 <!-- Generated Cron -->
@@ -464,13 +480,33 @@
                                 <button type="button" class="btn btn-danger rounded-5" (click)="closeCronEditorModal()">Cancel</button>
                                 <button type="button" class="btn btn-primary rounded-5" [disabled]="isGenerateBtnDisabled"
                                     (click)="generateCron()">Generate Cron</button>
-                                <button type="button" class="btn mode-btn" [disabled]="isGenerateBtnDisabled"
+                                <button type="button" class="btn mode-btn rounded-5" [disabled]="isGenerateBtnDisabled"
                                     (click)="generateCron(); applyCronExpression()">Generate & Apply</button>
                             </div>
                         </div>
                     </ng-container>
                 </div>
             </div>
+
+            @if(!isKpiLoading && !isLoading && !canViewScheduler){
+            <div class="d-flex flex-column align-items-center justify-content-center py-5 text-center text-muted"
+                style="min-height: 62vh;">
+            
+                <!-- Icon -->
+                <div class="mb-3">
+                    <div class="rounded-circle bg-primary-subtle d-flex align-items-center justify-content-center"
+                        style="width: 56px; height: 56px;">
+                        <i class="fe fe-clock text-primary fs-3"></i>
+                    </div>
+                </div>
+            
+                <!-- Message -->
+                <h5 class="fw-semibold text-dark mb-1">Access Restricted</h5>
+                <p class="small mb-0" style="max-width: 360px;">
+                    You don’t have permission to view Schedulers. Please contact your administrator for access.
+                </p>
+            </div>
+            }
         </div>
     </div>
 </div>

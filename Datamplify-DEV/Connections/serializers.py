@@ -20,6 +20,8 @@ class File_upload(serializers.Serializer):
     file_type = serializers.IntegerField()
     file_path = serializers.FileField()
     connection_name = serializers.CharField()
+    selected_sheets = serializers.ListField(child=serializers.CharField(), required=False, allow_empty=True, default=list)
+    sheet_relationships = serializers.JSONField(required=False, default=dict)
 
 
 
@@ -35,3 +37,5 @@ class Remote_files(serializers.Serializer):
 class server_Files(serializers.Serializer):
     source_type = serializers.CharField()
     file_name = serializers.CharField()
+
+

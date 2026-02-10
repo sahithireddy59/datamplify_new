@@ -411,11 +411,12 @@ import uuid
 import logging
 from airflow import DAG
 from datetime import datetime
-# from airflow.sdk import get_parsing_context  # Not available in this Airflow version
+from functools import lru_cache
 
 # ---------------------------------------------
 # CONFIGURATION
 # ---------------------------------------------
+# Use the mounted path in Docker container
 CONFIG_DIR = '/opt/airflow/project/Configs/FlowBoard'
 MAX_DAGS = 100000  # supports 10k+ DAGs efficiently
 log = logging.getLogger(__name__)
@@ -445,33 +446,12 @@ def list_dag_files(limit=None):
         log.error(f"[ERROR] Failed to scan {CONFIG_DIR}: {e}")
 
 
-# Cache with file modification time tracking
-_config_cache = {}
-_config_mtime = {}
-
+@lru_cache(maxsize=2048)
 def load_config(path: str):
-    """Load JSON config from file (cached with mtime check for dynamic updates)."""
+    """Load JSON config from file (cached)."""
     try:
-        # Get current file modification time
-        current_mtime = os.path.getmtime(path)
-        
-        # Check if we have a cached version and if file hasn't changed
-        if path in _config_cache and path in _config_mtime:
-            if _config_mtime[path] == current_mtime:
-                log.debug(f"Using cached config for: {path}")
-                return _config_cache[path]
-        
-        # File changed or not cached - reload it
-        log.info(f"Loading config from: {path} (mtime: {current_mtime})")
-        with open(path, 'r', encoding='utf-8') as f:
-            config = json.load(f)
-            log.info(f"Config loaded successfully. Keys: {list(config.keys())}")
-            
-            # Update cache
-            _config_cache[path] = config
-            _config_mtime[path] = current_mtime
-            
-            return config
+        with open(path) as f:
+            return json.load(f)
     except Exception as e:
         log.error(f"[ERROR] Failed to load JSON {path}: {e}")
         return None
@@ -482,62 +462,20 @@ def generate_dynamic_dag_from_file(dag_id, path):
     config = load_config(path)
     if not config:
         raise ValueError(f"Config for DAG {dag_id} not found or invalid.")
-    
-    # Check for required fields
-    if 'user_id' not in config:
-        log.error(f"Missing 'user_id' in config for DAG {dag_id}")
-        raise ValueError(f"Config for DAG {dag_id} missing required field 'user_id'")
-    
-    if 'dag_id' not in config:
-        log.error(f"Missing 'dag_id' in config for DAG {dag_id}")
-        raise ValueError(f"Config for DAG {dag_id} missing required field 'dag_id'")
-    
-    try:
-        from Flowboard_genaric_dag import generate_dynamic_dag  # imported only when needed
-        return generate_dynamic_dag(
-            dag_id=str(dag_id),
-            user_id=uuid.UUID(config['user_id']),
-            user_name=config.get('username', 'unknown'),
-            config=config
-        )
-    except Exception as e:
-        log.error(f"Failed to generate DAG {dag_id}: {e}")
-        # Create a simple fallback DAG
-        from airflow.operators.python import PythonOperator
-        import pendulum
-        
-        def simple_task():
-            print(f"Simple fallback task for {dag_id}")
-            return "completed"
-        
-        dag = DAG(
-            dag_id,
-            default_args={
-                'owner': config.get('username', 'airflow'),
-                'depends_on_past': False,
-                'start_date': pendulum.datetime(2024, 1, 1, tz='UTC'),
-                'retries': 0,
-            },
-            description=f"FlowBoard DAG: {config.get('flow_name', 'Unknown')} (Fallback)",
-            schedule_interval=None,
-            catchup=False,
-            tags=['flowboard', 'fallback'],
-        )
-        
-        task = PythonOperator(
-            task_id='simple_task',
-            python_callable=simple_task,
-            dag=dag,
-        )
-        
-        return dag
+    from Flowboard_genaric_dag import generate_dynamic_dag  # imported only when needed
+
+    return generate_dynamic_dag(
+        dag_id=str(dag_id),
+        user_id=uuid.UUID(config['user_id']),
+        user_name=config.get('username', 'unknown'),
+        config=config
+    )
 
 
 # ---------------------------------------------
 # DAG REGISTRATION (Lazy-Load pattern)
 # ---------------------------------------------
 for dag_id, path in list_dag_files(limit=MAX_DAGS):
-    log.info(f"dag_id :-{dag_id} {path}")
     # Create lightweight placeholder callable
     def _factory(dag_id=dag_id, path=path):
         return generate_dynamic_dag_from_file(dag_id, path)

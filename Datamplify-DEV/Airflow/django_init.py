@@ -5,7 +5,7 @@ import django
 from django.apps import apps  # ✅ Import explicitly to avoid AttributeError
 
 # Path to your Django project root
-PROJECT_ROOT = r"c:\Users\vsahithi\Desktop\datamplify_new\Datamplify-DEV"
+PROJECT_ROOT = "/var/www/Datamplify"
 if PROJECT_ROOT not in sys.path:
     sys.path.append(PROJECT_ROOT)
 

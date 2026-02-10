@@ -1,0 +1,91 @@
+<app-page-header title="Embed Sdk" title1="Home" activeitem="Embed Sdk"></app-page-header>
+
+<div class="main-container container-fluid container-background p-4">
+    <div class="d-flex gap-1">
+
+        <div class="glass-card col-5 p-4">
+            <h5 class="mb-4 fw-semibold text-dark">Embed Configuration</h5>
+
+            <div class="embed-form-wrapper">
+                <form (ngSubmit)="setOrValidateClientData()" class="embed-form">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Application Name <span class="text-danger">*</span> </label>
+                        <input type="text" class="form-control" [(ngModel)]="appName" [ngModelOptions]="{standalone: true}"
+                            placeholder="e.g. My Application" [disabled]="disableAppName">
+                    </div>
+            
+                    <!-- <div class="mb-3">
+                                <label class="form-label text-muted">Target URL</label>
+                                <input type="url" class="form-control" [(ngModel)]="targetUrl" [ngModelOptions]="{standalone: true}"
+                                    placeholder="https://myapp.com/widget">
+                            </div> -->
+            
+                    <div class="mb-4">
+                        <label class="form-label text-muted">Type <span class="text-danger">*</span> </label>
+                        <select class="form-select" [(ngModel)]="type" [ngModelOptions]="{standalone: true}" [disabled]="disableAppName" (change)="redirectUrl = ''">
+                            <option class="select-options" value="" selected disabled>Select Type</option>
+                            <option class="select-options" value="authorization-code">Authorization Code (SSO)</option>
+                            <option class="select-options" value="client-credentials">Client Credentials</option>
+                        </select>
+                    </div>
+            
+                    <div class="mb-3" *ngIf="type === 'authorization-code'">
+                        <label class="form-label text-muted">Redirected URL <span class="text-danger">*</span> </label>
+                        <input type="url" class="form-control" [(ngModel)]="redirectUrl" [ngModelOptions]="{standalone: true}"
+                            placeholder="https://myapp.com/widget" [disabled]="disableAppName">
+                    </div>
+            
+                    <div *ngIf="disableAppName" class="mb-3">
+                        <label class="form-label text-muted">Client ID <span class="text-danger">*</span> </label>
+                        <input type="text" class="form-control" [(ngModel)]="clientId" [ngModelOptions]="{standalone: true}"
+                            placeholder="Enter provided Client ID">
+                    </div>
+            
+                    <div *ngIf="disableAppName" class="mb-3">
+                        <label class="form-label text-muted">Client Secret <span class="text-danger">*</span> </label>
+                        <input type="text" class="form-control" [(ngModel)]="clientSecret" [ngModelOptions]="{standalone: true}"
+                            placeholder="Enter Client Secret">
+                    </div>
+            
+                    <div *ngIf="isClientCopied" class="alert alert-warning mt-3 mb-3">
+                        <strong>Important:</strong>
+                        Please store your <b>Client ID</b> and <b>Client Secret</b> securely.
+                        This secret will not be shown again.
+                    </div>
+                    
+                    <div class="submit-wrapper">
+                        <button type="submit" class="btn mode-btn w-100" 
+                        [disabled]="isGenerateDisabled">
+                            Generate Embed Script
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="glass-card col-7 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="m-0 text-dark">Generated Snippet</h5>
+                <!-- <span class="badge bg-primary">Ready
+                    to Copy</span> -->
+            </div>
+
+            <div class="code-display">
+                <button class="btn copy-btn" (click)="copyCode(rawCodeText)">{{ copyButtonText }}</button>
+                <code *ngIf="generatedCode; else placeholder" [innerHTML]="generatedCode"></code>
+
+                <ng-template #placeholder>
+                    <span class="token-comment">&lt;!-- Configure your settings on the left to generate the script
+                        --&gt;</span>
+                </ng-template>
+            </div>
+
+            <div class="mt-3">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle"></i>
+                    Paste this code into the <code>&lt;body&gt;</code> of your HTML page.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
