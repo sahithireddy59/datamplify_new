@@ -1722,6 +1722,24 @@ class Integration_endpoints(APIView):
             case "hubspot":
                 from integration_injection import HUBSPOT_CONFIG
                 endpoints_list = HUBSPOT_CONFIG.keys()
+            case "openai":
+                from integration_injection import OPENAI_CONFIG
+                endpoints_list = OPENAI_CONFIG.keys()
+            case "azure_openai":
+                from integration_injection import AZURE_OPENAI_CONFIG
+                endpoints_list = AZURE_OPENAI_CONFIG.keys()
+            case "anthropic":
+                from integration_injection import ANTHROPIC_CONFIG
+                endpoints_list = ANTHROPIC_CONFIG.keys()
+            case "gemini":
+                from integration_injection import GEMINI_CONFIG
+                endpoints_list = GEMINI_CONFIG.keys()
+            case "deepseek":
+                from integration_injection import DEEPSEEK_CONFIG
+                endpoints_list = DEEPSEEK_CONFIG.keys()
+            case "meta_llama":
+                from integration_injection import META_LLAMA_CONFIG
+                endpoints_list = META_LLAMA_CONFIG.keys()
             case _:
                 return Response({'message':"not implemented"},status=status.HTTP_400_BAD_REQUEST)
 

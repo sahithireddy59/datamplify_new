@@ -526,6 +526,43 @@ SHOPIFY_CONFIG = {
     } for e in ['orders','customers','products', 'price_rules','shipping_zones','script_tags']}
 }
 
+# LLM Integration Configurations
+OPENAI_CONFIG = {
+    **{e: {
+        "type": "page"
+    } for e in ["models", "completions", "chat/completions", "embeddings", "fine-tunes", "files"]}
+}
+
+AZURE_OPENAI_CONFIG = {
+    **{e: {
+        "type": "page"
+    } for e in ["deployments", "models", "completions", "chat/completions", "embeddings"]}
+}
+
+ANTHROPIC_CONFIG = {
+    **{e: {
+        "type": "page"
+    } for e in ["messages", "models"]}
+}
+
+GEMINI_CONFIG = {
+    **{e: {
+        "type": "page"
+    } for e in ["models", "generateContent", "embedContent", "countTokens"]}
+}
+
+DEEPSEEK_CONFIG = {
+    **{e: {
+        "type": "page"
+    } for e in ["models", "chat/completions", "completions"]}
+}
+
+META_LLAMA_CONFIG = {
+    **{e: {
+        "type": "page"
+    } for e in ["models", "completions", "chat/completions", "embeddings"]}
+}
+
 
 class NinjaClient:
     BASE_URL = "https://api.ninjaone.com/v2"
