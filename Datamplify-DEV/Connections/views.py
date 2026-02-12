@@ -1650,6 +1650,24 @@ class Integration_schema(APIView):
                 client = GoogleAnalyticClient(decrypt_json(Integration_data.token_metadata),decrypt_json(Integration_data.credentials),Integration_data.id)
             elif integration_type.lower()=='hubspot':
                 client = HubspotClientToken(decrypt_json(Integration_data.token_metadata),decrypt_json(Integration_data.credentials),Integration_data.id)
+            elif integration_type.lower() in ['openai', 'azure_openai', 'anthropic', 'gemini', 'deepseek', 'meta_llama']:
+                # LLM integrations don't have traditional schemas like databases
+                # Return a simple schema structure for LLM endpoints in the expected format
+                llm_schema = [
+                    {
+                        'tables': endpoint,  # Use the endpoint name as the table name
+                        'columns': [
+                            {'col': 'prompt', 'dtype': 'text'},
+                            {'col': 'response', 'dtype': 'text'},
+                            {'col': 'model', 'dtype': 'text'},
+                            {'col': 'timestamp', 'dtype': 'timestamp'}
+                        ]
+                    }
+                ]
+                return Response({'message':'success','tables':llm_schema},status=status.HTTP_200_OK)
+            else:
+                return Response({'message': f'Integration type {integration_type} not supported'}, status=status.HTTP_400_BAD_REQUEST)
+            
             result = discover_endpoint_schema(client,endpoint,endpoint,1)
             return Response({'message':'sucess','tables':result},status=status.HTTP_200_OK)
 
