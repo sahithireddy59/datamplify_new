@@ -18,6 +18,7 @@
 from abc import ABC, abstractmethod
 import requests
 from base64 import b64encode
+from decouple import config
 from Datamplify.settings import Integration_Credentials
 
 
@@ -696,6 +697,207 @@ class ImmyBotAuth(OAuthBaseAuth):
             return  f"https://login.microsoftonline.com/{self.tenant_id}/oauth2/v2.0/token"
         except Exception as e:
             return False
+AUTH_REGISTRY = {}
+
+def register_auth(name: str):
+    def decorator(cls):
+        AUTH_REGISTRY[name.lower()] = cls
+        return cls
+    return decorator
+
+@register_auth("openai")
+class OpenAIAuth(BaseAuth):
+    REQUIRED_FIELDS = {"api_key"}
+
+    def build_headers(self):
+        return {"Authorization": f"Bearer {self.payload['api_key']}"}
+
+    def validate_credentials(self) -> bool:
+        self.validate_payload(self.payload)
+        try:
+            r = requests.get(
+                "https://api.openai.com/v1/models",
+                headers={**self.build_headers(), "Content-Type": "application/json"},
+                timeout=15,
+            )
+            return r.status_code == 200
+        except:
+            return False
+        
+@register_auth("deepseek")
+class DeepseekAuth(BaseAuth):
+    REQUIRED_FIELDS = {"api_key"}
+
+    def build_headers(self):
+        return {
+            "Authorization": f"Bearer {self.payload['api_key']}",
+            "Content-Type": "application/json",
+        }
+
+    def validate_credentials(self) -> bool:
+        self.validate_payload(self.payload)
+        try:
+            r = requests.get(
+                "https://api.deepseek.com/v1/models",
+                headers=self.build_headers(),
+                timeout=15,
+            )
+            return r.status_code == 200
+        except requests.RequestException:
+            return False
+
+@register_auth("gemini")
+class GeminiAuth(BaseAuth):
+    REQUIRED_FIELDS = {"api_key"}
+    # Gemini uses ?key=... so site_url is just host
+    SITE_URL = "https://generativelanguage.googleapis.com"
+
+    def __init__(self, payload: dict):
+        payload = payload or {}
+        payload.setdefault("site_url", self.SITE_URL)
+        super().__init__(payload)
+
+    def build_headers(self) -> dict:
+        # Gemini API key is in query param, not header
+        return {"Content-Type": "application/json"}
+
+    def validate_credentials(self) -> bool:
+        """
+        Override BaseAuth.validate_credentials because Gemini doesn't use a simple GET test endpoint
+        and needs API key in query string.
+        """
+        self.validate_payload(self.payload)
+
+        model = self.payload.get("default_model") or "gemini-1.5-flash"
+        url = f"{self.payload['site_url'].rstrip('/')}/v1beta/models/{model}:generateContent"
+        url = f"{url}?key={self.payload['api_key']}"
+
+        try:
+            r = requests.post(
+                url,
+                headers=self.build_headers(),
+                json={"contents": [{"parts": [{"text": "ping"}]}]},
+                timeout=15,
+            )
+            # 200 => ok, 400 can also mean model/payload issue but key valid;
+            # treat 401/403 as invalid auth.
+            return r.status_code in (200, 400)
+        except requests.RequestException:
+            return False
+
+@register_auth("anthropic")
+class AnthropicAuth(BaseAuth):
+    REQUIRED_FIELDS = {"api_key"}
+    SITE_URL = "https://api.anthropic.com"
+
+    def __init__(self, payload: dict):
+        payload = payload or {}
+        payload.setdefault("site_url", self.SITE_URL)
+        super().__init__(payload)
+
+    def build_headers(self) -> dict:
+        return {
+            "x-api-key": self.payload["api_key"],
+            "anthropic-version": self.payload.get("anthropic_version") or "2023-06-01",
+            "content-type": "application/json",
+        }
+
+    def validate_credentials(self) -> bool:
+        """
+        Override because Anthropic validation is best via a tiny messages call.
+        """
+        self.validate_payload(self.payload)
+
+        model = self.payload.get("default_model") or "claude-3-haiku-20240307"
+        url = f"{self.payload['site_url'].rstrip('/')}/v1/messages"
+
+        try:
+            r = requests.post(
+                url,
+                headers=self.build_headers(),
+                json={
+                    "model": model,
+                    "max_tokens": 1,
+                    "messages": [{"role": "user", "content": "ping"}],
+                },
+                timeout=15,
+            )
+            # If key invalid -> typically 401/403.
+            return r.status_code in (200, 400)
+        except requests.RequestException:
+            return False
+
+@register_auth("azure_openai")
+class AzureOpenAIAuth(BaseAuth):
+    REQUIRED_FIELDS = {"api_key", "endpoint", "deployment"}
+    # NOTE: For Azure, we don't use payload['site_url'] for auth; we use endpoint+deployment.
+    # But we still set site_url to keep BaseAuth consistent.
+    SITE_URL = "https://example.openai.azure.com"
+
+    def __init__(self, payload: dict):
+        payload = payload or {}
+        payload.setdefault("site_url", payload.get("endpoint") or self.SITE_URL)
+        super().__init__(payload)
+
+    def build_headers(self) -> dict:
+        return {
+            "api-key": self.payload["api_key"],
+            "Content-Type": "application/json",
+        }
+
+    def validate_credentials(self) -> bool:
+        """
+        Validate with a tiny chat completions call.
+        """
+        self.validate_payload(self.payload)
+
+        endpoint = self.payload["endpoint"].rstrip("/")
+        deployment = self.payload["deployment"]
+        api_version = self.payload.get("api_version") or "2024-10-21"
+
+        url = f"{endpoint}/openai/deployments/{deployment}/chat/completions?api-version={api_version}"
+
+        try:
+            r = requests.post(
+                url,
+                headers=self.build_headers(),
+                json={
+                    "messages": [{"role": "user", "content": "ping"}],
+                    "max_tokens": 1,
+                },
+                timeout=20,
+            )
+            # Invalid key / access -> 401/403. Other failures can still mean key is okay.
+            return r.status_code in (200, 400)
+        except requests.RequestException:
+            return False
+
+@register_auth("meta_llama")
+class MetaLlamaAuth(BaseAuth):
+    """
+    Meta LLaMA is usually self-hosted (Ollama/vLLM/TGI) or via a provider.
+    Best practice: treat it as OpenAI-compatible base_url.
+
+    payload required:
+      - base_url (example: http://localhost:8000/v1 OR https://my-llama-host/v1)
+    optional:
+      - api_key (if your gateway requires it)
+    """
+    REQUIRED_FIELDS = {"base_url"}
+    TEST_ENDPOINTS = ["/models"]
+
+    def __init__(self, payload: dict):
+        payload = payload or {}
+        # Use base_url as site_url so BaseAuth.build_url('/models') works
+        payload["site_url"] = payload.get("base_url", "").rstrip("/")
+        super().__init__(payload)
+
+    def build_headers(self) -> dict:
+        headers = {"Content-Type": "application/json"}
+        api_key = self.payload.get("api_key")
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+        return headers
 
 class IntegrationAuthOrchestrator:
 
@@ -766,6 +968,18 @@ class IntegrationAuthOrchestrator:
             
             case "googleanalytic":
                 return GoogleAnalyticsAuth(payload)
+            case "deepseek":
+                 return DeepseekAuth(payload)
+            case "gemini":
+                return GeminiAuth(payload)
+            case "anthropic":
+                return AnthropicAuth(payload)
+            case "azure_openai":
+                return AzureOpenAIAuth(payload)
+            case "meta_llama":
+                return MetaLlamaAuth(payload)
+            case "openai":
+                return OpenAIAuth(payload)   # if you add it too
 
         raise ValueError("Unsupported integration type")
 

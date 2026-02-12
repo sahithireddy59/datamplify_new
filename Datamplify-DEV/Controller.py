@@ -137,7 +137,7 @@ class ExtractorFactory:
                 return HalopsaExtractor(context)
             case "connectwise":
                 return ConnectwiseExtractor(context)
-            case "shopify"|"tally" | "quickbooks" |"jira" |"hubspot"|"dbt"|"pax8"|"bamboohr" |"zoho_crm" |"zoho_books" | "zoho_inventory" | "salesforce":
+            case "shopify"|"tally" | "quickbooks" |"jira" |"hubspot"|"dbt"|"pax8"|"bamboohr" |"zoho_crm" |"zoho_books" | "zoho_inventory" | "salesforce"|"openai" | "deepseek" | "gemini" | "anthropic" | "azure_openai" | "meta_llama":
                 return IntegrationExtractor(context,conn_type.lower())
             case _:
                 raise NotImplementedError
@@ -185,6 +185,8 @@ def flatten_document(doc, parent_key='', sep='_'):
 import time
 from collections import defaultdict
 from integration_injection import NinjaClient,HalopsaClient,ConnectwiseClient,Normalizer,Clickhouse,ShopifyClient,TallyClient,QuickbooksClient,SalesforceClient,JiraClient,HubspotClientToken,DbtClient,Pax8Client,BambooHrClient,ZohoClient
+from llm_clients import OpenAIClient,DeepSeekClient,GeminiClient,AnthropicClient,AzureOpenAIClient,MetaLlamaClient
+
 class NinjaExtractor(BaseExtractor):
     def __init__(self, context):
         self.token_metadata = context.source_conn_info['token_metadata']
@@ -525,6 +527,18 @@ class IntegrationExtractor(BaseExtractor):
                 return ZohoClient
             case "salesforce":
                 return SalesforceClient
+            case "openai":
+                return OpenAIClient
+            case "deepseek":
+                return DeepSeekClient
+            case "meta_llama":
+                return MetaLlamaClient
+            case "anthropic":
+                return AnthropicClient
+            case "gemini":
+                return GeminiClient
+            case "azure_openai":
+                return AzureOpenAIClient
         
     def Load_data(self,table_name:str):
         client_type = self.get_integration_client()
@@ -1277,7 +1291,7 @@ class Orchastera:
         )
         # if self.context.source_conn_info["status"] or self.context.target_conn_info["status"]==400:
         #     return {"status":400,"message":"Invalid Credentials"}
-        self.extractor = ExtractorFactory.create(self.context)
+        self.extractor = ExtractorFactoryory.create(self.context)
         self.loader = LoaderFactory.create(self.context)
  
     def run(self, query, target_table,attributes=None):

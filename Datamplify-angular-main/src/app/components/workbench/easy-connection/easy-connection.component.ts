@@ -132,10 +132,16 @@ export class EasyConnectionComponent {
     ZOHO_INVENTORY: {type: 'image', value: './assets/images/icons_new/ZOHO_INVENTORY.svg'},
     ZOHO_CRM: {type: 'image', value: './assets/images/icons_new/ZOHO_CRM.svg'},
     DBT: {type: 'image', value: './assets/images/icons_new/DBT.svg'},
+    OPENAI: {type: 'image', value: './assets/images/icons_new/OPENAI.svg'},
+    DEEPSEEK: {type: 'image', value: './assets/images/icons_new/DEEPSEEK.svg'},
+    GEMINI: {type: 'image', value: './assets/images/icons_new/GEMINI.svg'},
+    ANTHROPIC: {type: 'image', value: './assets/images/icons_new/ANTHROPIC.svg'},
+    AZURE_OPENAI: {type: 'image', value: './assets/images/icons_new/AZURE_OPENAI.svg'},
+    META_LLAMA: {type: 'image', value: './assets/images/icons_new/META_LLAMA.svg'},
   };
   categories = [
     { name: 'Relational Database', image: './assets/images/icons/Rational.svg', description: 'Traditional SQL databases like MySQL, PostgreSQL' },
-    // { name: 'LLM Integrations', icon: '🤖', description: 'AI & Large Language Model integrations',count:'6' },
+    { name: 'LLM Integrations', icon: '🤖', description: 'AI & Language Model integrations' },
     // { name: 'Multi-dimensional Database', icon: '📊', description: 'OLAP & analytical data stores',count:'2' },
     { name: 'NoSQL Database', image: './assets/images/icons/NoSQl.svg', description: 'Document, Key-Value, Graph & Wide-column databases' },
     { name: 'File Source', icon: '📂', description: 'CSV, Excel & JSON files' },
@@ -181,6 +187,14 @@ export class EasyConnectionComponent {
       { displayName: "Zoho Inventory", name: "ZOHO_INVENTORY", description: "Zoho Inventory platform", image: './assets/images/icons_new/ZOHO_INVENTORY.svg', disabled: false },
       { displayName: "Zoho CRM", name: "ZOHO_CRM", description: "Zoho CRM platform", image: './assets/images/icons_new/ZOHO_CRM.svg', disabled: false },
       { displayName: "DBT", name: "DBT", description: "Data build tool", image: './assets/images/icons_new/DBT.svg', disabled: false },
+    ],
+    "LLM Integrations": [
+      { displayName: "OpenAI", name: "OPENAI", description: "OpenAI GPT models", image: './assets/images/icons_new/OPENAI.svg', disabled: false },
+      { displayName: "DeepSeek", name: "DEEPSEEK", description: "DeepSeek AI models", image: './assets/images/icons_new/DEEPSEEK.svg', disabled: false },
+      { displayName: "Gemini", name: "GEMINI", description: "Google Gemini models", image: './assets/images/icons_new/GEMINI.svg', disabled: false },
+      { displayName: "Anthropic", name: "ANTHROPIC", description: "Anthropic Claude models", image: './assets/images/icons_new/ANTHROPIC.svg', disabled: false },
+      { displayName: "Azure OpenAI", name: "AZURE_OPENAI", description: "Azure OpenAI Service", image: './assets/images/icons_new/AZURE_OPENAI.svg', disabled: false },
+      { displayName: "Meta LLaMA", name: "META_LLAMA", description: "Self-hosted LLaMA models", image: './assets/images/icons_new/META_LLAMA.svg', disabled: false },
     ]
   };
   currentStep = 1;
@@ -248,6 +262,25 @@ export class EasyConnectionComponent {
   clientIdError: boolean = false;
   clientSecretError: boolean = false;
   scopeError: boolean = false;
+
+  // LLM Integration Fields
+  llmApiKey: string = '';
+  llmSiteUrl: string = '';
+  llmDefaultModel: string = '';
+  azureEndpoint: string = '';
+  azureDeployment: string = '';
+  azureApiVersion: string = '';
+  anthropicVersion: string = '';
+  llamaBaseUrl: string = '';
+  description: string = '';
+
+  // LLM Validation Errors
+  llmApiKeyError: boolean = false;
+  llmSiteUrlError: boolean = false;
+  azureEndpointError: boolean = false;
+  azureDeploymentError: boolean = false;
+  llamaBaseUrlError: boolean = false;
+
   apiKeyError: boolean = false;
   domainNameError: boolean = false;
   accountIdError: boolean = false;
@@ -972,6 +1005,18 @@ export class EasyConnectionComponent {
       connectionId = 26;
     } else if(selectedConnection === 'GOOGLEANALYTIC') {
       connectionId = 27;
+    } else if(selectedConnection === 'OPENAI') {
+      connectionId = 29;
+    } else if(selectedConnection === 'AZURE_OPENAI') {
+      connectionId = 30;
+    } else if(selectedConnection === 'ANTHROPIC') {
+      connectionId = 31;
+    } else if(selectedConnection === 'GEMINI') {
+      connectionId = 32;
+    } else if(selectedConnection === 'META_LLAMA') {
+      connectionId = 33;
+    } else if(selectedConnection === 'DEEPSEEK') {
+      connectionId = 34;
     }
     this.workbenchService.disableLoaderForNextRequest();
     this.workbenchService.getConnectionsForEtl(connectionId).subscribe({
@@ -1432,6 +1477,117 @@ export class EasyConnectionComponent {
     }
   }
 
+  // LLM Integration Payload Methods
+  openaiPayload(isExistingConnection: boolean, hierarchyId?: any) {
+    let object: any = {
+      payload: {
+        api_key: this.llmApiKey,
+        display_name: this.displayName
+      }
+    };
+    if (this.llmSiteUrl) object.payload.site_url = this.llmSiteUrl;
+    if (this.llmDefaultModel) object.payload.default_model = this.llmDefaultModel;
+    if (this.description) object.payload.description = this.description;
+    
+    if(hierarchyId){
+      this.updateIntegrationConnection(object, hierarchyId, isExistingConnection);
+    }else {
+      this.integrationConnection(object, 'openai');
+    }
+  }
+
+  deepseekPayload(isExistingConnection: boolean, hierarchyId?: any) {
+    let object: any = {
+      payload: {
+        api_key: this.llmApiKey,
+        display_name: this.displayName
+      }
+    };
+    if (this.llmSiteUrl) object.payload.site_url = this.llmSiteUrl;
+    if (this.llmDefaultModel) object.payload.default_model = this.llmDefaultModel;
+    if (this.description) object.payload.description = this.description;
+    
+    if(hierarchyId){
+      this.updateIntegrationConnection(object, hierarchyId, isExistingConnection);
+    }else {
+      this.integrationConnection(object, 'deepseek');
+    }
+  }
+
+  geminiPayload(isExistingConnection: boolean, hierarchyId?: any) {
+    let object: any = {
+      payload: {
+        api_key: this.llmApiKey,
+        display_name: this.displayName
+      }
+    };
+    if (this.llmSiteUrl) object.payload.site_url = this.llmSiteUrl;
+    if (this.llmDefaultModel) object.payload.default_model = this.llmDefaultModel;
+    if (this.description) object.payload.description = this.description;
+    
+    if(hierarchyId){
+      this.updateIntegrationConnection(object, hierarchyId, isExistingConnection);
+    }else {
+      this.integrationConnection(object, 'gemini');
+    }
+  }
+
+  anthropicPayload(isExistingConnection: boolean, hierarchyId?: any) {
+    let object: any = {
+      payload: {
+        api_key: this.llmApiKey,
+        display_name: this.displayName
+      }
+    };
+    if (this.llmSiteUrl) object.payload.site_url = this.llmSiteUrl;
+    if (this.llmDefaultModel) object.payload.default_model = this.llmDefaultModel;
+    if (this.anthropicVersion) object.payload.anthropic_version = this.anthropicVersion;
+    if (this.description) object.payload.description = this.description;
+    
+    if(hierarchyId){
+      this.updateIntegrationConnection(object, hierarchyId, isExistingConnection);
+    }else {
+      this.integrationConnection(object, 'anthropic');
+    }
+  }
+
+  azureOpenaiPayload(isExistingConnection: boolean, hierarchyId?: any) {
+    let object: any = {
+      payload: {
+        api_key: this.llmApiKey,
+        endpoint: this.azureEndpoint,
+        deployment: this.azureDeployment,
+        display_name: this.displayName
+      }
+    };
+    if (this.azureApiVersion) object.payload.api_version = this.azureApiVersion;
+    if (this.description) object.payload.description = this.description;
+    
+    if(hierarchyId){
+      this.updateIntegrationConnection(object, hierarchyId, isExistingConnection);
+    }else {
+      this.integrationConnection(object, 'azure_openai');
+    }
+  }
+
+  metaLlamaPayload(isExistingConnection: boolean, hierarchyId?: any) {
+    let object: any = {
+      payload: {
+        base_url: this.llamaBaseUrl,
+        display_name: this.displayName
+      }
+    };
+    if (this.llmApiKey) object.payload.api_key = this.llmApiKey;
+    if (this.llmDefaultModel) object.payload.default_model = this.llmDefaultModel;
+    if (this.description) object.payload.description = this.description;
+    
+    if(hierarchyId){
+      this.updateIntegrationConnection(object, hierarchyId, isExistingConnection);
+    }else {
+      this.integrationConnection(object, 'meta_llama');
+    }
+  }
+
   urlIntegrationsPayload(isExistingConnection: boolean, type: string, hierarchyId?: any){
     let payload: any = {
       code: this.code,
@@ -1625,6 +1781,32 @@ export class EasyConnectionComponent {
       this.token = credentials.api_token ?? '';
     } else if (['zoho_books', 'zoho_inventory', 'zoho_crm'].includes(data.integration_type)){
       this.zohoCountry = this.toTitleCase(credentials.country) ?? '';
+    } else if (data.integration_type === 'openai') {
+      this.llmApiKey = credentials.api_key ?? '';
+      this.llmSiteUrl = credentials.site_url ?? '';
+      this.llmDefaultModel = credentials.default_model ?? '';
+    } else if (data.integration_type === 'deepseek') {
+      this.llmApiKey = credentials.api_key ?? '';
+      this.llmSiteUrl = credentials.site_url ?? '';
+      this.llmDefaultModel = credentials.default_model ?? '';
+    } else if (data.integration_type === 'gemini') {
+      this.llmApiKey = credentials.api_key ?? '';
+      this.llmSiteUrl = credentials.site_url ?? '';
+      this.llmDefaultModel = credentials.default_model ?? '';
+    } else if (data.integration_type === 'anthropic') {
+      this.llmApiKey = credentials.api_key ?? '';
+      this.llmSiteUrl = credentials.site_url ?? '';
+      this.llmDefaultModel = credentials.default_model ?? '';
+      this.anthropicVersion = credentials.anthropic_version ?? '';
+    } else if (data.integration_type === 'azure_openai') {
+      this.llmApiKey = credentials.api_key ?? '';
+      this.azureEndpoint = credentials.endpoint ?? '';
+      this.azureDeployment = credentials.deployment ?? '';
+      this.azureApiVersion = credentials.api_version ?? '';
+    } else if (data.integration_type === 'meta_llama') {
+      this.llamaBaseUrl = credentials.base_url ?? '';
+      this.llmApiKey = credentials.api_key ?? '';
+      this.llmDefaultModel = credentials.default_model ?? '';
     }
   }
 

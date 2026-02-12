@@ -262,6 +262,16 @@ select.form-select {
   border-right: 1px solid rgba(var(--primary-rgb, 13, 110, 253), 0.15);
 }
 
+.db-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.card-icon {
+  font-size: 32px !important;
+}
+
 
 /* ----------- For 90% Resolution (Large screens) ----------- */
 @media (min-width: 1420px) and (max-width: 1560px) {

@@ -418,6 +418,12 @@ export class FlowboardComponent {
       { id: 25, name: 'Zoho_Inventory', image: './assets/images/icons_new/ZOHO_INVENTORY.svg', type: 'source_data_object' },
       { id: 26, name: 'Zoho_Books', image: './assets/images/icons_new/ZOHO_BOOKS.svg', type: 'source_data_object' },
       { id: 27, name: 'GoogleAnalytics', image: './assets/images/icons_new/GOOGLE_ANALYTICS.svg', type: 'source_data_object' },
+      { id: 29, name: 'OpenAI', image: './assets/images/icons_new/OPENAI.svg', type: 'source_data_object' },
+      { id: 30, name: 'Azure_OpenAI', image: './assets/images/icons_new/AZURE_OPENAI.svg', type: 'source_data_object' },
+      { id: 31, name: 'Anthropic', image: './assets/images/icons_new/ANTHROPIC.svg', type: 'source_data_object' },
+      { id: 32, name: 'Gemini', image: './assets/images/icons_new/GEMINI.svg', type: 'source_data_object' },
+      { id: 33, name: 'DeepSeek', image: './assets/images/icons_new/DEEPSEEK.svg', type: 'source_data_object' },
+      { id: 34, name: 'Meta_LLaMA', image: './assets/images/icons_new/META_LLAMA.svg', type: 'source_data_object' },
     ],
     targets: [
       { id: 1, name: 'PostgreSQL', image: './assets/images/icons_new/POSTGRESQL.svg', type: 'target_data_object' },

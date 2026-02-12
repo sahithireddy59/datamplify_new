@@ -1570,6 +1570,7 @@ class IntegrationOperations(APIView):
         credentials.pop('client_secret',None)
         credentials.pop('api_token',None)
         credentials.pop('private_key',None)
+        credentials.pop('api_key', None)
         data = {
             "integration_type":integration_conn.integration_type,
             "connection_name":integration_conn.connection_name,

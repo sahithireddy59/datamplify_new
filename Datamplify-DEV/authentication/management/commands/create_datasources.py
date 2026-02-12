@@ -36,6 +36,12 @@ class Command(BaseCommand):
             {'name': 'ZOHO_BOOKS', 'type': 'INTEGRATIONS'},
             {'name': 'GOOGLEANALYTIC', 'type': 'INTEGRATIONS'},
             {'name': 'EXCEL', 'type': 'FILES'},
+            {'name': 'OPENAI', 'type': 'INTEGRATIONS'},
+            {'name': 'AZURE_OPENAI', 'type': 'INTEGRATIONS'},
+            {'name': 'ANTHROPIC', 'type': 'INTEGRATIONS'},
+            {'name': 'GEMINI', 'type': 'INTEGRATIONS'},
+            {'name': 'META_LLAMA', 'type': 'INTEGRATIONS'},
+            {'name': 'DEEPSEEK', 'type': 'INTEGRATIONS'},
         ]
 
         created_count = 0

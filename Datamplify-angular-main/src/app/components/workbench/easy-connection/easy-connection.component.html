@@ -45,9 +45,9 @@
       
                   <!-- Left: Icon + Display Name + Type -->
                   <div class="d-flex align-items-center flex-grow-1 me-3">
-                    <div class="fs-3 me-2 icon-bounce">
+                    <div class="me-2 icon-bounce">
                       @if(connectionListIcons[connection.server_type]?.type === 'emoji'){
-                      {{ connectionListIcons[connection.server_type]?.value }}
+                      <span class="card-icon">{{ connectionListIcons[connection.server_type]?.value }}</span>
                       }
                       @if(connectionListIcons[connection.server_type]?.type === 'image'){
                       <!-- <i [ngClass]="connectionListIcons[connection.server_type]?.value"></i> -->
@@ -137,10 +137,10 @@
                   <div class="p-4">
                     <div class="d-flex align-items-start justify-content-between mb-3">
                       <div class="d-flex align-items-center">
-                        <div class="fs-3 me-3 icon-bounce">
+                        <div class="me-3 icon-bounce">
                           <!-- Emoji -->
                           @if(connectionListIcons[connection.server_type]?.type === 'emoji'){
-                          {{ connectionListIcons[connection.server_type]?.value }}
+                          <span class="card-icon">{{ connectionListIcons[connection.server_type]?.value }}</span>
                           }
       
                           @if(connectionListIcons[connection.server_type]?.type === 'image'){
@@ -328,12 +328,9 @@
               (click)="categorySelect(cat.name)">
               <h6 class="mb-2">{{ cat.name }}</h6>
               <div class="d-flex align-items-start flex-grow-1">
-                <div class="fs-2 me-2 card-icon">
-                  <!-- <img *ngIf="cat.image" [src]="cat.image" [alt]="cat.name" class="db-icon">
-                <span *ngIf="!cat.image && cat.icon">{{ cat.icon }}</span>
-                <div *ngIf="!cat.image && !cat.icon && cat.svg" [innerHTML]="getSafeSvg(cat.svg)"></div> -->
-                  <img *ngIf="cat.image" [src]="cat.image" [alt]="cat.name" class="db-icon mb-2">
-                  <span class="fs-2 mb-2 card-icon" *ngIf="!cat.image && cat.icon">{{ cat.icon }}</span>
+                <div class="me-2">
+                  <img *ngIf="cat.image" [src]="cat.image" [alt]="cat.name" class="db-icon">
+                  <span class="card-icon" *ngIf="!cat.image && cat.icon">{{ cat.icon }}</span>
                 </div>
                 <div class="flex-frow-1 d-flex flex-column">
                   <small class="text-muted">{{ cat.description }}</small>
@@ -378,12 +375,9 @@
         <ng-container *ngIf="selectedCategory === 'All'; else singleCategory">
           <ng-container *ngFor="let cat of categories">
             <div class="d-flex align-items-center gap-2 mt-3 mb-2">
-              <div class="fs-3">
-                <!-- <img *ngIf="cat.image" [src]="cat.image" [alt]="cat.name" class="db-icon">
-              <span *ngIf="!cat.image && cat.icon">{{ cat.icon }}</span>
-              <div *ngIf="!cat.image && !cat.icon && cat.svg" [innerHTML]="getSafeSvg(cat.svg)"></div> -->
-                <img *ngIf="cat.image" [src]="cat.image" [alt]="cat.name" class="db-icon mb-2">
-                <span class="fs-2 mb-2 card-icon" *ngIf="!cat.image && cat.icon">{{ cat.icon }}</span>
+              <div>
+                <img *ngIf="cat.image" [src]="cat.image" [alt]="cat.name" class="db-icon">
+                <span class="card-icon" *ngIf="!cat.image && cat.icon">{{ cat.icon }}</span>
               </div>
               <div>
                 <h5 class="mb-0">{{ cat.name }}</h5>
@@ -396,12 +390,9 @@
                 <div class="glass-card h-100 p-3 hoverable d-flex justify-content-between text-center"
                   [class.disabled]="type.disabled" (click)="selectConnection(type)">
                   <div class="d-flex align-items-center gap-3 w-100">
-                    <div class="fs-3 card-icon">
-                      <!-- <img *ngIf="type.image" [src]="type.image" [alt]="type.name" class="db-icon">
-                    <span *ngIf="!type.image && type.icon">{{ type.icon }}</span>
-                    <div *ngIf="!type.image && !type.icon && type.svg" [innerHTML]="getSafeSvg(type.svg)"></div> -->
-                      <img *ngIf="type.image" [src]="type.image" [alt]="type.name" class="db-icon mb-2">
-                      <span class="fs-2 mb-2 card-icon" *ngIf="!type.image && type.icon">{{ type.icon }}</span>
+                    <div>
+                      <img *ngIf="type.image" [src]="type.image" [alt]="type.name" class="db-icon">
+                      <span class="card-icon" *ngIf="!type.image && type.icon">{{ type.icon }}</span>
                     </div>
                     <div class="d-flex flex-column text-start flex-grow-1">
                       <h6 class="mb-1 d-flex align-items-center">{{ type.displayName }}</h6>
@@ -422,9 +413,9 @@
               <div class="glass-card h-100 p-3 hoverable d-flex justify-content-between text-center"
                 [class.disabled]="type.disabled" (click)="selectConnection(type)">
                 <div class="d-flex align-items-start gap-3">
-                  <div class="fs-3 card-icon">
+                  <div>
                     <img *ngIf="type.image" [src]="type.image" [alt]="type.name" class="db-icon">
-                    <span *ngIf="!type.image && type.icon">{{ type.icon }}</span>
+                    <span class="card-icon" *ngIf="!type.image && type.icon">{{ type.icon }}</span>
                     <div *ngIf="!type.image && !type.icon && type.svg" [innerHTML]="getSafeSvg(type.svg)"></div>
                   </div>
                   <div>
@@ -484,9 +475,9 @@
             <div class="d-flex justify-content-between align-items-start">
               <!-- Icon + Name -->
               <div class="d-flex align-items-center">
-                <div class="fs-3 me-3">
+                <div class="me-3">
                   @if(connectionListIcons[conn.server_type]?.type === 'emoji'){
-                  {{ connectionListIcons[conn.server_type]?.value }}
+                  <span class="card-icon">{{ connectionListIcons[conn.server_type]?.value }}</span>
                   }
 
                   @if(connectionListIcons[conn.server_type]?.type === 'image'){
@@ -2271,6 +2262,301 @@
   </form>
 </ng-template>
 
+<!-- LLM Integration Forms -->
+<ng-template #openaiForm>
+  <form class="form-height"
+    (ngSubmit)="isExistingConnectionsEdit || isEditPreview ? openaiPayload(!isEditPreview, editPreviewData.id) : openaiPayload(!isEditPreview)"
+    style="overflow-x: hidden;">
+
+    <!-- Connection Name -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
+        Connection Name <span class="text-danger">*</span>
+      </label>
+      <input type="text" class="form-control w-100" [ngClass]="{'error-input': displayNameError}"
+        [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" placeholder="My OpenAI Connection"
+        [disabled]="isExistingConnectionsEdit || isEditPreview" (input)="displayNameChange()">
+    </div>
+
+    <!-- API Key -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': llmApiKeyError}" class="form-label d-inline-block me-1">
+        API Key <span class="text-danger">*</span>
+      </label>
+      <input type="password" class="form-control w-100" [ngClass]="{'error-input': llmApiKeyError}" 
+        [(ngModel)]="llmApiKey" [ngModelOptions]="{standalone: true}" placeholder="sk-..." 
+        (input)="llmApiKeyError = false" autocomplete="new-password">
+    </div>
+
+    <!-- Description -->
+    <div class="mb-3">
+      <label class="form-label d-inline-block me-1">
+        Description
+      </label>
+      <textarea class="form-control w-100" [(ngModel)]="description" 
+        [ngModelOptions]="{standalone: true}" placeholder="Enter connection description" rows="3"></textarea>
+    </div>
+
+    <!-- Footer Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5" (click)="onClose()">
+        Close
+      </button>
+      <button type="submit" class="btn btn-sm mode-btn rounded-5 me-3"
+        [disabled]="!displayName || !llmApiKey"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
+    </div>
+
+  </form>
+</ng-template>
+
+<ng-template #azureOpenaiForm>
+  <form class="form-height"
+    (ngSubmit)="isExistingConnectionsEdit || isEditPreview ? azureOpenaiPayload(!isEditPreview, editPreviewData.id) : azureOpenaiPayload(!isEditPreview)"
+    style="overflow-x: hidden;">
+
+    <!-- Connection Name -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
+        Connection Name <span class="text-danger">*</span>
+      </label>
+      <input type="text" class="form-control w-100" [ngClass]="{'error-input': displayNameError}"
+        [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" placeholder="My Azure OpenAI Connection"
+        [disabled]="isExistingConnectionsEdit || isEditPreview" (input)="displayNameChange()">
+    </div>
+
+    <!-- API Key -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': llmApiKeyError}" class="form-label d-inline-block me-1">
+        API Key <span class="text-danger">*</span>
+      </label>
+      <input type="password" class="form-control w-100" [ngClass]="{'error-input': llmApiKeyError}" 
+        [(ngModel)]="llmApiKey" [ngModelOptions]="{standalone: true}" placeholder="Azure API Key" 
+        (input)="llmApiKeyError = false" autocomplete="new-password">
+    </div>
+
+    <!-- Description -->
+    <div class="mb-3">
+      <label class="form-label d-inline-block me-1">
+        Description
+      </label>
+      <textarea class="form-control w-100" [(ngModel)]="description" 
+        [ngModelOptions]="{standalone: true}" placeholder="Enter connection description" rows="3"></textarea>
+    </div>
+
+    <!-- Footer Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5" (click)="onClose()">
+        Close
+      </button>
+      <button type="submit" class="btn btn-sm mode-btn rounded-5 me-3"
+        [disabled]="!displayName || !llmApiKey"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
+    </div>
+
+  </form>
+</ng-template>
+
+<ng-template #anthropicForm>
+  <form class="form-height"
+    (ngSubmit)="isExistingConnectionsEdit || isEditPreview ? anthropicPayload(!isEditPreview, editPreviewData.id) : anthropicPayload(!isEditPreview)"
+    style="overflow-x: hidden;">
+
+    <!-- Connection Name -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
+        Connection Name <span class="text-danger">*</span>
+      </label>
+      <input type="text" class="form-control w-100" [ngClass]="{'error-input': displayNameError}"
+        [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" placeholder="My Anthropic Connection"
+        [disabled]="isExistingConnectionsEdit || isEditPreview" (input)="displayNameChange()">
+    </div>
+
+    <!-- API Key -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': llmApiKeyError}" class="form-label d-inline-block me-1">
+        API Key <span class="text-danger">*</span>
+      </label>
+      <input type="password" class="form-control w-100" [ngClass]="{'error-input': llmApiKeyError}" 
+        [(ngModel)]="llmApiKey" [ngModelOptions]="{standalone: true}" placeholder="sk-ant-..." 
+        (input)="llmApiKeyError = false" autocomplete="new-password">
+    </div>
+
+    <!-- Description -->
+    <div class="mb-3">
+      <label class="form-label d-inline-block me-1">
+        Description
+      </label>
+      <textarea class="form-control w-100" [(ngModel)]="description" 
+        [ngModelOptions]="{standalone: true}" placeholder="Enter connection description" rows="3"></textarea>
+    </div>
+
+    <!-- Footer Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5" (click)="onClose()">
+        Close
+      </button>
+      <button type="submit" class="btn btn-sm mode-btn rounded-5 me-3"
+        [disabled]="!displayName || !llmApiKey"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
+    </div>
+
+  </form>
+</ng-template>
+
+<ng-template #geminiForm>
+  <form class="form-height"
+    (ngSubmit)="isExistingConnectionsEdit || isEditPreview ? geminiPayload(!isEditPreview, editPreviewData.id) : geminiPayload(!isEditPreview)"
+    style="overflow-x: hidden;">
+
+    <!-- Connection Name -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
+        Connection Name <span class="text-danger">*</span>
+      </label>
+      <input type="text" class="form-control w-100" [ngClass]="{'error-input': displayNameError}"
+        [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" placeholder="My Gemini Connection"
+        [disabled]="isExistingConnectionsEdit || isEditPreview" (input)="displayNameChange()">
+    </div>
+
+    <!-- API Key -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': llmApiKeyError}" class="form-label d-inline-block me-1">
+        API Key <span class="text-danger">*</span>
+      </label>
+      <input type="password" class="form-control w-100" [ngClass]="{'error-input': llmApiKeyError}" 
+        [(ngModel)]="llmApiKey" [ngModelOptions]="{standalone: true}" placeholder="AIza..." 
+        (input)="llmApiKeyError = false" autocomplete="new-password">
+    </div>
+
+    <!-- Description -->
+    <div class="mb-3">
+      <label class="form-label d-inline-block me-1">
+        Description
+      </label>
+      <textarea class="form-control w-100" [(ngModel)]="description" 
+        [ngModelOptions]="{standalone: true}" placeholder="Enter connection description" rows="3"></textarea>
+    </div>
+
+    <!-- Footer Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5" (click)="onClose()">
+        Close
+      </button>
+      <button type="submit" class="btn btn-sm mode-btn rounded-5 me-3"
+        [disabled]="!displayName || !llmApiKey"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
+    </div>
+
+  </form>
+</ng-template>
+
+<ng-template #deepseekForm>
+  <form class="form-height"
+    (ngSubmit)="isExistingConnectionsEdit || isEditPreview ? deepseekPayload(!isEditPreview, editPreviewData.id) : deepseekPayload(!isEditPreview)"
+    style="overflow-x: hidden;">
+
+    <!-- Connection Name -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
+        Connection Name <span class="text-danger">*</span>
+      </label>
+      <input type="text" class="form-control w-100" [ngClass]="{'error-input': displayNameError}"
+        [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" placeholder="My DeepSeek Connection"
+        [disabled]="isExistingConnectionsEdit || isEditPreview" (input)="displayNameChange()">
+    </div>
+
+    <!-- API Key -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': llmApiKeyError}" class="form-label d-inline-block me-1">
+        API Key <span class="text-danger">*</span>
+      </label>
+      <input type="password" class="form-control w-100" [ngClass]="{'error-input': llmApiKeyError}" 
+        [(ngModel)]="llmApiKey" [ngModelOptions]="{standalone: true}" placeholder="sk-..." 
+        (input)="llmApiKeyError = false" autocomplete="new-password">
+    </div>
+
+    <!-- Description -->
+    <div class="mb-3">
+      <label class="form-label d-inline-block me-1">
+        Description
+      </label>
+      <textarea class="form-control w-100" [(ngModel)]="description" 
+        [ngModelOptions]="{standalone: true}" placeholder="Enter connection description" rows="3"></textarea>
+    </div>
+
+    <!-- Footer Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5" (click)="onClose()">
+        Close
+      </button>
+      <button type="submit" class="btn btn-sm mode-btn rounded-5 me-3"
+        [disabled]="!displayName || !llmApiKey"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
+    </div>
+
+  </form>
+</ng-template>
+
+<ng-template #metaLlamaForm>
+  <form class="form-height"
+    (ngSubmit)="isExistingConnectionsEdit || isEditPreview ? metaLlamaPayload(!isEditPreview, editPreviewData.id) : metaLlamaPayload(!isEditPreview)"
+    style="overflow-x: hidden;">
+
+    <!-- Connection Name -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': displayNameError}" class="form-label d-inline-block me-1">
+        Connection Name <span class="text-danger">*</span>
+      </label>
+      <input type="text" class="form-control w-100" [ngClass]="{'error-input': displayNameError}"
+        [(ngModel)]="displayName" [ngModelOptions]="{standalone: true}" placeholder="My LLaMA Connection"
+        [disabled]="isExistingConnectionsEdit || isEditPreview" (input)="displayNameChange()">
+    </div>
+
+    <!-- API Key -->
+    <div class="mb-3">
+      <label [ngClass]="{'error-label': llmApiKeyError}" class="form-label d-inline-block me-1">
+        API Key <span class="text-danger">*</span>
+      </label>
+      <input type="password" class="form-control w-100" [ngClass]="{'error-input': llmApiKeyError}" 
+        [(ngModel)]="llmApiKey" [ngModelOptions]="{standalone: true}" placeholder="API Key" 
+        (input)="llmApiKeyError = false" autocomplete="new-password">
+    </div>
+
+    <!-- Description -->
+    <div class="mb-3">
+      <label class="form-label d-inline-block me-1">
+        Description
+      </label>
+      <textarea class="form-control w-100" [(ngModel)]="description" 
+        [ngModelOptions]="{standalone: true}" placeholder="Enter connection description" rows="3"></textarea>
+    </div>
+
+    <!-- Footer Buttons -->
+    <div class="d-flex justify-content-end gap-2 mt-3 footer-buttons">
+      <button type="button" class="btn btn-sm btn-danger rounded-5" (click)="onClose()">
+        Close
+      </button>
+      <button type="submit" class="btn btn-sm mode-btn rounded-5 me-3"
+        [disabled]="!displayName || !llmApiKey"
+        *appHasPermission="{ id: isExistingConnectionsEdit || isEditPreview ? 23 : 22, mode: 'disable' }">
+        {{ isExistingConnectionsEdit || isEditPreview ? 'Update' : 'Connect' }}
+      </button>
+    </div>
+
+  </form>
+</ng-template>
+
 <ng-template #connectionFormsTemplate>
   <ng-container [ngSwitch]="selectedConnection">
     <ng-container *ngSwitchCase="'POSTGRESQL'">
@@ -2383,6 +2669,30 @@
 
     <ng-container *ngSwitchCase="'DBT'">
       <ng-container *ngTemplateOutlet="dbtForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'OPENAI'">
+      <ng-container *ngTemplateOutlet="openaiForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'AZURE_OPENAI'">
+      <ng-container *ngTemplateOutlet="azureOpenaiForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'ANTHROPIC'">
+      <ng-container *ngTemplateOutlet="anthropicForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'GEMINI'">
+      <ng-container *ngTemplateOutlet="geminiForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'DEEPSEEK'">
+      <ng-container *ngTemplateOutlet="deepseekForm"></ng-container>
+    </ng-container>
+
+    <ng-container *ngSwitchCase="'META_LLAMA'">
+      <ng-container *ngTemplateOutlet="metaLlamaForm"></ng-container>
     </ng-container>
 
     <div *ngSwitchDefault>
