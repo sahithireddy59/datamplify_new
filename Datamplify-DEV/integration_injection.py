@@ -114,6 +114,7 @@ TALLY_CONGIG ={
     **{e:{
         "type": "page",
         "page_param": "page",
+        "cursor_field": "hasMore",
         'cursor_param':"hasMore",
         "page_size_param": "limit",
         "result_key": 'items',
@@ -529,37 +530,37 @@ SHOPIFY_CONFIG = {
 # LLM Integration Configurations
 OPENAI_CONFIG = {
     **{e: {
-        "type": "page"
+        "type": "None"
     } for e in ["models", "completions", "chat/completions", "embeddings", "fine-tunes", "files"]}
 }
 
 AZURE_OPENAI_CONFIG = {
     **{e: {
-        "type": "page"
+        "type": "None"
     } for e in ["deployments", "models", "completions", "chat/completions", "embeddings"]}
 }
 
 ANTHROPIC_CONFIG = {
     **{e: {
-        "type": "page"
+        "type": "None"
     } for e in ["messages", "models"]}
 }
 
 GEMINI_CONFIG = {
     **{e: {
-        "type": "page"
+        "type": "None"
     } for e in ["models", "generateContent", "embedContent", "countTokens"]}
 }
 
 DEEPSEEK_CONFIG = {
     **{e: {
-        "type": "page"
+        "type": "None"
     } for e in ["models", "chat/completions", "completions"]}
 }
 
 META_LLAMA_CONFIG = {
     **{e: {
-        "type": "page"
+        "type": "None"
     } for e in ["models", "completions", "chat/completions", "embeddings"]}
 }
 
