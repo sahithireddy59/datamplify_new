@@ -362,6 +362,16 @@ export class NavService implements OnDestroy {
       type: 'link',
       nochild: true,
     },
+    {
+      title: 'Sync',
+      icon: `<i class="fe fe-refresh-cw side-menu__icon"></i>`,
+      active: false,
+      badgeClass: 'badge badge-sm bg-secondary badge-hide',
+      badgeValue: 'new',
+      path: 'datamplify/sync',
+      type: 'link',
+      nochild: true,
+    },
   //   {
   //     title: 'ETL',
   //     icon: `<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000">

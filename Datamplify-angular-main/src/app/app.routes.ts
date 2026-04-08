@@ -8,6 +8,21 @@ export const App_Route: Route[] = [
         path: 'embed',
         loadChildren: () => import('../app/embed/embed.module').then(m => m.EmbedModule)
       },
+      {
+        path: 'workbench',
+        component: WorkbenchLayoutsComponent,
+        children: [
+          { path: '', redirectTo: 'sync', pathMatch: 'full' },
+          {
+            path: 'sync',
+            loadChildren: () => import('./components/workbench/datasync/datasync.routes').then((m) => m.datasyncRoutes)
+          },
+          {
+            path: 'datasync',
+            loadChildren: () => import('./components/workbench/datasync/datasync.routes').then((m) => m.datasyncRoutes)
+          }
+        ]
+      },
       { path: '', redirectTo: 'authentication/login', pathMatch: 'full' },
       // {
       //   path: '',

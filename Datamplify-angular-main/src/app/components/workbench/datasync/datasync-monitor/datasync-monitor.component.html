@@ -1,0 +1,136 @@
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <button class="btn btn-link px-0 mb-2" type="button" (click)="goBack()">
+        Back to Sync Jobs
+      </button>
+      <h4 class="mb-1">{{ job?.name || 'Sync Monitor' }}</h4>
+      <p class="text-muted mb-0">{{ job?.description || 'Run history, status, and logs for this sync job.' }}</p>
+    </div>
+    <div class="d-flex gap-2">
+      <span class="badge" [ngClass]="getStatusClass(job?.status)">{{ job?.status || 'unknown' }}</span>
+      <button class="btn btn-outline-secondary" type="button" (click)="editSchedule()">
+        Edit Schedule
+      </button>
+      <button class="btn btn-outline-primary" type="button" (click)="createNewJob()">
+        Add Sync Job
+      </button>
+      <button class="btn btn-primary" type="button" (click)="triggerSync()" [disabled]="loading">
+        Run Sync Now
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status"></div>
+  </div>
+
+  <ng-container *ngIf="!loading && job">
+    <div class="row g-3 mb-4">
+      <div class="col-md-3">
+        <div class="metric-card">
+          <span class="metric-label">Mode</span>
+          <strong>{{ job.sync_mode }}</strong>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="metric-card">
+          <span class="metric-label">Frequency</span>
+          <strong>{{ job.sync_frequency }}</strong>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="metric-card">
+          <span class="metric-label">Tables</span>
+          <strong>{{ job.table_count || job.tables?.length || 0 }}</strong>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="metric-card">
+          <span class="metric-label">Last Sync</span>
+          <strong>{{ formatDate(job.last_sync_at) }}</strong>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="metric-card">
+          <span class="metric-label">Next Sync</span>
+          <strong>{{ formatDate(job.next_sync_at) }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Recent Runs</h5>
+          </div>
+          <div class="card-body">
+            <div *ngIf="runs.length === 0" class="text-muted">No sync runs available yet.</div>
+            <div class="d-flex justify-content-end mb-3" *ngIf="selectedRun?.status === 'running' || selectedRun?.status === 'pending'">
+              <button class="btn btn-outline-danger btn-sm" type="button" (click)="cancelSelectedRun()">
+                Cancel Selected Run
+              </button>
+            </div>
+            <div class="run-list" *ngIf="runs.length > 0">
+              <button
+                type="button"
+                class="run-row"
+                *ngFor="let run of runs"
+                [class.active]="selectedRun?.id === run.id"
+                (click)="selectRun(run)">
+                <div>
+                  <div class="fw-semibold">{{ formatDate(run.created_at) }}</div>
+                  <small class="text-muted">{{ run.trigger_type }} run</small>
+                </div>
+                <div class="text-end">
+                  <span class="badge" [ngClass]="getStatusClass(run.status)">{{ run.status }}</span>
+                  <div class="run-metrics">
+                    {{ run.rows_inserted || 0 }} inserted / {{ run.rows_updated || 0 }} updated / {{ run.rows_deleted || 0 }} soft deleted / {{ run.rows_failed || 0 }} failed
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="card">
+          <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="card-title mb-0">Run Logs</h5>
+              <button class="btn btn-sm btn-outline-secondary" type="button" (click)="refreshSelectedRun()" [disabled]="!selectedRun">
+                Refresh Logs
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div *ngIf="!selectedRun" class="text-muted">Select a run to inspect its logs.</div>
+            <div *ngIf="loadingLogs" class="text-center py-4">
+              <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+            </div>
+            <div *ngIf="selectedRun && !loadingLogs && selectedRunLogs.length === 0" class="text-muted">
+              No logs recorded for the selected run.
+            </div>
+            <div *ngIf="selectedRun && !loadingLogs && selectedRunLogs.length > 0" class="log-list">
+              <div class="log-item" *ngFor="let log of selectedRunLogs">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span class="badge" [ngClass]="getStatusClass(log.level)">{{ log.level }}</span>
+                  <small class="text-muted">{{ formatDate(log.timestamp) }}</small>
+                </div>
+                <div>{{ log.message }}</div>
+                <small class="text-muted" *ngIf="log.table_name">Table: {{ log.table_name }}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+  <button class="sync-fab" type="button" (click)="createNewJob()" title="Add Sync Job">
+    +
+  </button>
+</div>

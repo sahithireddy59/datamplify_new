@@ -194,6 +194,17 @@ export const admin: Routes = [
         loadComponent: () =>
           import('../workbench/embed-application/embed-application.component').then((m) => m.EmbedApplicationComponent)
       },
+      {
+        path: 'sync',
+        canActivate: [authGuard],
+        loadChildren: () =>
+          import('./datasync/datasync.routes').then((m) => m.datasyncRoutes)
+      },
+      {
+        path: 'datasync',
+        pathMatch: 'prefix',
+        redirectTo: 'sync'
+      },
     ]
   }
  ];

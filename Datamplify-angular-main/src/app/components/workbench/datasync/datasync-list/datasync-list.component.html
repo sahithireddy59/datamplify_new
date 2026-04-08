@@ -1,0 +1,120 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h4 class="card-title mb-0">Sync Jobs</h4>
+          <button class="btn btn-primary" (click)="createNewJob()">
+            <i class="bi bi-plus-circle me-2"></i>Create Sync Job
+          </button>
+        </div>
+        <div class="card-body">
+          <div *ngIf="loading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+
+          <div *ngIf="error" class="alert alert-danger">
+            {{ error }}
+          </div>
+
+          <div *ngIf="!loading && !error && syncJobs.length === 0" class="text-center py-5">
+            <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+            <p class="mt-3 text-muted">No sync jobs found. Create your first sync job to get started.</p>
+            <button class="btn btn-primary mt-2" (click)="createNewJob()">
+              Create Sync Job
+            </button>
+          </div>
+
+          <div *ngIf="!loading && !error && syncJobs.length > 0" class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Source</th>
+                  <th>Destination</th>
+                  <th>Status</th>
+                  <th>Tables</th>
+                  <th>Sync Mode</th>
+                  <th>Frequency</th>
+                  <th>Last Sync</th>
+                  <th>Next Sync</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let job of syncJobs" (click)="viewJob(job)" style="cursor: pointer;">
+                  <td>
+                    <strong>{{ job.name }}</strong>
+                    <br>
+                    <small class="text-muted">{{ job.description }}</small>
+                  </td>
+                  <td>
+                    <i class="bi bi-database me-1"></i>
+                    {{ job.source_connector_name }}
+                  </td>
+                  <td>
+                    <i class="bi bi-database me-1"></i>
+                    {{ job.destination_connector_name }}
+                  </td>
+                  <td>
+                    <span class="badge" [ngClass]="getStatusClass(job.status)">
+                      {{ job.status }}
+                    </span>
+                  </td>
+                  <td>{{ job.table_count || 0 }}</td>
+                  <td>
+                    <span class="badge badge-info">{{ job.sync_mode }}</span>
+                  </td>
+                  <td>{{ job.sync_frequency }}</td>
+                  <td>{{ formatDate(job.last_sync_at) }}</td>
+                  <td>{{ getNextSyncText(job) }}</td>
+                  <td>
+                    <div class="btn-group" role="group">
+                      <button 
+                        class="btn btn-sm btn-outline-primary"
+                        (click)="editSchedule(job, $event)"
+                        title="Edit Schedule">
+                        <i class="bi bi-clock-history"></i>
+                      </button>
+                      <button 
+                        class="btn btn-sm btn-success" 
+                        (click)="triggerSync(job, $event)"
+                        title="Trigger Sync Now">
+                        <i class="bi bi-play-fill"></i>
+                      </button>
+                      <button 
+                        *ngIf="job.status === 'active'"
+                        class="btn btn-sm btn-warning" 
+                        (click)="pauseJob(job, $event)"
+                        title="Pause Job">
+                        <i class="bi bi-pause-fill"></i>
+                      </button>
+                      <button 
+                        *ngIf="job.status === 'paused'"
+                        class="btn btn-sm btn-info" 
+                        (click)="activateJob(job, $event)"
+                        title="Activate Job">
+                        <i class="bi bi-play-circle"></i>
+                      </button>
+                      <button 
+                        class="btn btn-sm btn-danger" 
+                        (click)="deleteJob(job, $event)"
+                        title="Delete Job">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button class="sync-fab" type="button" (click)="createNewJob()" title="Create Sync Job">
+    +
+  </button>
+</div>

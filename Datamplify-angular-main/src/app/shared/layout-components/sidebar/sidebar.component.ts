@@ -144,6 +144,9 @@ export class SidebarComponent{
         if (item.title === 'Monitoring') { 
           return true;
         }
+        if (item.title === 'Data Sync' || item.title === 'Sync') { 
+          return true;
+        }
       })
 
     })

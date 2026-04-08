@@ -1,0 +1,198 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title mb-0">Create Data Sync Job</h4>
+        </div>
+        <div class="card-body">
+          <!-- Progress Steps -->
+          <div class="steps-progress mb-4">
+            <div class="step" [class.active]="currentStep >= 1" [class.completed]="currentStep > 1">
+              <div class="step-number">1</div>
+              <div class="step-label">Source</div>
+            </div>
+            <div class="step" [class.active]="currentStep >= 2" [class.completed]="currentStep > 2">
+              <div class="step-number">2</div>
+              <div class="step-label">Destination</div>
+            </div>
+            <div class="step" [class.active]="currentStep >= 3" [class.completed]="currentStep > 3">
+              <div class="step-number">3</div>
+              <div class="step-label">Tables</div>
+            </div>
+            <div class="step" [class.active]="currentStep >= 4" [class.completed]="currentStep > 4">
+              <div class="step-number">4</div>
+              <div class="step-label">Sync Config</div>
+            </div>
+            <div class="step" [class.active]="currentStep >= 5">
+              <div class="step-number">5</div>
+              <div class="step-label">Review</div>
+            </div>
+          </div>
+
+          <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+          <!-- Step 1: Select Source -->
+          <div *ngIf="currentStep === 1" class="step-content">
+            <h5>Select Source Connector</h5>
+            <div class="row">
+              <div class="col-md-6" *ngFor="let connector of sourceConnectors">
+                <div class="connector-card" 
+                     [class.selected]="selectedSourceConnector === connector.hierarchy_id"
+                     (click)="selectedSourceConnector = connector.hierarchy_id">
+                  <i class="bi bi-database"></i>
+                  <h6>{{ connector.name }}</h6>
+                  <p class="text-muted">{{ connector.source_type }}</p>
+                  <small class="text-muted" *ngIf="connector.schema">Schema: {{ connector.schema }}</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: Select Destination -->
+          <div *ngIf="currentStep === 2" class="step-content">
+            <h5>Select Destination Connector</h5>
+            <div class="row">
+              <div class="col-md-6" *ngFor="let connector of destinationConnectors">
+                <div class="connector-card" 
+                     [class.selected]="selectedDestinationConnector === connector.hierarchy_id"
+                     (click)="selectedDestinationConnector = connector.hierarchy_id">
+                  <i class="bi bi-database"></i>
+                  <h6>{{ connector.name }}</h6>
+                  <p class="text-muted">{{ connector.source_type }}</p>
+                  <small class="text-muted" *ngIf="connector.schema">Schema: {{ connector.schema }}</small>
+                </div>
+              </div>
+            </div>
+            <div class="mt-3">
+              <div class="mb-3">
+                <label class="form-label">Destination Schema</label>
+                <input type="text" class="form-control" [(ngModel)]="destinationSchema" placeholder="public">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Table Prefix (optional)</label>
+                <input type="text" class="form-control" [(ngModel)]="tablePrefix" placeholder="hubspot_">
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3: Select Tables -->
+          <div *ngIf="currentStep === 3" class="step-content">
+            <h5>Select Tables to Sync</h5>
+            <div *ngIf="loadingTables" class="text-center py-5">
+              <div class="spinner-border text-primary"></div>
+            </div>
+            <div *ngIf="!loadingTables" class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th><input type="checkbox" [checked]="areAllTablesSelected()" (change)="toggleAllTables()"></th>
+                    <th>Table Name</th>
+                    <th>Primary Key</th>
+                    <th>Cursor Field</th>
+                    <th>Row Count</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let table of availableTables">
+                    <td>
+                      <input type="checkbox" 
+                             [checked]="isTableSelected(table)"
+                             (change)="toggleTableSelection(table)">
+                    </td>
+                    <td>{{ table.name }}</td>
+                    <td>{{ table.primary_key || 'id' }}</td>
+                    <td>{{ table.cursor_field || 'Not detected' }}</td>
+                    <td>{{ table.row_count || 'N/A' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Step 4: Sync Configuration -->
+          <div *ngIf="currentStep === 4" class="step-content">
+            <h5>Sync Configuration</h5>
+            <div class="row g-3 mb-4">
+              <div class="col-md-6 col-xl-3" *ngFor="let mode of syncModes">
+                <button
+                  type="button"
+                  class="sync-mode-card w-100"
+                  [class.active]="syncMode === mode.value"
+                  (click)="syncMode = mode.value">
+                  <span class="sync-mode-title">{{ mode.label }}</span>
+                  <span class="sync-mode-copy">{{ mode.description }}</span>
+                </button>
+              </div>
+            </div>
+            <div class="alert alert-secondary mb-3" *ngIf="getSelectedMode() as selectedMode">
+              <strong>{{ selectedMode.label }}:</strong> {{ selectedMode.description }}
+            </div>
+            <div class="alert alert-info mb-3" *ngIf="syncMode === 'incremental'">
+              The backend will auto-detect the best incremental field for each table. It prefers update timestamp columns first, then falls back to the detected business key only when needed.
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Sync Frequency</label>
+              <select class="form-select" [(ngModel)]="syncFrequency">
+                <option value="manual">Manual</option>
+                <option value="15min">Every 15 minutes</option>
+                <option value="hourly">Hourly</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="custom">Custom Cron</option>
+              </select>
+            </div>
+            <div class="mb-3" *ngIf="syncFrequency === 'custom'">
+              <label class="form-label">Cron Expression</label>
+              <input type="text" class="form-control" [(ngModel)]="cronExpression" placeholder="0 0 * * *">
+            </div>
+          </div>
+
+          <!-- Step 5: Review & Create -->
+          <div *ngIf="currentStep === 5" class="step-content">
+            <h5>Review & Create</h5>
+            <div class="mb-3">
+              <label class="form-label">Job Name *</label>
+              <input type="text" class="form-control" [(ngModel)]="jobName" placeholder="HubSpot to PostgreSQL Sync">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Description</label>
+              <textarea class="form-control" [(ngModel)]="jobDescription" rows="3"></textarea>
+            </div>
+            <div class="alert alert-info">
+              <strong>Summary:</strong>
+              <ul>
+                <li>Tables: {{ selectedTables.length }}</li>
+                <li>Sync Mode: {{ getSelectedMode()?.label || syncMode }}</li>
+                <li>Frequency: {{ syncFrequency }}</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Navigation Buttons -->
+          <div class="d-flex justify-content-between mt-4">
+            <button class="btn btn-secondary" (click)="cancel()">Cancel</button>
+            <div>
+              <button class="btn btn-outline-primary me-2" 
+                      *ngIf="currentStep > 1" 
+                      (click)="previousStep()">
+                Previous
+              </button>
+              <button class="btn btn-primary" 
+                      *ngIf="currentStep < totalSteps" 
+                      (click)="nextStep()">
+                Next
+              </button>
+              <button class="btn btn-success" 
+                      *ngIf="currentStep === totalSteps" 
+                      (click)="createJob()"
+                      [disabled]="loading">
+                {{ loading ? 'Creating...' : 'Create Job' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

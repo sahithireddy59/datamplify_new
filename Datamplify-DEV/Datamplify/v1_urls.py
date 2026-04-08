@@ -8,4 +8,5 @@ urlpatterns = [
     path('taskplan/',include('TaskPlan.urls')),
     path('monitor/',include('Monitor.urls')),
     path('schedule/',include('Tasks_Scheduler.urls')),
+    path('datasync/',include('DataSync.urls')),
 ]

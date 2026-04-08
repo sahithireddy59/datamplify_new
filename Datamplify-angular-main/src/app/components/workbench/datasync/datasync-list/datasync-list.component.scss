@@ -1,0 +1,53 @@
+.badge {
+  padding: 0.35em 0.65em;
+  font-size: 0.85em;
+}
+
+.badge-success {
+  background-color: #28a745;
+  color: white;
+}
+
+.badge-warning {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.badge-danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+.badge-info {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.badge-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.btn-group .btn {
+  margin: 0 2px;
+}
+
+.sync-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 999px;
+  background: #0d6efd;
+  color: #fff;
+  font-size: 2rem;
+  line-height: 1;
+  box-shadow: 0 12px 28px rgba(13, 110, 253, 0.3);
+  z-index: 1100;
+}
