@@ -8,6 +8,19 @@ class SyncConnector(models.Model):
     CONNECTOR_TYPES = [
         ('hubspot', 'HubSpot'),
         ('salesforce', 'Salesforce'),
+        ('shopify', 'Shopify'),
+        ('quickbooks', 'QuickBooks'),
+        ('jira', 'Jira'),
+        ('pax8', 'Pax8'),
+        ('bamboohr', 'BambooHR'),
+        ('zoho_crm', 'Zoho CRM'),
+        ('zoho_books', 'Zoho Books'),
+        ('zoho_inventory', 'Zoho Inventory'),
+        ('tally', 'Tally'),
+        ('dbt', 'dbt'),
+        ('oracle', 'Oracle'),
+        ('snowflake', 'Snowflake'),
+        ('mssql', 'Microsoft SQL Server'),
         ('postgresql', 'PostgreSQL'),
         ('mysql', 'MySQL'),
         ('api', 'REST API'),
@@ -75,6 +88,7 @@ class SyncJob(models.Model):
     
     STATUS_CHOICES = [
         ('active', 'Active'),
+        ('running', 'Running'),
         ('paused', 'Paused'),
         ('error', 'Error'),
         ('configuring', 'Configuring'),

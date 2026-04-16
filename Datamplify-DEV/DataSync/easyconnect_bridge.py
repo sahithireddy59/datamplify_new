@@ -6,7 +6,21 @@ from .models import SyncConnector
 SUPPORTED_SOURCES = {
     'POSTGRESQL': 'postgresql',
     'MYSQL': 'mysql',
+    'ORACLE': 'oracle',
+    'SNOWFLAKE': 'snowflake',
+    'MICROSOFTSQLSERVER': 'mssql',
     'HUBSPOT': 'hubspot',
+    'SALESFORCE': 'salesforce',
+    'SHOPIFY': 'shopify',
+    'QUICKBOOKS': 'quickbooks',
+    'JIRA': 'jira',
+    'PAX8': 'pax8',
+    'BAMBOOHR': 'bamboohr',
+    'ZOHO_CRM': 'zoho_crm',
+    'ZOHO_BOOKS': 'zoho_books',
+    'ZOHO_INVENTORY': 'zoho_inventory',
+    'TALLY': 'tally',
+    'DBT': 'dbt',
 }
 
 SUPPORTED_DESTINATIONS = {
@@ -124,7 +138,15 @@ def import_connection_as_sync_connector(user, hierarchy_id, connector_role):
             'username': details.username,
             'password': decode_value(details.password) if details.password else '',
             'schema': details.schema or 'public',
+            'service_name': details.service_name,
+            'database_path': details.database_path,
         }
+        if connector_type == 'oracle':
+            payload['schema'] = details.schema or (details.username.upper() if details.username else None)
+        elif connector_type == 'snowflake':
+            payload['schema'] = details.schema
+        elif connector_type == 'mssql':
+            payload['driver'] = 'ODBC Driver 18 for SQL Server'
         connector_name = details.connection_name
 
     elif connection.type.type == 'INTEGRATIONS':
@@ -135,17 +157,14 @@ def import_connection_as_sync_connector(user, hierarchy_id, connector_role):
         credentials = decrypt_json(details.credentials or {})
         token_metadata = decrypt_json(details.token_metadata or {})
         connector_name = details.connection_name
-
-        if connector_type == 'hubspot':
-            access_token = credentials.get('api_token') or token_metadata.get('access_token')
-            refresh_token = token_metadata.get('refresh_token')
-            payload = {
-                'site_url': details.site_url,
-                'client_id': credentials.get('client_id'),
-                'client_secret': credentials.get('client_secret'),
-            }
-        else:
-            raise ValueError(f'{source_type} bridge is not implemented yet.')
+        access_token = credentials.get('api_token') or token_metadata.get('access_token')
+        refresh_token = token_metadata.get('refresh_token')
+        payload = {
+            'site_url': details.site_url,
+            'credentials': credentials,
+            'token_metadata': token_metadata,
+            'integration_id': str(details.id),
+        }
     else:
         raise ValueError('Unsupported EasyConnect connection category.')
 

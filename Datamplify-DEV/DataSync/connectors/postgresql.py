@@ -1,14 +1,18 @@
+import csv
+import io
+import json
+from collections import defaultdict
 import psycopg2
 from psycopg2.extras import execute_values, RealDictCursor
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone
 import hashlib
-import json
 from .base import BaseConnector
 
 
 class PostgreSQLConnector(BaseConnector):
     """PostgreSQL database connector"""
+    DEFAULT_WRITE_BATCH_SIZE = 20000
     RESERVED_METADATA_COLUMNS = {
         '_datamplify_id',
         '_datamplify_synced',
@@ -33,6 +37,32 @@ class PostgreSQLConnector(BaseConnector):
                 password=self.config.get('password')
             )
         return self.connection
+
+    def _get_active_schema(self) -> str:
+        if self.connector_role == 'source':
+            return (
+                self.runtime_context.get('source_schema')
+                or self.config.get('schema')
+                or 'public'
+            )
+
+        return (
+            self.runtime_context.get('destination_schema')
+            or self.config.get('schema')
+            or 'public'
+        )
+
+    def _ensure_schema_exists(self, schema: str) -> None:
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(f'CREATE SCHEMA IF NOT EXISTS "{schema}"')
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            cursor.close()
     
     def test_connection(self) -> Dict[str, Any]:
         """Test PostgreSQL connection"""
@@ -57,34 +87,35 @@ class PostgreSQLConnector(BaseConnector):
         conn = self._get_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
-        schema = self.config.get('schema', 'public')
+        schema = self._get_active_schema()
         
         # Get all tables
         cursor.execute("""
-            SELECT 
-                table_name,
-                (SELECT COUNT(*) FROM information_schema.columns 
-                 WHERE table_schema = t.table_schema AND table_name = t.table_name) as column_count
+            SELECT
+                table_name
             FROM information_schema.tables t
             WHERE table_schema = %s AND table_type = 'BASE TABLE'
             ORDER BY table_name
         """, (schema,))
-        
+
+        table_names = [row['table_name'] for row in cursor.fetchall()]
+        if not table_names:
+            cursor.close()
+            return []
+
+        table_columns = self._get_schema_columns(cursor, schema, table_names)
+        table_primary_keys = self._get_schema_primary_keys(cursor, schema, table_names)
+
         tables = []
-        for row in cursor.fetchall():
-            table_name = row['table_name']
-            
-            columns, primary_key = self._get_table_metadata(cursor, schema, table_name)
+        for table_name in table_names:
+            columns = table_columns.get(table_name, [])
+            primary_key = table_primary_keys.get(table_name) or self._infer_identifier_column(columns)
             cursor_field = self._resolve_cursor_field(columns, primary_key)
-            
-            # Get row count
-            cursor.execute(f'SELECT COUNT(*) as count FROM "{schema}"."{table_name}"')
-            row_count = cursor.fetchone()['count']
-            
+
             tables.append({
                 'name': table_name,
                 'schema': schema,
-                'row_count': row_count,
+                'row_count': None,
                 'columns': columns,
                 'supports_incremental': True,
                 'primary_key': primary_key,
@@ -94,11 +125,58 @@ class PostgreSQLConnector(BaseConnector):
         cursor.close()
         return tables
 
+    def _get_schema_columns(self, cursor, schema: str, table_names: List[str]) -> Dict[str, List[Dict[str, Any]]]:
+        cursor.execute("""
+            SELECT
+                table_name,
+                column_name,
+                data_type,
+                is_nullable,
+                column_default
+            FROM information_schema.columns
+            WHERE table_schema = %s
+              AND table_name = ANY(%s)
+            ORDER BY table_name, ordinal_position
+        """, (schema, table_names))
+
+        table_columns = defaultdict(list)
+        for row in cursor.fetchall():
+            table_columns[row['table_name']].append({
+                'name': row['column_name'],
+                'type': row['data_type'],
+                'nullable': row['is_nullable'] == 'YES',
+                'default': row['column_default']
+            })
+        return dict(table_columns)
+
+    def _get_schema_primary_keys(self, cursor, schema: str, table_names: List[str]) -> Dict[str, str]:
+        cursor.execute("""
+            SELECT
+                c.relname AS table_name,
+                a.attname AS column_name
+            FROM pg_index i
+            JOIN pg_class c
+              ON c.oid = i.indrelid
+            JOIN pg_namespace n
+              ON n.oid = c.relnamespace
+            JOIN pg_attribute a
+              ON a.attrelid = i.indrelid
+             AND a.attnum = ANY(i.indkey)
+            WHERE n.nspname = %s
+              AND c.relname = ANY(%s)
+              AND i.indisprimary
+        """, (schema, table_names))
+
+        primary_keys = {}
+        for row in cursor.fetchall():
+            primary_keys.setdefault(row['table_name'], row['column_name'])
+        return primary_keys
+
     def get_table_schema(self, table_name: str) -> List[Dict[str, Any]]:
         """Get schema for a PostgreSQL table."""
         conn = self._get_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
-        schema = self.config.get('schema', 'public')
+        schema = self._get_active_schema()
 
         try:
             columns, primary_key = self._get_table_metadata(cursor, schema, table_name)
@@ -127,7 +205,7 @@ class PostgreSQLConnector(BaseConnector):
         conn = self._get_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
-        schema = self.config.get('schema', 'public')
+        schema = self._get_active_schema()
         columns, primary_key = self._get_table_metadata(cursor, schema, table_name)
         resolved_cursor_field = self._resolve_requested_field(columns, cursor_field, primary_key)
         
@@ -258,7 +336,7 @@ class PostgreSQLConnector(BaseConnector):
         conn = self._get_connection()
         cursor = conn.cursor()
         
-        schema = self.config.get('schema', 'public')
+        schema = self._get_active_schema()
         full_table_name = f'"{schema}"."{table_name}"'
         
         sync_timestamp = datetime.now(timezone.utc)
@@ -273,6 +351,7 @@ class PostgreSQLConnector(BaseConnector):
         updated = 0
         deleted = 0
         failed = 0
+        write_batch_size = self._get_write_batch_size()
         
         try:
             if mode == 'upsert':
@@ -286,14 +365,11 @@ class PostgreSQLConnector(BaseConnector):
                     DO UPDATE SET {update_str}
                 """
 
-                execute_values(cursor, query, values_list, page_size=1000)
+                execute_values(cursor, query, values_list, page_size=write_batch_size)
                 inserted = len(data)
             
             elif mode == 'insert':
-                columns_str = ', '.join([f'"{col}"' for col in columns])
-                values_list = [[record.get(col) for col in columns] for record in prepared_data]
-                query = f"INSERT INTO {full_table_name} ({columns_str}) VALUES %s"
-                execute_values(cursor, query, values_list, page_size=1000)
+                self._copy_insert_data(cursor, full_table_name, columns, prepared_data)
                 inserted = len(prepared_data)
             
             elif mode == 'replace':
@@ -309,7 +385,7 @@ class PostgreSQLConnector(BaseConnector):
                     cursor,
                     upsert_query,
                     values_list,
-                    page_size=1000
+                    page_size=write_batch_size
                 )
                 inserted = len(prepared_data)
 
@@ -357,7 +433,7 @@ class PostgreSQLConnector(BaseConnector):
 
         conn = self._get_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
-        schema = self.config.get('schema', 'public')
+        schema = self._get_active_schema()
         try:
             table_schema = self.get_table_schema(table_name)
             column_names = {column['name'] for column in table_schema}
@@ -392,6 +468,20 @@ class PostgreSQLConnector(BaseConnector):
         finally:
             cursor.close()
 
+    def prepare_full_reload(self, table_name: str) -> None:
+        """Clear an existing destination table before a full refresh."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        schema = self._get_active_schema()
+        try:
+            cursor.execute(f'TRUNCATE TABLE "{schema}"."{table_name}"')
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            cursor.close()
+
     def _with_datamplify_metadata(self, record: Dict[str, Any], sync_timestamp: datetime, primary_key: Optional[str] = None) -> Dict[str, Any]:
         prepared = dict(record)
         prepared['_datamplify_id'] = self._build_datamplify_id(record, primary_key)
@@ -418,6 +508,38 @@ class PostgreSQLConnector(BaseConnector):
 
         encoded = json.dumps(identity_payload, sort_keys=True, default=str, separators=(',', ':'))
         return hashlib.md5(encoded.encode('utf-8')).hexdigest()
+
+    def _get_write_batch_size(self) -> int:
+        configured_value = self.config.get('batch_size') or self.DEFAULT_WRITE_BATCH_SIZE
+        try:
+            return max(1000, int(configured_value))
+        except (TypeError, ValueError):
+            return self.DEFAULT_WRITE_BATCH_SIZE
+
+    def _copy_insert_data(self, cursor, full_table_name: str, columns: List[str], records: List[Dict[str, Any]]) -> None:
+        buffer = io.StringIO()
+        writer = csv.writer(buffer, lineterminator='\n')
+
+        for record in records:
+            writer.writerow([self._serialize_copy_value(record.get(column)) for column in columns])
+
+        buffer.seek(0)
+        columns_str = ', '.join([f'"{col}"' for col in columns])
+        cursor.copy_expert(
+            f"COPY {full_table_name} ({columns_str}) FROM STDIN WITH (FORMAT CSV, NULL '')",
+            buffer
+        )
+
+    def _serialize_copy_value(self, value: Any) -> str:
+        if value is None:
+            return ''
+        if isinstance(value, datetime):
+            return value.isoformat(sep=' ')
+        if isinstance(value, (dict, list)):
+            return json.dumps(value, default=str, separators=(',', ':'))
+        if isinstance(value, bool):
+            return 'true' if value else 'false'
+        return str(value)
 
     def _prepare_record(self, record: Dict[str, Any], sync_timestamp: datetime, primary_key: Optional[str], mode: str, row_index: int = 0) -> Dict[str, Any]:
         prepared = dict(record)
@@ -620,7 +742,8 @@ class PostgreSQLConnector(BaseConnector):
         conn = self._get_connection()
         cursor = conn.cursor()
         
-        db_schema = self.config.get('schema', 'public')
+        db_schema = self._get_active_schema()
+        self._ensure_schema_exists(db_schema)
         
         # Build CREATE TABLE statement
         columns_def = []

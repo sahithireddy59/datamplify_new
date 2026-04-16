@@ -6,8 +6,15 @@ import traceback
 from datetime import datetime
 
 
+class SyncInterrupted(Exception):
+    def __init__(self, reason: str):
+        super().__init__(reason)
+        self.reason = reason
+
+
 class SyncEngine:
     """Core sync engine that orchestrates data synchronization"""
+    DEFAULT_BATCH_SIZE = 1000000
     
     def __init__(self, sync_job: SyncJob, sync_run: SyncRun):
         self.sync_job = sync_job
@@ -53,6 +60,8 @@ class SyncEngine:
                     total_updated += result['updated']
                     total_deleted += result.get('deleted', 0)
                     total_failed += result['failed']
+                except SyncInterrupted:
+                    raise
                 except Exception as e:
                     self._log('error', f'Failed to sync table {sync_table.source_table}: {str(e)}', sync_table)
                     total_failed += 1
@@ -73,7 +82,10 @@ class SyncEngine:
                 self.sync_run.status = 'failed'
             
             self._log('info', f'Sync completed: {total_inserted} inserted, {total_updated} updated, {total_deleted} deleted, {total_failed} failed')
-            
+        except SyncInterrupted as e:
+            self.sync_run.status = 'cancelled'
+            self.sync_run.error_message = str(e)
+            self._log('warning', f'Sync stopped: {str(e)}')
         except Exception as e:
             self.sync_run.status = 'failed'
             self.sync_run.error_message = str(e)
@@ -89,10 +101,13 @@ class SyncEngine:
             self.sync_run.save()
             
             # Update job last sync time
+            previous_job_status = (self.sync_run.error_details or {}).get('previous_job_status', 'active')
             self.sync_job.last_sync_at = timezone.now()
             if self.sync_run.status == 'failed':
                 self.sync_job.status = 'error'
-            elif self.sync_job.status == 'error':
+            elif previous_job_status == 'paused':
+                self.sync_job.status = 'paused'
+            elif self.sync_job.status in ['error', 'running']:
                 self.sync_job.status = 'active'
             self.sync_job.next_sync_at = calculate_next_sync_at(
                 self.sync_job.sync_frequency,
@@ -115,6 +130,7 @@ class SyncEngine:
     
     def _sync_table(self, sync_table: SyncTable) -> dict:
         """Sync a single table"""
+        self._check_control_state()
         self._log('info', f'Syncing table: {sync_table.source_table}', sync_table)
         
         # Determine sync mode
@@ -139,12 +155,21 @@ class SyncEngine:
         
         # Fetch data from source
         self._log('info', f'Fetching data from source', sync_table)
-        
+
+        batch_size = self._get_batch_size()
         all_data = []
         has_more = True
         page = 0
+        total_fetched = 0
+        total_inserted = 0
+        total_updated = 0
+        total_deleted = 0
+        total_failed = 0
+        destination_initialized = False
+        effective_write_mode = self._get_write_mode(execution_mode)
         
         while has_more:
+            self._check_control_state()
             page += 1
             self._log('info', f'Fetching page {page}', sync_table)
             
@@ -152,38 +177,72 @@ class SyncEngine:
                 table_name=sync_table.source_table,
                 cursor_value=cursor_value,
                 cursor_field=cursor_field,
-                limit=1000
+                limit=batch_size
             )
             
             data = result['data']
-            all_data.extend(data)
-            
             has_more = result.get('has_more', False)
             cursor_value = result.get('next_cursor')
-            
-            self._log('info', f'Fetched {len(data)} records (total: {len(all_data)})', sync_table)
-            
-            # Limit pages to prevent infinite loops
-            if page >= 100:
-                self._log('warning', f'Reached page limit (100), stopping fetch', sync_table)
+
+            if not data:
                 break
-        
-        if not all_data:
+
+            total_fetched += len(data)
+            self._log('info', f'Fetched {len(data)} records (total: {total_fetched})', sync_table)
+
+            if not destination_initialized:
+                self._check_control_state()
+                destination_created, effective_write_mode = self._ensure_destination_table(
+                    sync_table,
+                    data[0],
+                    primary_key,
+                    execution_mode
+                )
+                destination_initialized = True
+                if destination_created and effective_write_mode == 'replace':
+                    effective_write_mode = 'insert'
+                    self._log('info', 'Using bulk insert for initial full load into a newly created destination table', sync_table)
+                elif effective_write_mode == 'insert':
+                    self._log('info', 'Using truncate-and-reload path for full refresh into an existing destination table', sync_table)
+
+            if self._can_stream_write(effective_write_mode):
+                self._check_control_state()
+                write_result = self.dest_connector.write_data(
+                    table_name=sync_table.destination_table,
+                    data=data,
+                    primary_key=primary_key,
+                    mode=effective_write_mode
+                )
+                total_inserted += write_result.get('inserted', 0)
+                total_updated += write_result.get('updated', 0)
+                total_deleted += write_result.get('deleted', 0)
+                total_failed += write_result.get('failed', 0)
+                self._log('info', f'Wrote batch of {len(data)} records to destination', sync_table)
+            else:
+                all_data.extend(data)
+
+        if total_fetched == 0 and not all_data:
             self._log('info', f'No data to sync', sync_table)
             return {'inserted': 0, 'updated': 0, 'deleted': 0, 'failed': 0}
-        
-        # Ensure destination table exists
-        self._ensure_destination_table(sync_table, all_data[0], primary_key, execution_mode)
-        
-        # Write data to destination
-        self._log('info', f'Writing {len(all_data)} records to destination', sync_table)
-        
-        write_result = self.dest_connector.write_data(
-            table_name=sync_table.destination_table,
-            data=all_data,
-            primary_key=primary_key,
-            mode=self._get_write_mode(execution_mode)
-        )
+
+        if all_data:
+            if not destination_initialized:
+                self._check_control_state()
+                _, effective_write_mode = self._ensure_destination_table(sync_table, all_data[0], primary_key, execution_mode)
+
+            self._check_control_state()
+            self._log('info', f'Writing {len(all_data)} records to destination', sync_table)
+
+            write_result = self.dest_connector.write_data(
+                table_name=sync_table.destination_table,
+                data=all_data,
+                primary_key=primary_key,
+                mode=effective_write_mode
+            )
+            total_inserted += write_result.get('inserted', 0)
+            total_updated += write_result.get('updated', 0)
+            total_deleted += write_result.get('deleted', 0)
+            total_failed += write_result.get('failed', 0)
         
         # Update cursor
         if resolved_mode.startswith('incremental') and cursor_field and cursor_value:
@@ -193,13 +252,19 @@ class SyncEngine:
             cursor.save()
         
         # Update table statistics
-        sync_table.row_count = len(all_data)
+        sync_table.row_count = total_fetched
         sync_table.last_synced_value = cursor_value
         sync_table.save()
         
-        self._log('info', f'Table sync completed: {write_result}', sync_table)
+        final_result = {
+            'inserted': total_inserted,
+            'updated': total_updated,
+            'deleted': total_deleted,
+            'failed': total_failed
+        }
+        self._log('info', f'Table sync completed: {final_result}', sync_table)
         
-        return write_result
+        return final_result
 
     def _get_effective_cursor_field(self, sync_table: SyncTable, sync_mode: str, primary_key: str = None):
         """Resolve the cursor field for the selected sync mode."""
@@ -242,6 +307,11 @@ class SyncEngine:
         except Exception:
             source_schema = []
 
+        if isinstance(source_schema, dict):
+            source_schema = source_schema.get('tables', [])
+        elif not isinstance(source_schema, list):
+            source_schema = []
+
         table_metadata = next(
             (table for table in source_schema if table.get('name') == sync_table.source_table),
             None
@@ -269,6 +339,9 @@ class SyncEngine:
         try:
             # Try to get existing schema
             self.dest_connector.get_table_schema(sync_table.destination_table)
+            if write_mode == 'replace' and hasattr(self.dest_connector, 'prepare_full_reload'):
+                self.dest_connector.prepare_full_reload(sync_table.destination_table)
+                return False, 'insert'
             if hasattr(self.dest_connector, 'ensure_conflict_target'):
                 self.dest_connector.ensure_conflict_target(
                     table_name=sync_table.destination_table,
@@ -276,6 +349,7 @@ class SyncEngine:
                     sample_record=sample_record,
                     mode=write_mode
                 )
+            return False, write_mode
         except Exception:
             if hasattr(self.dest_connector, 'reset_transaction'):
                 self.dest_connector.reset_transaction()
@@ -305,6 +379,7 @@ class SyncEngine:
                     sample_record=sample_record,
                     mode=write_mode
                 )
+            return True, write_mode
     
     def _infer_column_type(self, value) -> str:
         """Infer SQL column type from Python value"""
@@ -332,6 +407,30 @@ class SyncEngine:
             message=message
         )
 
+    def _check_control_state(self):
+        self.sync_job.refresh_from_db(fields=['status'])
+        self.sync_run.refresh_from_db(fields=['status'])
+
+        if self.sync_run.status == 'cancelled':
+            raise SyncInterrupted('Sync run was cancelled.')
+
+        if self.sync_job.status == 'paused' and self.sync_run.trigger_type != 'manual':
+            raise SyncInterrupted('Sync job was paused.')
+
+    def _get_batch_size(self) -> int:
+        configured_value = (
+            self.sync_job.source_connector.config.get('batch_size')
+            or self.sync_job.destination_connector.config.get('batch_size')
+            or self.DEFAULT_BATCH_SIZE
+        )
+        try:
+            return max(1000, int(configured_value))
+        except (TypeError, ValueError):
+            return self.DEFAULT_BATCH_SIZE
+
+    def _can_stream_write(self, write_mode: str) -> bool:
+        return write_mode in ['insert', 'upsert']
+
     def _set_connector_context(self, sync_table: SyncTable, sync_mode: str):
         context = {
             'sync_job_id': str(self.sync_job.id),
@@ -339,7 +438,9 @@ class SyncEngine:
             'sync_run_id': str(self.sync_run.id),
             'sync_table_id': str(sync_table.id),
             'source_table': sync_table.source_table,
+            'source_schema': sync_table.source_schema or self.sync_job.source_connector.config.get('schema'),
             'destination_table': sync_table.destination_table,
+            'destination_schema': self.sync_job.destination_schema,
             'sync_mode': sync_mode,
         }
         if hasattr(self.source_connector, 'set_runtime_context'):

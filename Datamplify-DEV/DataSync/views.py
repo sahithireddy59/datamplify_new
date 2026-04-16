@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db import transaction
+from django.db.models import OuterRef, Subquery
 from django.utils import timezone
 from oauth2_provider.contrib.rest_framework import OAuth2Authentication
 from authentication.permissions import CustomIsAuthenticated
@@ -58,6 +59,11 @@ class SyncConnectorViewSet(viewsets.ModelViewSet):
             connector = import_connection_as_sync_connector(request.user, hierarchy_id, connector_role)
         except ValueError as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as exc:
+            return Response({
+                'error': str(exc),
+                'traceback': traceback.format_exc(),
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         serializer = self.get_serializer(connector)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -105,12 +111,19 @@ class SyncConnectorViewSet(viewsets.ModelViewSet):
         
         try:
             connector_instance = get_connector(connector)
-            tables = connector_instance.discover_schema()
+            discovery_result = connector_instance.discover_schema()
+            if isinstance(discovery_result, dict):
+                tables = discovery_result.get('tables', [])
+                skipped_endpoints = discovery_result.get('skipped_endpoints', [])
+            else:
+                tables = discovery_result
+                skipped_endpoints = []
             
             return Response({
                 'success': True,
                 'tables': tables,
-                'count': len(tables)
+                'count': len(tables),
+                'skipped_endpoints': skipped_endpoints,
             }, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({
@@ -169,12 +182,35 @@ class SyncJobViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         user_id = self.request.user.id
+        active_runs = SyncRun.objects.filter(
+            sync_job=OuterRef('pk'),
+            status__in=['pending', 'running']
+        ).order_by('-created_at')
         return SyncJob.objects.filter(user_id=user_id).select_related(
             'source_connector', 'destination_connector'
-        ).prefetch_related('tables')
+        ).prefetch_related('tables').annotate(
+            current_run_id=Subquery(active_runs.values('id')[:1]),
+            current_run_status=Subquery(active_runs.values('status')[:1]),
+        )
     
     def perform_create(self, serializer):
         serializer.save(user_id=self.request.user.id)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            self.perform_create(serializer)
+        except Exception as exc:
+            return Response({
+                'success': False,
+                'error': str(exc),
+                'traceback': traceback.format_exc(),
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_update(self, serializer):
         sync_job = serializer.save()
@@ -188,12 +224,7 @@ class SyncJobViewSet(viewsets.ModelViewSet):
     def trigger(self, request, pk=None):
         """Manually trigger a sync job"""
         sync_job = self.get_object()
-        
-        if sync_job.status == 'paused':
-            return Response({
-                'error': 'Cannot trigger paused job. Please activate it first.'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         try:
             sync_run = start_sync_job(sync_job, trigger_type='manual')
             if sync_run is None:
@@ -359,6 +390,11 @@ class SyncRunViewSet(viewsets.ReadOnlyModelViewSet):
             duration = (sync_run.completed_at - sync_run.started_at).total_seconds()
             sync_run.duration_seconds = int(duration)
         sync_run.save()
+
+        previous_job_status = (sync_run.error_details or {}).get('previous_job_status', 'active')
+        sync_job = sync_run.sync_job
+        sync_job.status = 'paused' if previous_job_status == 'paused' else 'active'
+        sync_job.save(update_fields=['status', 'updated_at'])
         
         return Response({
             'success': True,

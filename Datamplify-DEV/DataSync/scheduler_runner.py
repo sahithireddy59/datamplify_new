@@ -22,12 +22,17 @@ def start_sync_job(sync_job, trigger_type='manual'):
     if SyncRun.objects.filter(sync_job=sync_job, status__in=['pending', 'running']).exists():
         return None
 
+    previous_job_status = sync_job.status
     sync_run = SyncRun.objects.create(
         sync_job=sync_job,
         status='pending',
         trigger_type=trigger_type,
-        started_at=timezone.now()
+        started_at=timezone.now(),
+        error_details={'previous_job_status': previous_job_status}
     )
+
+    sync_job.status = 'running'
+    sync_job.save(update_fields=['status', 'updated_at'])
 
     worker = threading.Thread(
         target=_run_sync_job,

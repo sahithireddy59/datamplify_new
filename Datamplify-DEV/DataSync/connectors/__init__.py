@@ -1,13 +1,29 @@
 from .base import BaseConnector
 from .hubspot import HubSpotConnector
+from .integration_source import GenericIntegrationSourceConnector
 from .postgresql import PostgreSQLConnector
 from .mysql import MySQLConnector
+from .sql_source import SQLSourceConnector
 
 
 def get_connector(sync_connector):
     """Factory function to get appropriate connector instance"""
     connector_map = {
-        'hubspot': HubSpotConnector,
+        'hubspot': GenericIntegrationSourceConnector,
+        'salesforce': GenericIntegrationSourceConnector,
+        'shopify': GenericIntegrationSourceConnector,
+        'quickbooks': GenericIntegrationSourceConnector,
+        'jira': GenericIntegrationSourceConnector,
+        'pax8': GenericIntegrationSourceConnector,
+        'bamboohr': GenericIntegrationSourceConnector,
+        'zoho_crm': GenericIntegrationSourceConnector,
+        'zoho_books': GenericIntegrationSourceConnector,
+        'zoho_inventory': GenericIntegrationSourceConnector,
+        'tally': GenericIntegrationSourceConnector,
+        'dbt': GenericIntegrationSourceConnector,
+        'oracle': SQLSourceConnector,
+        'snowflake': SQLSourceConnector,
+        'mssql': SQLSourceConnector,
         'postgresql': PostgreSQLConnector,
         'mysql': MySQLConnector,
     }
@@ -19,4 +35,4 @@ def get_connector(sync_connector):
     return connector_class(sync_connector)
 
 
-__all__ = ['BaseConnector', 'HubSpotConnector', 'PostgreSQLConnector', 'MySQLConnector', 'get_connector']
+__all__ = ['BaseConnector', 'HubSpotConnector', 'GenericIntegrationSourceConnector', 'PostgreSQLConnector', 'MySQLConnector', 'SQLSourceConnector', 'get_connector']
