@@ -2,13 +2,17 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Observable, of, throwError } from 'rxjs';
-import { map, switchMap, catchError, tap } from 'rxjs/operators';
+import { catchError, finalize, map, shareReplay, switchMap, tap } from 'rxjs/operators';
 import { get } from 'lodash';
 @Injectable({
   providedIn: 'root'
 })
 export class WorkbenchService {
   private skipLoader = false; // Flag to control the loader
+  private serverTablesCache = new Map<string, any>();
+  private serverTablesInFlight = new Map<string, Observable<any>>();
+  private serverTableSchemaCache = new Map<string, any>();
+  private serverTableSchemaInFlight = new Map<string, Observable<any>>();
   accessToken: any;
   constructor(private http: HttpClient) { }
   disableLoaderForNextRequest() {
@@ -259,7 +263,79 @@ export class WorkbenchService {
   }
 
   getTablesForDataTransformation(hierarchyId: any) {
-    return this.http.get<any>(`${environment.apiUrl}/connections/Server_tables/${hierarchyId}/`, { headers: this.buildHeaders(this.accessToken) });
+    const cacheKey = String(hierarchyId);
+    const cachedResponse = this.serverTablesCache.get(cacheKey);
+    if (cachedResponse) {
+      return of(cachedResponse);
+    }
+
+    const inFlightRequest = this.serverTablesInFlight.get(cacheKey);
+    if (inFlightRequest) {
+      return inFlightRequest;
+    }
+
+    const request$ = this.http.get<any>(
+      `${environment.apiUrl}/connections/Server_tables/${hierarchyId}/`,
+      { headers: this.buildHeaders(this.accessToken) }
+    ).pipe(
+      tap((response) => this.serverTablesCache.set(cacheKey, response)),
+      finalize(() => this.serverTablesInFlight.delete(cacheKey)),
+      shareReplay(1)
+    );
+
+    this.serverTablesInFlight.set(cacheKey, request$);
+    return request$;
+  }
+
+  getTableSchemaForDataTransformation(hierarchyId: any, tableName: string) {
+    const cacheKey = `${String(hierarchyId)}::${tableName}`;
+    const cachedResponse = this.serverTableSchemaCache.get(cacheKey);
+    if (cachedResponse) {
+      return of(cachedResponse);
+    }
+
+    const inFlightRequest = this.serverTableSchemaInFlight.get(cacheKey);
+    if (inFlightRequest) {
+      return inFlightRequest;
+    }
+
+    const request$ = this.http.get<any>(
+      `${environment.apiUrl}/connections/Server_tables/${hierarchyId}/?table=${encodeURIComponent(tableName)}`,
+      { headers: this.buildHeaders(this.accessToken) }
+    ).pipe(
+      tap((response) => this.serverTableSchemaCache.set(cacheKey, response)),
+      finalize(() => this.serverTableSchemaInFlight.delete(cacheKey)),
+      shareReplay(1)
+    );
+
+    this.serverTableSchemaInFlight.set(cacheKey, request$);
+    return request$;
+  }
+
+  clearTablesForDataTransformationCache(hierarchyId?: any) {
+    if (hierarchyId === undefined || hierarchyId === null) {
+      this.serverTablesCache.clear();
+      this.serverTablesInFlight.clear();
+      this.serverTableSchemaCache.clear();
+      this.serverTableSchemaInFlight.clear();
+      return;
+    }
+
+    const cacheKey = String(hierarchyId);
+    this.serverTablesCache.delete(cacheKey);
+    this.serverTablesInFlight.delete(cacheKey);
+
+    for (const schemaKey of this.serverTableSchemaCache.keys()) {
+      if (schemaKey.startsWith(`${cacheKey}::`)) {
+        this.serverTableSchemaCache.delete(schemaKey);
+      }
+    }
+
+    for (const schemaKey of this.serverTableSchemaInFlight.keys()) {
+      if (schemaKey.startsWith(`${cacheKey}::`)) {
+        this.serverTableSchemaInFlight.delete(schemaKey);
+      }
+    }
   }
 
   getDataObjectsForFile(id: any) {

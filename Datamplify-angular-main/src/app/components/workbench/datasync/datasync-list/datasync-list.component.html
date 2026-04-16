@@ -40,7 +40,7 @@
                   <th>Frequency</th>
                   <th>Last Sync</th>
                   <th>Next Sync</th>
-                  <th>Actions</th>
+                  <th>Job Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -59,8 +59,8 @@
                     {{ job.destination_connector_name }}
                   </td>
                   <td>
-                    <span class="badge" [ngClass]="getStatusClass(job.status)">
-                      {{ job.status }}
+                    <span class="badge" [ngClass]="getStatusClass(getDisplayStatus(job))">
+                      {{ getDisplayStatus(job) }}
                     </span>
                   </td>
                   <td>{{ job.table_count || 0 }}</td>
@@ -75,27 +75,28 @@
                       <button 
                         class="btn btn-sm btn-outline-primary"
                         (click)="editSchedule(job, $event)"
-                        title="Edit Schedule">
+                        title="Edit Job Schedule">
                         <i class="bi bi-clock-history"></i>
                       </button>
                       <button 
                         class="btn btn-sm btn-success" 
                         (click)="triggerSync(job, $event)"
-                        title="Trigger Sync Now">
-                        <i class="bi bi-play-fill"></i>
+                        [disabled]="isRunInProgress(job)"
+                        [title]="isRunInProgress(job) ? 'Run already in progress' : 'Start Manual Run'">
+                        <i class="bi" [ngClass]="isRunInProgress(job) ? 'bi-arrow-repeat' : 'bi-play-fill'"></i>
                       </button>
                       <button 
                         *ngIf="job.status === 'active'"
                         class="btn btn-sm btn-warning" 
                         (click)="pauseJob(job, $event)"
-                        title="Pause Job">
+                        title="Pause Job Schedule">
                         <i class="bi bi-pause-fill"></i>
                       </button>
                       <button 
                         *ngIf="job.status === 'paused'"
                         class="btn btn-sm btn-info" 
                         (click)="activateJob(job, $event)"
-                        title="Activate Job">
+                        title="Resume Job Schedule">
                         <i class="bi bi-play-circle"></i>
                       </button>
                       <button 

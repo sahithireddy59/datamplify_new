@@ -38,6 +38,7 @@ export class FlowboardComponent {
   selectedIntegrationConnection: any = null; // Separate variable for integration connections
   dataObjectOptions: [] = [];
   selectedDataObject: any = null;
+  isDataObjectSchemaLoading: boolean = false;
   posX: any;
   posY: any;
   tableTabId: number = 1;
@@ -1650,6 +1651,8 @@ export class FlowboardComponent {
     });
   }
   getDataObjects() {
+    this.selectedDataObject = null;
+    this.isDataObjectSchemaLoading = false;
     const activeConnection = this.getActiveConnection();
     if (activeConnection?.hierarchy_id) {
       this.workbechService.getTablesForDataTransformation(activeConnection.hierarchy_id).subscribe({
@@ -1663,8 +1666,44 @@ export class FlowboardComponent {
         }
       });
     }
-    this.selectedDataObject = null;
   }
+
+  onDataObjectChange(dataObject: any) {
+    if (!dataObject?.tables) {
+      this.selectedDataObject = null;
+      this.isDataObjectSchemaLoading = false;
+      return;
+    }
+
+    this.selectedDataObject = { ...dataObject };
+    this.isDataObjectSchemaLoading = true;
+    const activeConnection = this.getActiveConnection();
+    const requestedTable = dataObject.tables;
+
+    if (!activeConnection?.hierarchy_id) {
+      this.isDataObjectSchemaLoading = false;
+      return;
+    }
+
+    this.workbechService.getTableSchemaForDataTransformation(activeConnection.hierarchy_id, requestedTable).subscribe({
+      next: (response) => {
+        console.log(response);
+        if (this.selectedDataObject?.tables === requestedTable) {
+          this.selectedDataObject = response?.tables?.[0] || this.selectedDataObject;
+        }
+        this.isDataObjectSchemaLoading = false;
+      },
+      error: (error) => {
+        console.log(error);
+        if (this.selectedDataObject?.tables === requestedTable) {
+          this.selectedDataObject = null;
+        }
+        this.isDataObjectSchemaLoading = false;
+        this.toasterService.error(error.error.message || 'Failed to fetch table schema', 'error', { positionClass: 'toast-top-right' });
+      }
+    });
+  }
+
   getDataObjectsforFile(){
     const activeConnection = this.getActiveConnection();
     if (activeConnection?.hierarchy_id) {
@@ -2208,6 +2247,7 @@ export class FlowboardComponent {
       next: (data: any) => {
         console.log(data);
         this.isRefrshEnable = true;
+        this.dataFlowRunStatus = 'running';
         this.runId = data.run_id;
         this.isRunEnable = false;
         // this.startPollingDataFlowStatus(data.run_id);
@@ -2229,6 +2269,7 @@ export class FlowboardComponent {
       },
       error: (error: any) => {
         this.isRefrshEnable = false;
+        this.dataFlowRunStatus = '';
         this.isLogShow = false;
         this.isRunEnable = true;
         if (error?.error?.message?.detail?.includes('not found')) {
@@ -2289,10 +2330,14 @@ export class FlowboardComponent {
           }, 3000);
         } else {
           this.isRefrshEnable = false;
+          if (!['success', 'failed'].includes(this.dataFlowRunStatus)) {
+            this.dataFlowRunStatus = data.status;
+          }
           this.isRunEnable = true;
         }
       },
       error: (error: any) => {
+        this.isRefrshEnable = false;
         this.toasterService.error(error.error.message, 'error', { positionClass: 'toast-top-right' });
         console.log(error);
       }

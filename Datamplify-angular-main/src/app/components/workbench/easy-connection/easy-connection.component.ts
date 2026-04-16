@@ -59,6 +59,8 @@ export class EasyConnectionComponent {
   selectedSchema: string = 'public';
   selectedFile: File | null = null;
   schemaList: any[] = [];
+  warehouseName: string = '';
+  roleName: string = '';
   
   // Excel-specific properties
   availableSheets: string[] = [];
@@ -436,7 +438,7 @@ export class EasyConnectionComponent {
   }
 
   getSchemaList(type: any) {
-    let object = {
+    let object: any = {
       database_type: type,
       hostname: this.serverName,
       port: this.portName,
@@ -444,6 +446,11 @@ export class EasyConnectionComponent {
       password: this.password,
       database: this.databaseName,
       display_name: this.displayName,
+    }
+    if (type === 10) {
+      object.schema = this.selectedSchema;
+      object.warehouse = this.warehouseName;
+      object.role = this.roleName;
     }
     console.log(object);
 
@@ -474,6 +481,10 @@ export class EasyConnectionComponent {
       object.schema = this.selectedSchema;
     } else if(type === 7){
       object.service_name = this.databaseName;
+    }
+    if (type === 10) {
+      object.warehouse = this.warehouseName;
+      object.role = this.roleName;
     }
     console.log(object);
 
@@ -507,6 +518,19 @@ export class EasyConnectionComponent {
         database: this.databaseName,
         connection_name: this.displayName,
         schema: this.selectedSchema
+      }
+    } else if (type === 10) {
+      object = {
+        database_type: type,
+        hostname: this.serverName,
+        port: this.portName,
+        username: this.userName,
+        password: this.password,
+        database: this.databaseName,
+        connection_name: this.displayName,
+        schema: this.selectedSchema,
+        warehouse: this.warehouseName,
+        role: this.roleName
       }
     } else if (type === 6) {
       object = {
@@ -553,6 +577,8 @@ export class EasyConnectionComponent {
         this.displayName = response.connection_name;
         this.password = '';
         this.selectedSchema = response.schema;
+        this.warehouseName = response.warehouse || '';
+        this.roleName = response.role || '';
         this.isExistingConnectionsEdit = isExistingConnection ?? false;
         if(!isExistingConnection){
           this.isEditPreview = true;

@@ -6,7 +6,7 @@ import { environment } from '../../../../environments/environment';
 export interface SyncConnector {
   id?: string;
   name: string;
-  connector_type: 'hubspot' | 'salesforce' | 'postgresql' | 'mysql' | 'api';
+  connector_type: string;
   connector_role: 'source' | 'destination';
   config: any;
   is_active?: boolean;
@@ -57,7 +57,10 @@ export interface SyncJob {
   sync_mode: 'full' | 'incremental' | 'incremental_timestamp' | 'incremental_id' | 'incremental_cursor' | 'history';
   sync_frequency: 'manual' | '15min' | 'hourly' | 'daily' | 'weekly' | 'custom';
   cron_expression?: string;
-  status?: 'active' | 'paused' | 'error' | 'configuring';
+  status?: 'active' | 'running' | 'paused' | 'error' | 'configuring';
+  current_run_id?: string;
+  current_run_status?: 'pending' | 'running' | 'success' | 'partial_success' | 'failed' | 'cancelled';
+  display_status?: 'active' | 'running' | 'paused' | 'error' | 'configuring' | 'pending' | 'running' | 'success' | 'partial_success' | 'failed' | 'cancelled';
   last_sync_at?: string;
   next_sync_at?: string;
   dag_id?: string;

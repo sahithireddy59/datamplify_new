@@ -79,6 +79,12 @@
           <!-- Step 3: Select Tables -->
           <div *ngIf="currentStep === 3" class="step-content">
             <h5>Select Tables to Sync</h5>
+            <div *ngIf="!loadingTables && skippedEndpoints.length" class="alert alert-warning">
+              Discovery skipped {{ skippedEndpoints.length }} endpoint(s).
+              <div *ngFor="let item of skippedEndpoints">
+                <strong>{{ item.name }}</strong>: {{ item.reason }}
+              </div>
+            </div>
             <div *ngIf="loadingTables" class="text-center py-5">
               <div class="spinner-border text-primary"></div>
             </div>
@@ -94,13 +100,13 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let table of availableTables">
+                  <tr *ngFor="let table of availableTables; trackBy: trackByTableName">
                     <td>
                       <input type="checkbox" 
                              [checked]="isTableSelected(table)"
                              (change)="toggleTableSelection(table)">
                     </td>
-                    <td>{{ table.name }}</td>
+                    <td>{{ table.label || table.name }}</td>
                     <td>{{ table.primary_key || 'id' }}</td>
                     <td>{{ table.cursor_field || 'Not detected' }}</td>
                     <td>{{ table.row_count || 'N/A' }}</td>

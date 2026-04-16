@@ -1,7 +1,9 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { forkJoin } from 'rxjs';
 import { DatasyncService, SyncJob, SyncRun } from '../datasync.service';
+import { WorkbenchService } from '../../workbench.service';
 
 @Component({
   selector: 'app-datasync-monitor',
@@ -24,7 +26,8 @@ export class DatasyncMonitorComponent implements OnInit, OnDestroy {
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
-    private readonly datasyncService: DatasyncService
+    private readonly datasyncService: DatasyncService,
+    private readonly workbenchService: WorkbenchService
   ) {}
 
   ngOnInit(): void {
@@ -41,13 +44,21 @@ export class DatasyncMonitorComponent implements OnInit, OnDestroy {
   }
 
   loadJob(): void {
-    this.loading = true;
-    this.error = null;
+    this.loadJobInternal(true);
+  }
+
+  private loadJobInternal(showLoader: boolean): void {
+    if (showLoader) {
+      this.loading = true;
+      this.error = null;
+    } else {
+      this.workbenchService.disableLoaderForNextRequest();
+    }
 
     this.datasyncService.getJob(this.jobId).subscribe({
       next: (job) => {
         this.job = job;
-        this.loadRuns();
+        this.loadRuns(showLoader);
       },
       error: (err) => {
         this.loading = false;
@@ -56,7 +67,10 @@ export class DatasyncMonitorComponent implements OnInit, OnDestroy {
     });
   }
 
-  loadRuns(): void {
+  loadRuns(showLoader: boolean = true): void {
+    if (!showLoader) {
+      this.workbenchService.disableLoaderForNextRequest();
+    }
     this.datasyncService.getJobRuns(this.jobId).subscribe({
       next: (runs) => {
         this.runs = runs.results || runs;
@@ -65,7 +79,7 @@ export class DatasyncMonitorComponent implements OnInit, OnDestroy {
           const activeSelectedRun = this.selectedRun?.id
             ? this.runs.find((run) => run.id === this.selectedRun?.id)
             : null;
-          this.selectRun(activeSelectedRun || this.runs[0]);
+          this.selectRun(activeSelectedRun || this.runs[0], showLoader);
         }
       },
       error: () => {
@@ -75,22 +89,33 @@ export class DatasyncMonitorComponent implements OnInit, OnDestroy {
     });
   }
 
-  selectRun(run: SyncRun): void {
+  selectRun(run: SyncRun, showLogLoader: boolean = true): void {
     this.selectedRun = run;
     if (!run.id) {
       this.selectedRunLogs = [];
       return;
     }
 
-    this.loadingLogs = true;
-    this.datasyncService.getRunLogs(run.id).subscribe({
-      next: (logs) => {
-        this.selectedRunLogs = logs.results || logs;
+    if (showLogLoader) {
+      this.loadingLogs = true;
+    } else {
+      this.workbenchService.disableLoaderForNextRequest();
+    }
+    forkJoin({
+      run: this.datasyncService.getRun(run.id),
+      logs: this.datasyncService.getRunLogs(run.id)
+    }).subscribe({
+      next: ({ run: runDetails, logs }) => {
+        this.selectedRun = {
+          ...run,
+          ...runDetails,
+        };
+        this.selectedRunLogs = this.buildDisplayedLogs(runDetails, logs.results || logs);
         this.loadingLogs = false;
         this.configureAutoRefresh();
       },
       error: () => {
-        this.selectedRunLogs = [];
+        this.selectedRunLogs = this.buildDisplayedLogs(run, []);
         this.loadingLogs = false;
         this.error = 'Failed to load run logs.';
         this.configureAutoRefresh();
@@ -104,11 +129,16 @@ export class DatasyncMonitorComponent implements OnInit, OnDestroy {
     }
 
     this.datasyncService.triggerSync(this.job.id).subscribe({
-      next: () => {
+      next: (response) => {
+        if (this.job) {
+          this.job.current_run_id = response?.run_id || this.job.current_run_id;
+          this.job.current_run_status = 'pending';
+          this.job.display_status = 'pending';
+        }
         this.loadJob();
       },
       error: (err) => {
-        this.error = err.error?.message || 'Failed to trigger sync.';
+        this.error = err.error?.error || err.error?.message || 'Failed to start manual run.';
       }
     });
   }
@@ -120,10 +150,19 @@ export class DatasyncMonitorComponent implements OnInit, OnDestroy {
 
     this.datasyncService.cancelRun(this.selectedRun.id).subscribe({
       next: () => {
+        if (this.selectedRun) {
+          this.selectedRun.status = 'cancelled';
+        }
+        if (this.job) {
+          this.job.current_run_status = undefined;
+          this.job.display_status = this.job.status === 'paused' ? 'paused' : 'active';
+          this.job.status = this.job.status === 'paused' ? 'paused' : 'active';
+        }
+        this.stopAutoRefresh();
         this.loadJob();
       },
       error: (err) => {
-        this.error = err.error?.message || err.error?.error || 'Failed to cancel sync run.';
+        this.error = err.error?.error || err.error?.message || 'Failed to cancel selected run.';
       }
     });
   }
@@ -164,6 +203,15 @@ export class DatasyncMonitorComponent implements OnInit, OnDestroy {
     }
   }
 
+  getJobDisplayStatus(): string {
+    return this.job?.display_status || this.job?.current_run_status || this.job?.status || 'unknown';
+  }
+
+  isJobRunInProgress(): boolean {
+    const status = this.getJobDisplayStatus();
+    return status === 'pending' || status === 'running';
+  }
+
   formatDate(value?: string): string {
     if (!value) {
       return 'Never';
@@ -171,11 +219,25 @@ export class DatasyncMonitorComponent implements OnInit, OnDestroy {
     return new Date(value).toLocaleString();
   }
 
+  formatLogDetails(details: any): string {
+    if (!details) {
+      return '';
+    }
+    if (typeof details === 'string') {
+      return details;
+    }
+    try {
+      return JSON.stringify(details, null, 2);
+    } catch {
+      return String(details);
+    }
+  }
+
   refreshSelectedRun(): void {
     if (!this.selectedRun?.id) {
       return;
     }
-    this.loadRuns();
+    this.loadRuns(false);
   }
 
   private configureAutoRefresh(): void {
@@ -187,7 +249,7 @@ export class DatasyncMonitorComponent implements OnInit, OnDestroy {
     if (this.refreshTimer) {
       return;
     }
-    this.refreshTimer = setInterval(() => this.loadRuns(), 5000);
+    this.refreshTimer = setInterval(() => this.pollSelectedRunStatus(), 5000);
   }
 
   private stopAutoRefresh(): void {
@@ -195,5 +257,79 @@ export class DatasyncMonitorComponent implements OnInit, OnDestroy {
       clearInterval(this.refreshTimer);
       this.refreshTimer = null;
     }
+  }
+
+  private pollSelectedRunStatus(): void {
+    if (!this.selectedRun?.id) {
+      this.stopAutoRefresh();
+      return;
+    }
+
+    this.workbenchService.disableLoaderForNextRequest();
+    this.datasyncService.getRun(this.selectedRun.id).subscribe({
+      next: (run) => {
+        this.selectedRun = {
+          ...this.selectedRun!,
+          ...run,
+        };
+        this.selectedRunLogs = this.buildDisplayedLogs(run, this.selectedRunLogs);
+
+        this.runs = this.runs.map((existingRun) =>
+          existingRun.id === run.id ? { ...existingRun, ...run } : existingRun
+        );
+
+        if (this.job) {
+          if (run.status === 'pending' || run.status === 'running') {
+            this.job.current_run_id = run.id;
+            this.job.current_run_status = run.status;
+            this.job.display_status = run.status;
+            this.job.status = 'running';
+          } else {
+            this.job.current_run_status = undefined;
+            this.job.display_status = this.job.status === 'paused' ? 'paused' : 'active';
+            if (this.job.status !== 'paused' && this.job.status !== 'error') {
+              this.job.status = 'active';
+            }
+            this.stopAutoRefresh();
+          }
+        }
+      },
+      error: () => {
+        this.stopAutoRefresh();
+      }
+    });
+  }
+
+  private buildDisplayedLogs(run: SyncRun, logs: any[]): any[] {
+    const normalizedLogs = Array.isArray(logs) ? [...logs] : [];
+
+    if (normalizedLogs.length > 0) {
+      return normalizedLogs;
+    }
+
+    const fallbackLogs: any[] = [];
+    if (run.error_message) {
+      fallbackLogs.push({
+        level: 'error',
+        message: run.error_message,
+        details: run.error_details,
+        timestamp: run.completed_at || run.created_at
+      });
+    } else if (run.status === 'success') {
+      fallbackLogs.push({
+        level: 'info',
+        message: 'Run completed successfully.',
+        details: {
+          tables_synced: run.tables_synced,
+          rows_inserted: run.rows_inserted,
+          rows_updated: run.rows_updated,
+          rows_deleted: run.rows_deleted,
+          rows_failed: run.rows_failed
+        },
+        timestamp: run.completed_at || run.created_at
+      });
+    }
+
+    return fallbackLogs;
   }
 }

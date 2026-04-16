@@ -31,7 +31,9 @@ export class DatasyncCreateComponent implements OnInit {
   // Step 3: Tables
   availableTables: any[] = [];
   selectedTables: any[] = [];
+  selectedTableLookup: Record<string, boolean> = {};
   loadingTables = false;
+  skippedEndpoints: { name: string; reason: string }[] = [];
   
   // Step 4: Sync Configuration
   syncMode: 'full' | 'incremental' | 'incremental_timestamp' | 'incremental_id' | 'incremental_cursor' | 'history' = 'full';
@@ -108,16 +110,20 @@ export class DatasyncCreateComponent implements OnInit {
   discoverTables(): void {
     this.loadingTables = true;
     this.availableTables = [];
+    this.skippedEndpoints = [];
     
     this.datasyncService.discoverSchema(this.selectedSourceSyncConnector).subscribe({
       next: (response) => {
         this.availableTables = response.tables || [];
+        this.selectedTables = [];
+        this.selectedTableLookup = {};
+        this.skippedEndpoints = response.skipped_endpoints || [];
         this.loadingTables = false;
       },
       error: (err) => {
-        this.error = 'Failed to discover tables';
+        this.error = `Failed to discover tables: ${this.getErrorMessage(err)}`;
         this.loadingTables = false;
-        console.error('Error discovering tables:', err);
+        console.error('Error discovering tables:', err?.error || err);
       }
     });
   }
@@ -138,28 +144,30 @@ export class DatasyncCreateComponent implements OnInit {
       },
       error: (err) => {
         this.loadingTables = false;
-        this.error = err.error?.error || 'Failed to load the selected EasyConnect connections';
+        this.error = `Failed to load the selected EasyConnect connections: ${this.getErrorMessage(err)}`;
+        console.error('Error importing selected EasyConnect connections:', err?.error || err);
       }
     });
   }
 
   toggleTableSelection(table: any): void {
-    const index = this.selectedTables.findIndex(t => t.name === table.name);
+    const index = this.selectedTables.findIndex(t => t.source_table === table.name);
     if (index > -1) {
       this.selectedTables.splice(index, 1);
     } else {
       this.selectedTables.push({
         source_table: table.name,
-        destination_table: (this.tablePrefix || '') + table.name,
+        destination_table: (this.tablePrefix || '') + (table.destination_name || table.name),
         is_enabled: true,
         cursor_field: table.cursor_field || null,
         primary_key_field: table.primary_key || null
       });
     }
+    this.syncSelectedTableLookup();
   }
 
   isTableSelected(table: any): boolean {
-    return this.selectedTables.some(t => t.source_table === table.name);
+    return !!this.selectedTableLookup[table.name];
   }
 
   toggleAllTables(): void {
@@ -170,12 +178,13 @@ export class DatasyncCreateComponent implements OnInit {
       // Select all
       this.selectedTables = this.availableTables.map(table => ({
         source_table: table.name,
-        destination_table: (this.tablePrefix || '') + table.name,
+        destination_table: (this.tablePrefix || '') + (table.destination_name || table.name),
         is_enabled: true,
         cursor_field: table.cursor_field || null,
         primary_key_field: table.primary_key || null
       }));
     }
+    this.syncSelectedTableLookup();
   }
 
   areAllTablesSelected(): boolean {
@@ -211,9 +220,7 @@ export class DatasyncCreateComponent implements OnInit {
         this.router.navigate(['/datamplify/sync']);
       },
       error: (err) => {
-        const detail = typeof err.error === 'string'
-          ? err.error
-          : err.error?.message || err.error?.detail || JSON.stringify(err.error);
+        const detail = this.getErrorMessage(err);
         this.error = 'Failed to create sync job: ' + detail;
         this.loading = false;
         console.error('Error creating job:', err);
@@ -227,5 +234,36 @@ export class DatasyncCreateComponent implements OnInit {
 
   getSelectedMode(): SyncModeOption | undefined {
     return this.syncModes.find((mode) => mode.value === this.syncMode);
+  }
+
+  trackByTableName(index: number, table: any): string {
+    return table.name;
+  }
+
+  private getErrorMessage(err: any): string {
+    const payload = err?.error;
+    if (typeof payload === 'string' && payload.trim()) {
+      return payload;
+    }
+    if (payload?.error) {
+      return payload.error;
+    }
+    if (payload?.message) {
+      return payload.message;
+    }
+    if (payload?.detail) {
+      return payload.detail;
+    }
+    if (err?.message) {
+      return err.message;
+    }
+    return 'Unknown error';
+  }
+
+  private syncSelectedTableLookup(): void {
+    this.selectedTableLookup = this.selectedTables.reduce((lookup, table) => {
+      lookup[table.source_table] = true;
+      return lookup;
+    }, {} as Record<string, boolean>);
   }
 }

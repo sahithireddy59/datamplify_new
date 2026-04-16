@@ -61,10 +61,15 @@
                                 <i class="fa fa-save me-1" style="font-size: 12px;"></i> Update
                             </button>
                             }
-                            <div [ngbTooltip]="!isRunEnable ? 'Update the DagBoard to enable the Run' : null">
+                            <div [ngbTooltip]="isRefrshEnable ? 'DagBoard run is in progress' : (!isRunEnable ? 'Update the DagBoard to enable the Run' : null)">
                                 <button type="button" class="btn mode-btn btn-sm rounded-5" [disabled]="!isRunEnable" (click)="runDataFlow()"
                                     container="body" *appHasPermission="{ id: 13, mode: 'disable' }">
-                                    <i class="fa fa-play me-1" style="font-size: 12px;"></i> Run
+                                    <ng-container *ngIf="!isRefrshEnable; else runningState">
+                                        <i class="fa fa-play me-1" style="font-size: 12px;"></i> Run
+                                    </ng-container>
+                                    <ng-template #runningState>
+                                        <i class="fa fa-spinner fa-spin me-1" style="font-size: 12px;"></i> Running
+                                    </ng-template>
                                 </button>
                             </div>
                         </div>
@@ -1323,8 +1328,9 @@
                         <div *ngIf="objectType === 'select'">
                             <label for="dataObject" class="fw-semibold mt-1">Select Data Object <span class="text-danger">*</span></label>
                             <ng-select [items]="dataObjectOptions" bindLabel="tables" placeholder="Select a Data Object" [searchable]="true"
-                                [(ngModel)]="selectedDataObject" name="dataObject" id="dataObject" [disabled]="!selectedConnection && !selectedFileConnection && !selectedIntegrationConnection">
+                                [(ngModel)]="selectedDataObject" (change)="onDataObjectChange($event)" name="dataObject" id="dataObject" [disabled]="!selectedConnection && !selectedFileConnection && !selectedIntegrationConnection">
                             </ng-select>
+                            <small *ngIf="isDataObjectSchemaLoading" class="text-muted d-block mt-2">Loading table schema...</small>
                         </div>
                         <div *ngIf="objectType === 'create'">
                             <label for="newObjectName" class="form-label fw-semibold mt-2">New Object Name <span class="text-danger">*</span></label>
@@ -1423,7 +1429,7 @@
             <button type="button" class="btn ripple btn-secondary btn-sm me-2"
                 (click)="modal.close('Cross click'); objectType = 'select'; selectedConnection = null; selectedFileConnection = null; selectedIntegrationConnection = null; selectedDataObject = null; fileSelectType = 'dataSource'; sourcePath = ''; selectedFile = ''; selectedEndpoint = null; selectedSchemas.clear(); expandedSchemas.clear();">Cancel</button>
             <button *ngIf="[1,2,3,6,7,8,9,10].includes(type)" type="button" [disabled]="
-              (type === 1 && (!selectedConnection || !selectedDataObject)) ||
+              (type === 1 && (!selectedConnection || !selectedDataObject || (objectType === 'select' && (isDataObjectSchemaLoading || !selectedDataObject?.columns)))) ||
               (type === 2 && (
                 (fileSelectType === 'dataSource' && !selectedFileConnection) ||
                 (fileSelectType === 'server' && (!sourcePath || !selectedFile))

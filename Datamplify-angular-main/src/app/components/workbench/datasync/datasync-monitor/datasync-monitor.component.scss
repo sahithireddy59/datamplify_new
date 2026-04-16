@@ -1,3 +1,101 @@
+.datasync-monitor-page {
+  color: #1f2d3d;
+}
+
+.monitor-header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.monitor-hero {
+  background: #ffffff;
+  border: 1px solid #e5edf7;
+  border-radius: 16px;
+  padding: 20px 24px;
+  box-shadow: 0 10px 24px rgba(10, 31, 68, 0.06);
+}
+
+.monitor-back-link {
+  color: #0d6efd !important;
+  text-align: left;
+}
+
+.monitor-title {
+  margin: 0;
+  color: #1f2d3d !important;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+.monitor-subtitle {
+  margin-top: 6px;
+  color: #5f6f86 !important;
+  line-height: 1.5;
+}
+
+.monitor-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.monitor-action-btn {
+  border-radius: 10px;
+  font-weight: 600;
+  padding: 0.5rem 0.9rem;
+}
+
+.monitor-action-btn-secondary {
+  background: #ffffff;
+  border: 1px solid #cdd9e8;
+  color: #1f2d3d !important;
+}
+
+.monitor-action-btn-secondary:hover,
+.monitor-action-btn-secondary:focus {
+  background: #f4f8fc;
+  border-color: #b8c8dc;
+  color: #1f2d3d !important;
+}
+
+.monitor-action-btn-outline {
+  background: #ffffff;
+  border: 1px solid #0d6efd;
+  color: #0d6efd !important;
+}
+
+.monitor-action-btn-outline:hover,
+.monitor-action-btn-outline:focus {
+  background: #eaf3ff;
+  color: #0d6efd !important;
+}
+
+.monitor-action-btn-primary {
+  background: #0d6efd;
+  border: 1px solid #0d6efd;
+  color: #ffffff !important;
+}
+
+.monitor-action-btn-primary:hover,
+.monitor-action-btn-primary:focus {
+  background: #0b5ed7;
+  border-color: #0b5ed7;
+  color: #ffffff !important;
+}
+
+.monitor-action-btn:disabled {
+  opacity: 0.65;
+}
+
+.monitor-edit-btn {
+  min-height: 42px;
+  white-space: nowrap;
+}
+
 .metric-card {
   height: 100%;
   border: 1px solid #e5edf7;
@@ -9,9 +107,50 @@
 
 .metric-label {
   display: block;
-  color: #5f6f86;
+  color: #5f6f86 !important;
   font-size: 0.85rem;
   margin-bottom: 8px;
+}
+
+.metric-value {
+  display: block;
+  color: #1f2d3d !important;
+  font-size: 1rem;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.monitor-card-title {
+  color: #1f2d3d !important;
+  font-weight: 700;
+}
+
+.monitor-panel {
+  border: 1px solid #e5edf7;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(10, 31, 68, 0.05);
+}
+
+.monitor-panel-header {
+  background: #f8fbff;
+  border-bottom: 1px solid #e5edf7;
+  color: #1f2d3d !important;
+}
+
+.monitor-panel-body {
+  background: #ffffff;
+  color: #1f2d3d !important;
+}
+
+.monitor-toolbar {
+  gap: 12px;
+}
+
+.card-header,
+.card-body {
+  color: #1f2d3d;
 }
 
 .run-list {
@@ -30,6 +169,7 @@
   background: #fff;
   padding: 14px 16px;
   text-align: left;
+  color: #1f2d3d !important;
 }
 
 .run-row.active {
@@ -37,9 +177,13 @@
   background: #f3f8ff;
 }
 
+.run-row .text-muted,
+.run-metrics {
+  color: #5f6f86 !important;
+}
+
 .run-metrics {
   margin-top: 6px;
-  color: #5f6f86;
   font-size: 0.85rem;
 }
 
@@ -56,36 +200,57 @@
   border-radius: 10px;
   background: #fbfdff;
   padding: 12px;
+  color: #1f2d3d !important;
+}
+
+.log-item .text-muted {
+  color: #5f6f86 !important;
+}
+
+.log-item pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #42556d !important;
+  background: #f4f8fc;
+  border: 1px solid #e5edf7;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.badge-primary,
+.badge-success,
+.badge-danger,
+.badge-secondary {
+  color: #fff !important;
+}
+
+.badge-warning,
+.badge-info {
+  color: #212529 !important;
 }
 
 .badge-primary {
   background-color: #0d6efd;
-  color: #fff;
 }
 
 .badge-success {
   background-color: #198754;
-  color: #fff;
 }
 
 .badge-warning {
   background-color: #ffc107;
-  color: #212529;
 }
 
 .badge-info {
   background-color: #0dcaf0;
-  color: #0a1f44;
 }
 
 .badge-danger {
   background-color: #dc3545;
-  color: #fff;
 }
 
 .badge-secondary {
   background-color: #6c757d;
-  color: #fff;
 }
 
 .sync-fab {
@@ -102,4 +267,31 @@
   line-height: 1;
   box-shadow: 0 12px 28px rgba(13, 110, 253, 0.3);
   z-index: 1100;
+}
+
+@media (max-width: 991.98px) {
+  .monitor-hero {
+    padding: 18px;
+  }
+
+  .monitor-header-actions {
+    align-items: stretch;
+  }
+
+  .monitor-header-actions .badge {
+    align-self: flex-start;
+  }
+
+  .monitor-edit-btn {
+    white-space: normal;
+  }
+
+  .monitor-toolbar {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+
+  .run-row {
+    flex-direction: column;
+  }
 }
