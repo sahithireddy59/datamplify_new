@@ -18,6 +18,7 @@
 from abc import ABC, abstractmethod
 import requests
 from base64 import b64encode
+from decouple import config
 from Datamplify.settings import Integration_Credentials
 
 

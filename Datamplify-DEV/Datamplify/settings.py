@@ -84,6 +84,7 @@ INSTALLED_APPS = [
     'TaskPlan',
     'Monitor',
     'Tasks_Scheduler',
+    'DataSync',
 
     #swagger
     'drf_yasg', 

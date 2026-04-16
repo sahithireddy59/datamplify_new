@@ -8,7 +8,7 @@ from authentication import models as auth_models
 from rest_framework.response import Response
 from rest_framework import status
 from Service.utils import encode_value,file_files_save,CustomPaginator,s3,SSHConnect,encrypt_json,decrypt_json
-from Connections.utils import server_connection,get_table_details,discover_endpoint_schema
+from Connections.utils import server_connection,get_table_details,get_table_names,get_single_table_details,discover_endpoint_schema
 from authentication.utils import token_function
 import uuid,datetime,os
 from pytz import utc
@@ -55,7 +55,17 @@ class Server_Connection(APIView):
             except conn_models.DataSources.DoesNotExist:
                 return Response({'message': ' Connection Not Implemented'}, status=status.HTTP_406_NOT_ACCEPTABLE)
             encoded_passw=encode_value(password)
-            server_conn=server_connection(username, encoded_passw, db_name, hostname,port,service_name,conn_type.name.upper(),server_path)
+            server_conn=server_connection(
+                username,
+                encoded_passw,
+                db_name,
+                hostname,
+                port,
+                service_name,
+                conn_type.name.upper(),
+                server_path,
+                schema=schema
+            )
             User = auth_models.UserProfile.objects.get(id = user_id)
             if server_conn['status']==200:
                 connection =conn_models.DatabaseConnections.objects.create(
@@ -118,9 +128,18 @@ class Server_Connection_update(APIView):
                 conn_type = conn_models.DataSources.objects.get(id=db_type, type__iexact='DATABASE')
             except conn_models.DataSources.DoesNotExist:
                 return Response({'message': ' Connection Not Implemented'}, status=status.HTTP_406_NOT_ACCEPTABLE)
-            
             encoded_passw=encode_value(password)
-            server_conn=server_connection(username, encoded_passw, db_name, hostname,port,service_name,conn_type.name.upper(),server_path)
+            server_conn=server_connection(
+                username,
+                encoded_passw,
+                db_name,
+                hostname,
+                port,
+                service_name,
+                conn_type.name.upper(),
+                server_path,
+                schema=schema
+            )
             User = auth_models.UserProfile.objects.get(id = user_id)
             if server_conn['status']==200:
                 connection =conn_models.DatabaseConnections.objects.filter(id=conn_data.table_id).update(
@@ -175,7 +194,6 @@ class Server_Connection_update(APIView):
             'created_at': Database_data.created_at,
             'updated_at': Database_data.updated_at,
         }
-
         return Response(connection_data, status=status.HTTP_200_OK)
 
 
@@ -784,16 +802,26 @@ class Server_tables(APIView):
             connections_data = conn_models.Connections.objects.get(id = id,user_id__in=accessible_user_ids)
             Database_data = conn_models.DatabaseConnections.objects.get(id=connections_data.table_id)
             server_type = conn_models.DataSources.objects.get(id=connections_data.type.id)
-            server_conn=server_connection(Database_data.username,Database_data.password,Database_data.database,Database_data.hostname,Database_data.port,Database_data.service_name,server_type.name.upper(),Database_data.database_path)
+            server_conn=server_connection(Database_data.username,Database_data.password,Database_data.database,Database_data.hostname,Database_data.port,Database_data.service_name,server_type.name.upper(),Database_data.database_path,schema=Database_data.schema)
             if server_conn['status']==200:
-                tables_list = get_table_details(server_type.name,server_conn['cursor'],Database_data.schema)
+                schema_name = Database_data.schema
                 schema_map = {
                     "SQLITE": "main",
                     "ORACLE": Database_data.username.upper() if Database_data.username else None
                 }
+                response_schema = schema_map.get(server_type.name.upper(), "public" if Database_data.server_type is None else Database_data.schema)
 
-                Database_data.schema = schema_map.get(server_type.name.upper(), "public" if Database_data.server_type is None else Database_data.schema)
-                return Response({'message':'sucess','tables':tables_list,'database_name':Database_data.database,'schema':Database_data.schema,'connection_name':Database_data.connection_name,'id':connections_data.id},status = status.HTTP_200_OK)
+                include_columns = str(request.query_params.get('include_columns', '')).lower() == 'true'
+                table_name = request.query_params.get('table')
+
+                if table_name:
+                    tables_payload = [get_single_table_details(server_type.name, server_conn['cursor'], table_name, schema_name)]
+                elif include_columns:
+                    tables_payload = get_table_details(server_type.name, server_conn['cursor'], schema_name)
+                else:
+                    tables_payload = get_table_names(server_type.name, server_conn['cursor'], schema_name)
+
+                return Response({'message':'sucess','tables':tables_payload,'database_name':Database_data.database,'schema':response_schema,'connection_name':Database_data.connection_name,'id':connections_data.id},status = status.HTTP_200_OK)
             else:
                 return Response({'message':server_conn['message']},status=server_conn['status'])
         else:
@@ -1195,6 +1223,13 @@ def get_available_schemas(request):
     try:
         # Get connection details from request
         data = request.data
+        required_fields = ['database_type', 'username', 'password', 'database', 'hostname', 'port']
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            return Response(
+                {'message': f"Missing required fields: {', '.join(missing_fields)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         try:
             conn_type = conn_models.DataSources.objects.get(id=data['database_type'], type__iexact='DATABASE')
         except conn_models.DataSources.DoesNotExist:
@@ -1207,7 +1242,8 @@ def get_available_schemas(request):
             data['port'],
             data.get('service_name',''),
             conn_type.name.upper(),
-            data.get('path','')
+            data.get('path',''),
+            schema=data.get('schema')
         )
         
         if server_conn['status'] != 200:
@@ -1232,6 +1268,11 @@ def get_available_schemas(request):
                     ORDER BY SCHEMA_NAME;
 
                     """))
+            case _:
+                return Response(
+                    {'message': f"Schema discovery is not implemented for {conn_type.name}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         schemas = [row[0] for row in schemas_query.fetchall()]
         
         return Response({'schemas': schemas}, status=status.HTTP_200_OK)

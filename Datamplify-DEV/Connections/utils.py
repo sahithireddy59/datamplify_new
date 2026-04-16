@@ -408,7 +408,7 @@ def mongo_db(username, password, database, hostname, port):
 from urllib.parse import quote_plus
 
 
-def server_connection(username, password, database, hostname,port,service_name,parameter,server_path):
+def server_connection(username, password, database, hostname,port,service_name,parameter,server_path, schema=None):
     try:
         password1234=quote_plus(decode_value(password))
     except:
@@ -422,7 +422,11 @@ def server_connection(username, password, database, hostname,port,service_name,p
         case "MYSQL":
             url = f'mysql+mysqlconnector://{username}:{password1234}@{hostname}:{port}/{database}'
         case "SNOWFLAKE":
-            url = f'snowflake://{username}:{password1234}@{hostname}/{database}?port={port}'
+            snowflake_options = [f'port={port}']
+            if schema:
+                snowflake_options.append(f'schema={quote_plus(str(schema))}')
+            query_string = '&'.join(snowflake_options)
+            url = f'snowflake://{username}:{password1234}@{hostname}/{database}?{query_string}'
         case "IBMDB2":
             url = f'ibm_db_sa://{username}:{password1234}@{hostname}:{port}/{database}'
         case "MICROSOFTSQLSERVER":
@@ -486,7 +490,7 @@ def server_connection(username, password, database, hostname,port,service_name,p
         engine = create_engine(url)
         cursor = engine.connect()
     except Exception as e:
-        return {"status":400,"message":"Invalid Credentials"}
+        return {"status":400,"message":str(e)}
     data={
         "status":200,
         "engine":engine,
@@ -507,7 +511,8 @@ def generate_engine(id,user_id):
         if server_type.type.lower() =='database':
             database_details = conn_models.DatabaseConnections.objects.get(id=Connection_details.table_id)
             data = server_connection(database_details.username,database_details.password,database_details.database,database_details.hostname,
-                                    database_details.port,database_details.service_name,server_type.name,database_details.database_path)
+                                    database_details.port,database_details.service_name,server_type.name,database_details.database_path,
+                                    schema=database_details.schema)
             data['schema'] = database_details.schema
             data['type'] = server_type.name
             return data
@@ -688,4 +693,231 @@ def get_table_details(database_type,cursor,schema='public'):
         table_data = {"tables": table_name, "columns": columns}
         tables.append(table_data)
 
+    return tables
+
+
+def _get_mongodb_columns(cursor, table_name):
+    collection = cursor[table_name]
+    fields = {}
+
+    for row in collection.find({}):
+        flat_row = flatten_document(row)
+        for key, value in flat_row.items():
+            fields[key] = type(value).__name__
+        break
+
+    sql_type_map = {
+        "int": "integer",
+        "float": "numeric",
+        "str": "character varying",
+        "datetime": "timestamp",
+        "ObjectId": "integer",
+        "bool": "boolean",
+        "list": "json",
+        "dict": "json",
+        "NoneType": "character varying",
+    }
+
+    return [
+        {
+            "col": col,
+            "dtype": sql_type_map.get(py_type, "character varying")
+        }
+        for col, py_type in fields.items()
+    ]
+
+
+def get_table_names(database_type, cursor, schema='public'):
+    database_type = database_type.lower()
+
+    match database_type:
+        case 'mysql' | 'mariadb':
+            cursor_data = cursor.execute(text("""SELECT
+                    TABLE_NAME
+                FROM
+                    INFORMATION_SCHEMA.TABLES
+                WHERE
+                    TABLE_SCHEMA = DATABASE()
+                ORDER BY
+                    TABLE_NAME;"""))
+            return [{"tables": row[0]} for row in cursor_data.fetchall()]
+
+        case 'oracle':
+            cursor_data = cursor.execute(text("""SELECT
+                    TABLE_NAME
+                FROM
+                    USER_TABLES
+                ORDER BY
+                    TABLE_NAME"""))
+            return [{"tables": row[0]} for row in cursor_data.fetchall()]
+
+        case 'snowflake':
+            cursor_data = cursor.execute(text("""SELECT
+                    TABLE_NAME
+                FROM
+                    INFORMATION_SCHEMA.TABLES
+                WHERE
+                    TABLE_SCHEMA = :schema
+                    AND TABLE_CATALOG = CURRENT_DATABASE()
+                ORDER BY
+                    TABLE_NAME;"""), {"schema": schema})
+            return [{"tables": row[0]} for row in cursor_data.fetchall()]
+
+        case 'sqlite':
+            cursor_data = cursor.execute(text("""SELECT
+                    name
+                FROM
+                    sqlite_master
+                WHERE
+                    type = 'table'
+                    AND name NOT LIKE 'sqlite_%'
+                ORDER BY
+                    name;"""))
+            return [{"tables": row[0]} for row in cursor_data.fetchall()]
+
+        case 'microsoftsqlserver':
+            cursor_data = cursor.execute(text("""SELECT
+                    t.name
+                FROM
+                    sys.tables AS t
+                INNER JOIN sys.schemas AS s ON t.schema_id = s.schema_id
+                WHERE
+                    s.name = :schema
+                ORDER BY
+                    t.name;"""), {"schema": schema or "dbo"})
+            return [{"tables": row[0]} for row in cursor_data.fetchall()]
+
+        case 'postgresql':
+            cursor_data = cursor.execute(text("""SELECT
+                    table_name
+                FROM
+                    information_schema.tables
+                WHERE
+                    table_schema = :schema
+                    AND table_type = 'BASE TABLE'
+                ORDER BY
+                    table_name;"""), {"schema": schema})
+            return [{"tables": row[0]} for row in cursor_data.fetchall()]
+
+        case 'db2':
+            cursor_data = cursor.execute(text("""SELECT
+                    TABNAME
+                FROM
+                    SYSCAT.TABLES
+                WHERE
+                    TABSCHEMA = CURRENT SCHEMA
+                ORDER BY
+                    TABNAME;"""))
+            return [{"tables": row[0]} for row in cursor_data.fetchall()]
+
+        case 'mongodb':
+            return [{"tables": coll_name} for coll_name in cursor.list_collection_names()]
+
+        case _:
+            raise ValueError(f"Unsupported database type: {database_type}")
+
+
+def get_single_table_details(database_type, cursor, table_name, schema='public'):
+    database_type = database_type.lower()
+
+    match database_type:
+        case 'mysql' | 'mariadb':
+            cursor_data = cursor.execute(text("""SELECT
+                    COLUMN_NAME,
+                    DATA_TYPE
+                FROM
+                    INFORMATION_SCHEMA.COLUMNS
+                WHERE
+                    TABLE_SCHEMA = DATABASE()
+                    AND TABLE_NAME = :table_name
+                ORDER BY
+                    ORDINAL_POSITION;"""), {"table_name": table_name})
+            columns = [{"col": row[0], "dtype": row[1]} for row in cursor_data.fetchall()]
+
+        case 'oracle':
+            cursor_data = cursor.execute(text("""SELECT
+                    COLUMN_NAME,
+                    DATA_TYPE
+                FROM
+                    ALL_TAB_COLUMNS
+                WHERE
+                    OWNER = USER
+                    AND TABLE_NAME = :table_name
+                ORDER BY
+                    COLUMN_ID"""), {"table_name": table_name})
+            columns = [{"col": row[0], "dtype": row[1]} for row in cursor_data.fetchall()]
+
+        case 'snowflake':
+            cursor_data = cursor.execute(text("""SELECT
+                    COLUMN_NAME,
+                    DATA_TYPE
+                FROM
+                    INFORMATION_SCHEMA.COLUMNS
+                WHERE
+                    TABLE_SCHEMA = :schema
+                    AND TABLE_CATALOG = CURRENT_DATABASE()
+                    AND TABLE_NAME = :table_name
+                ORDER BY
+                    ORDINAL_POSITION;"""), {"schema": schema, "table_name": table_name})
+            columns = [{"col": row[0], "dtype": row[1]} for row in cursor_data.fetchall()]
+
+        case 'sqlite':
+            escaped_table_name = table_name.replace("'", "''")
+            cursor_data = cursor.execute(text(f"PRAGMA table_info('{escaped_table_name}');"))
+            columns = [{"col": row[1], "dtype": row[2] or "string"} for row in cursor_data.fetchall()]
+
+        case 'microsoftsqlserver':
+            cursor_data = cursor.execute(text("""SELECT
+                    c.name,
+                    TYPE_NAME(c.user_type_id)
+                FROM
+                    sys.tables AS t
+                INNER JOIN sys.columns AS c ON t.object_id = c.object_id
+                INNER JOIN sys.schemas AS s ON t.schema_id = s.schema_id
+                WHERE
+                    s.name = :schema
+                    AND t.name = :table_name
+                ORDER BY
+                    c.column_id;"""), {"schema": schema or "dbo", "table_name": table_name})
+            columns = [{"col": row[0], "dtype": row[1]} for row in cursor_data.fetchall()]
+
+        case 'postgresql':
+            cursor_data = cursor.execute(text("""SELECT
+                    column_name,
+                    data_type
+                FROM
+                    information_schema.columns
+                WHERE
+                    table_schema = :schema
+                    AND table_name = :table_name
+                ORDER BY
+                    ordinal_position;"""), {"schema": schema, "table_name": table_name})
+            columns = [{"col": row[0], "dtype": row[1]} for row in cursor_data.fetchall()]
+
+        case 'db2':
+            cursor_data = cursor.execute(text("""SELECT
+                    COLNAME,
+                    TYPENAME
+                FROM
+                    SYSCAT.COLUMNS
+                WHERE
+                    TABSCHEMA = CURRENT SCHEMA
+                    AND TABNAME = :table_name
+                ORDER BY
+                    COLNO;"""), {"table_name": table_name})
+            columns = [{"col": row[0], "dtype": row[1]} for row in cursor_data.fetchall()]
+
+        case 'mongodb':
+            columns = _get_mongodb_columns(cursor, table_name)
+
+        case _:
+            raise ValueError(f"Unsupported database type: {database_type}")
+
+    return {"tables": table_name, "columns": columns}
+
+
+def get_table_details(database_type, cursor, schema='public'):
+    tables = []
+    for table in get_table_names(database_type, cursor, schema):
+        tables.append(get_single_table_details(database_type, cursor, table["tables"], schema))
     return tables
