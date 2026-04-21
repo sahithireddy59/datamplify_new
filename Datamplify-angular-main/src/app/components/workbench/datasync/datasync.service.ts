@@ -57,6 +57,7 @@ export interface SyncJob {
   sync_mode: 'full' | 'incremental' | 'incremental_timestamp' | 'incremental_id' | 'incremental_cursor' | 'history';
   sync_frequency: 'manual' | '15min' | 'hourly' | 'daily' | 'weekly' | 'custom';
   cron_expression?: string;
+  notification_email?: string;
   status?: 'active' | 'running' | 'paused' | 'error' | 'configuring';
   current_run_id?: string;
   current_run_status?: 'pending' | 'running' | 'success' | 'partial_success' | 'failed' | 'cancelled';
@@ -104,6 +105,7 @@ export interface SyncModeOption {
 })
 export class DatasyncService {
   private apiUrl = `${environment.apiUrl}/datasync`;
+  private jobsCache: any[] | null = null;
   readonly syncModes: SyncModeOption[] = [
     {
       value: 'full',
@@ -176,9 +178,25 @@ export class DatasyncService {
     return this.http.post(`${this.apiUrl}/connectors/${id}/discover_schema/`, {}, { headers: this.getHeaders() });
   }
 
+  listTables(id: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/connectors/${id}/list_tables/`, { headers: this.getHeaders() });
+  }
+
   // Job APIs
   getJobs(): Observable<any> {
     return this.http.get(`${this.apiUrl}/jobs/`, { headers: this.getHeaders() });
+  }
+
+  getCachedJobs(): any[] | null {
+    return this.jobsCache ? [...this.jobsCache] : null;
+  }
+
+  setCachedJobs(jobs: any[]): void {
+    this.jobsCache = Array.isArray(jobs) ? [...jobs] : null;
+  }
+
+  clearJobsCache(): void {
+    this.jobsCache = null;
   }
 
   getJob(id: string): Observable<SyncJob> {

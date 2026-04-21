@@ -44,7 +44,7 @@ class SyncJobSerializer(serializers.ModelSerializer):
             'id', 'name', 'description', 'source_connector', 'destination_connector',
             'source_connector_name', 'destination_connector_name',
             'destination_schema', 'table_prefix', 'sync_mode', 'sync_frequency',
-            'cron_expression', 'status', 'last_sync_at', 'next_sync_at',
+            'cron_expression', 'notification_email', 'status', 'last_sync_at', 'next_sync_at',
             'dag_id', 'tables', 'table_count', 'current_run_id', 'current_run_status',
             'display_status', 'user_id', 'created_at', 'updated_at'
         ]
@@ -52,6 +52,30 @@ class SyncJobSerializer(serializers.ModelSerializer):
     
     def get_table_count(self, obj):
         return obj.tables.filter(is_enabled=True).count()
+
+    def get_display_status(self, obj):
+        return obj.current_run_status or obj.status
+
+
+class SyncJobListSerializer(serializers.ModelSerializer):
+    source_connector_name = serializers.CharField(source='source_connector.name', read_only=True)
+    destination_connector_name = serializers.CharField(source='destination_connector.name', read_only=True)
+    table_count = serializers.IntegerField(read_only=True)
+    current_run_id = serializers.UUIDField(read_only=True)
+    current_run_status = serializers.CharField(read_only=True)
+    display_status = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SyncJob
+        fields = [
+            'id', 'name', 'description', 'source_connector', 'destination_connector',
+            'source_connector_name', 'destination_connector_name',
+            'destination_schema', 'table_prefix', 'sync_mode', 'sync_frequency',
+            'cron_expression', 'notification_email', 'status', 'last_sync_at', 'next_sync_at',
+            'dag_id', 'table_count', 'current_run_id', 'current_run_status',
+            'display_status', 'user_id', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'last_sync_at', 'next_sync_at', 'dag_id']
 
     def get_display_status(self, obj):
         return obj.current_run_status or obj.status
@@ -65,11 +89,12 @@ class SyncJobCreateSerializer(serializers.ModelSerializer):
         fields = [
             'name', 'description', 'source_connector', 'destination_connector',
             'destination_schema', 'table_prefix', 'sync_mode', 'sync_frequency',
-            'cron_expression', 'tables'
+            'cron_expression', 'notification_email', 'tables'
         ]
     
     def create(self, validated_data):
         tables_data = validated_data.pop('tables', [])
+        requested_job_mode = validated_data.get('sync_mode', 'full')
         validated_data.setdefault('status', 'active')
         validated_data['next_sync_at'] = calculate_next_sync_at(
             validated_data.get('sync_frequency'),
@@ -78,6 +103,7 @@ class SyncJobCreateSerializer(serializers.ModelSerializer):
         sync_job = SyncJob.objects.create(**validated_data)
         
         for table_data in tables_data:
+            table_data['sync_mode'] = self._resolve_table_sync_mode(requested_job_mode, table_data)
             SyncTable.objects.create(sync_job=sync_job, **table_data)
         
         return sync_job
@@ -112,6 +138,35 @@ class SyncJobCreateSerializer(serializers.ModelSerializer):
             })
 
         return attrs
+
+    def _resolve_table_sync_mode(self, requested_job_mode, table_data):
+        if requested_job_mode != 'history':
+            return table_data.get('sync_mode')
+
+        primary_key = table_data.get('primary_key_field')
+        cursor_field = table_data.get('cursor_field')
+
+        if self._is_valid_history_primary_key(primary_key):
+            return 'history'
+        if cursor_field:
+            return 'incremental'
+        return 'full'
+
+    def _is_valid_history_primary_key(self, primary_key):
+        if not primary_key:
+            return False
+
+        normalized = str(primary_key).strip().lower()
+        if not normalized:
+            return False
+
+        if normalized in {
+            'name', 'title', 'label', 'description', 'value', 'text',
+            'email', 'domain', 'slug', 'path', 'url'
+        }:
+            return False
+
+        return normalized in {'id', 'key', 'objectid', 'hs_object_id'} or normalized.endswith('id')
 
 
 class SyncLogSerializer(serializers.ModelSerializer):

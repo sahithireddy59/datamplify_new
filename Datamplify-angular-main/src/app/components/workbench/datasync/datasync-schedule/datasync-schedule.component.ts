@@ -17,6 +17,7 @@ export class DatasyncScheduleComponent implements OnInit {
   job: SyncJob | null = null;
   syncFrequency: SyncJob['sync_frequency'] = 'manual';
   cronExpression = '';
+  notificationEmail = '';
   loading = false;
   saving = false;
   error: string | null = null;
@@ -45,6 +46,7 @@ export class DatasyncScheduleComponent implements OnInit {
         this.job = job;
         this.syncFrequency = job.sync_frequency;
         this.cronExpression = job.cron_expression || '';
+        this.notificationEmail = job.notification_email || '';
         this.loading = false;
       },
       error: (err) => {
@@ -68,7 +70,8 @@ export class DatasyncScheduleComponent implements OnInit {
 
     this.datasyncService.updateJob(this.jobId, {
       sync_frequency: this.syncFrequency,
-      cron_expression: this.syncFrequency === 'custom' ? this.cronExpression.trim() : ''
+      cron_expression: this.syncFrequency === 'custom' ? this.cronExpression.trim() : '',
+      notification_email: this.notificationEmail.trim()
     }).subscribe({
       next: () => {
         this.saving = false;

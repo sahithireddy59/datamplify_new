@@ -67,7 +67,7 @@ class MySQLConnector(BaseConnector):
             ]
             cursor_field = next(
                 (col['name'] for col in columns if col['name'].lower() in cursor_candidates),
-                primary_key
+                primary_key if self._is_valid_identifier_column(primary_key) else self._infer_identifier_column(columns)
             )
             
             # Get row count
@@ -80,12 +80,37 @@ class MySQLConnector(BaseConnector):
                 'database': database,
                 'row_count': row_count,
                 'columns': columns,
-                'supports_incremental': True,
+                'supports_incremental': cursor_field is not None,
+                'supports_history': self._is_valid_history_key(primary_key),
                 'primary_key': primary_key,
                 'cursor_field': cursor_field
             })
         
         return tables
+
+    def list_tables(self) -> List[Dict[str, Any]]:
+        """Return table names quickly without loading full metadata."""
+        engine = self._get_connection()
+        inspector = inspect(engine)
+        database = self.config.get('database')
+
+        return [
+            {
+                'name': table_name,
+                'label': table_name,
+                'destination_name': table_name,
+                'database': database,
+                'row_count': None,
+                'columns': [],
+                'supports_incremental': False,
+                'supports_history': False,
+                'primary_key': None,
+                'cursor_field': None,
+                'discovery_status': 'pending',
+                'discovery_error': None,
+            }
+            for table_name in inspector.get_table_names()
+        ]
     
     def fetch_data(self, table_name: str, cursor_value: Optional[str] = None,
                    cursor_field: Optional[str] = None, limit: Optional[int] = 1000) -> Dict[str, Any]:
@@ -169,6 +194,40 @@ class MySQLConnector(BaseConnector):
             'updated': updated,
             'failed': failed
         }
+
+    def _infer_identifier_column(self, columns: List[Dict[str, Any]]) -> Optional[str]:
+        by_name = {column['name'].lower(): column['name'] for column in columns}
+        for candidate in ['id', 'empid', 'employee_id', 'emp_id']:
+            if candidate in by_name:
+                return by_name[candidate]
+
+        return next(
+            (column['name'] for column in columns if self._is_valid_identifier_column(column['name'])),
+            None
+        )
+
+    def _is_valid_identifier_column(self, column_name: Optional[str]) -> bool:
+        if not column_name:
+            return False
+
+        normalized = str(column_name).strip().lower()
+        if not normalized:
+            return False
+
+        blocked_names = {
+            'name', 'title', 'label', 'description', 'value', 'text',
+            'email', 'domain', 'slug', 'path', 'url'
+        }
+        if normalized in blocked_names:
+            return False
+
+        if normalized in {'id', 'key', 'objectid', 'hs_object_id', 'empid', 'employee_id', 'emp_id'}:
+            return True
+
+        return normalized.endswith('id')
+
+    def _is_valid_history_key(self, primary_key: Optional[str]) -> bool:
+        return self._is_valid_identifier_column(primary_key)
     
     def __del__(self):
         """Close connection on cleanup"""

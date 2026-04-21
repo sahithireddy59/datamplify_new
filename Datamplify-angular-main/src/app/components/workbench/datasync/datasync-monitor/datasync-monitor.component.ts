@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { forkJoin } from 'rxjs';
-import { DatasyncService, SyncJob, SyncRun } from '../datasync.service';
+import { DatasyncService, SyncJob, SyncRun, SyncTable } from '../datasync.service';
 import { WorkbenchService } from '../../workbench.service';
 
 @Component({
@@ -219,6 +219,58 @@ export class DatasyncMonitorComponent implements OnInit, OnDestroy {
     return new Date(value).toLocaleString();
   }
 
+  getDisplaySourceTableName(table: SyncTable): string {
+    return this.getReadableTableName(table.source_table);
+  }
+
+  getDisplayDestinationTableName(table: SyncTable): string {
+    return this.getReadableTableName(table.destination_table);
+  }
+
+  getTableModeLabel(table: SyncTable): string {
+    switch (table.sync_mode) {
+      case 'history':
+        return 'History';
+      case 'incremental':
+      case 'incremental_cursor':
+      case 'incremental_id':
+      case 'incremental_timestamp':
+        return 'Incremental';
+      case 'full':
+      default:
+        return 'Resync';
+    }
+  }
+
+  getTableModeBadgeClass(table: SyncTable): string {
+    switch (table.sync_mode) {
+      case 'history':
+        return 'badge-success';
+      case 'incremental':
+      case 'incremental_cursor':
+      case 'incremental_id':
+      case 'incremental_timestamp':
+        return 'badge-primary';
+      case 'full':
+      default:
+        return 'badge-secondary';
+    }
+  }
+
+  getHistoryTableCount(): number {
+    return this.job?.tables?.filter((table) => table.sync_mode === 'history').length || 0;
+  }
+
+  getIncrementalTableCount(): number {
+    return this.job?.tables?.filter((table) =>
+      ['incremental', 'incremental_cursor', 'incremental_id', 'incremental_timestamp'].includes(table.sync_mode || '')
+    ).length || 0;
+  }
+
+  getNotApplicableTableCount(): number {
+    return this.job?.tables?.filter((table) => !table.sync_mode || table.sync_mode === 'full').length || 0;
+  }
+
   formatLogDetails(details: any): string {
     if (!details) {
       return '';
@@ -237,7 +289,33 @@ export class DatasyncMonitorComponent implements OnInit, OnDestroy {
     if (!this.selectedRun?.id) {
       return;
     }
-    this.loadRuns(false);
+
+    this.loadingLogs = true;
+    this.error = null;
+    this.workbenchService.disableLoaderForNextRequest();
+
+    forkJoin({
+      job: this.datasyncService.getJob(this.jobId),
+      runs: this.datasyncService.getJobRuns(this.jobId),
+      run: this.datasyncService.getRun(this.selectedRun.id),
+      logs: this.datasyncService.getRunLogs(this.selectedRun.id),
+    }).subscribe({
+      next: ({ job, runs, run, logs }) => {
+        this.job = job;
+        this.runs = runs.results || runs;
+        this.selectedRun = {
+          ...this.selectedRun!,
+          ...run,
+        };
+        this.selectedRunLogs = this.buildDisplayedLogs(run, logs.results || logs);
+        this.loadingLogs = false;
+        this.configureAutoRefresh();
+      },
+      error: (err) => {
+        this.loadingLogs = false;
+        this.error = err?.error?.detail || err?.error?.message || 'Failed to refresh run logs.';
+      }
+    });
   }
 
   private configureAutoRefresh(): void {
@@ -331,5 +409,28 @@ export class DatasyncMonitorComponent implements OnInit, OnDestroy {
     }
 
     return fallbackLogs;
+  }
+
+  private getReadableTableName(value?: string): string {
+    if (!value) {
+      return '-';
+    }
+
+    const normalizedValue = value.trim();
+    if (!normalizedValue) {
+      return '-';
+    }
+
+    const slashSegments = normalizedValue.split('/').filter(Boolean);
+    const lastSlashSegment = slashSegments[slashSegments.length - 1];
+
+    if (slashSegments.length > 1 && lastSlashSegment) {
+      return lastSlashSegment;
+    }
+
+    const dotSegments = normalizedValue.split('.').filter(Boolean);
+    const lastDotSegment = dotSegments[dotSegments.length - 1];
+
+    return lastDotSegment || normalizedValue;
   }
 }

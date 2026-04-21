@@ -10,7 +10,7 @@ import { WorkbenchService } from '../../workbench.service';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './datasync-list.component.html',
-  styleUrls: ['./datasync-list.component.scss']
+  styleUrl: './datasync-list.component.scss'
 })
 export class DatasyncListComponent implements OnInit, OnDestroy {
   syncJobs: SyncJob[] = [];
@@ -26,6 +26,13 @@ export class DatasyncListComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
+    const cachedJobs = this.datasyncService.getCachedJobs();
+    if (cachedJobs && cachedJobs.length > 0) {
+      this.syncJobs = cachedJobs;
+      this.loading = false;
+      this.loadSyncJobsInternal(false);
+      return;
+    }
     this.loadSyncJobs();
   }
 
@@ -48,6 +55,7 @@ export class DatasyncListComponent implements OnInit, OnDestroy {
     this.datasyncService.getJobs().subscribe({
       next: (response) => {
         this.syncJobs = response.results || response;
+        this.datasyncService.setCachedJobs(this.syncJobs);
         this.loading = false;
         this.applyTrackedRunStates();
         this.syncTrackedRuns();
@@ -82,6 +90,7 @@ export class DatasyncListComponent implements OnInit, OnDestroy {
     
     this.datasyncService.triggerSync(job.id).subscribe({
       next: (response) => {
+        this.datasyncService.clearJobsCache();
         if (response?.run_id) {
           this.trackedRuns[job.id!] = {
             runId: response.run_id,
@@ -109,6 +118,7 @@ export class DatasyncListComponent implements OnInit, OnDestroy {
     
     this.datasyncService.pauseJob(job.id).subscribe({
       next: () => {
+        this.datasyncService.clearJobsCache();
         alert('Job paused. Scheduled runs are paused, but you can still start a manual run.');
         this.loadSyncJobs();
       },
@@ -126,6 +136,7 @@ export class DatasyncListComponent implements OnInit, OnDestroy {
     
     this.datasyncService.activateJob(job.id).subscribe({
       next: () => {
+        this.datasyncService.clearJobsCache();
         alert('Job activated. Scheduled runs can resume.');
         this.loadSyncJobs();
       },
@@ -144,6 +155,7 @@ export class DatasyncListComponent implements OnInit, OnDestroy {
     if (confirm(`Are you sure you want to delete "${job.name}"?`)) {
       this.datasyncService.deleteJob(job.id).subscribe({
         next: () => {
+          this.datasyncService.clearJobsCache();
           this.loadSyncJobs();
         },
         error: (err) => {

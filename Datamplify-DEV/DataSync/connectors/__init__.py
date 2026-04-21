@@ -1,5 +1,4 @@
 from .base import BaseConnector
-from .hubspot import HubSpotConnector
 from .integration_source import GenericIntegrationSourceConnector
 from .postgresql import PostgreSQLConnector
 from .mysql import MySQLConnector
@@ -35,4 +34,4 @@ def get_connector(sync_connector):
     return connector_class(sync_connector)
 
 
-__all__ = ['BaseConnector', 'HubSpotConnector', 'GenericIntegrationSourceConnector', 'PostgreSQLConnector', 'MySQLConnector', 'SQLSourceConnector', 'get_connector']
+__all__ = ['BaseConnector', 'GenericIntegrationSourceConnector', 'PostgreSQLConnector', 'MySQLConnector', 'SQLSourceConnector', 'get_connector']

@@ -151,18 +151,52 @@ class SQLSourceConnector(BaseConnector):
                 })
 
             cursor_field = self._resolve_cursor_field(columns, primary_key)
+            resolved_primary_key = primary_key or self._infer_identifier_column(columns)
 
             tables.append({
                 'name': table_name,
                 'schema': selected_schema,
                 'row_count': None,
                 'columns': columns,
-                'supports_incremental': True,
-                'primary_key': primary_key or self._infer_identifier_column(columns),
+                'supports_incremental': cursor_field is not None,
+                'supports_history': self._is_valid_history_key(resolved_primary_key),
+                'primary_key': resolved_primary_key,
                 'cursor_field': cursor_field,
             })
 
         return tables
+
+    def list_tables(self) -> List[Dict[str, Any]]:
+        inspector = inspect(self._get_engine())
+        selected_schema = None
+        table_names: List[str] = []
+
+        for schema_candidate in self._get_schema_candidates():
+            try:
+                table_names = inspector.get_table_names(schema=schema_candidate)
+            except Exception:
+                continue
+            if table_names:
+                selected_schema = schema_candidate
+                break
+
+        return [
+            {
+                'name': table_name,
+                'label': table_name,
+                'destination_name': table_name,
+                'schema': selected_schema,
+                'row_count': None,
+                'columns': [],
+                'supports_incremental': False,
+                'supports_history': False,
+                'primary_key': None,
+                'cursor_field': None,
+                'discovery_status': 'pending',
+                'discovery_error': None,
+            }
+            for table_name in table_names
+        ]
 
     def fetch_data(
         self,
@@ -241,7 +275,12 @@ class SQLSourceConnector(BaseConnector):
         for candidate in cursor_candidates:
             if candidate in by_name:
                 return by_name[candidate]
-        return primary_key or self._infer_identifier_column(columns)
+        if primary_key and self._is_valid_identifier_column(primary_key):
+            return primary_key
+        inferred_identifier = self._infer_identifier_column(columns)
+        if inferred_identifier and self._is_valid_identifier_column(inferred_identifier):
+            return inferred_identifier
+        return None
 
     def _infer_identifier_column(self, columns: List[Dict[str, Any]]) -> Optional[str]:
         by_name = {column['name'].lower(): column['name'] for column in columns}
@@ -249,10 +288,33 @@ class SQLSourceConnector(BaseConnector):
             if candidate in by_name:
                 return by_name[candidate]
         suffix_match = next(
-            (column['name'] for column in columns if column['name'].lower().endswith('id')),
+            (column['name'] for column in columns if self._is_valid_identifier_column(column['name'])),
             None
         )
-        return suffix_match or (columns[0]['name'] if columns else None)
+        return suffix_match
+
+    def _is_valid_identifier_column(self, column_name: Optional[str]) -> bool:
+        if not column_name:
+            return False
+
+        normalized = str(column_name).strip().lower()
+        if not normalized:
+            return False
+
+        blocked_names = {
+            'name', 'title', 'label', 'description', 'value', 'text',
+            'email', 'domain', 'slug', 'path', 'url'
+        }
+        if normalized in blocked_names:
+            return False
+
+        if normalized in {'id', 'key', 'objectid', 'hs_object_id', 'empid', 'employee_id', 'emp_id'}:
+            return True
+
+        return normalized.endswith('id')
+
+    def _is_valid_history_key(self, primary_key: Optional[str]) -> bool:
+        return self._is_valid_identifier_column(primary_key)
 
     def _resolve_requested_field(
         self,

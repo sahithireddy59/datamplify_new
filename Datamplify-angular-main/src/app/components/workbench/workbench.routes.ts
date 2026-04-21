@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Routes } from '@angular/router';
 import { authGuard } from '../../auth.guard';
 import { permissionGuard } from '../../shared/guards/permission.guard'
+import { datasyncRoutes } from './datasync/datasync.routes';
 
 export const admin: Routes = [
 
@@ -197,8 +198,7 @@ export const admin: Routes = [
       {
         path: 'sync',
         canActivate: [authGuard],
-        loadChildren: () =>
-          import('./datasync/datasync.routes').then((m) => m.datasyncRoutes)
+        children: datasyncRoutes
       },
       {
         path: 'datasync',

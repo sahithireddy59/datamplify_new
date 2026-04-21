@@ -1,19 +1,71 @@
 .datasync-monitor-page {
-  color: #1f2d3d;
+  color: var(--default-text-color);
+}
+
+.datasync-monitor-page,
+.datasync-monitor-page .monitor-shell-card,
+.datasync-monitor-page .monitor-shell-body {
+  background: transparent !important;
+}
+
+.datasync-monitor-page .glass-card,
+.datasync-monitor-page .monitor-header,
+.datasync-monitor-page .monitor-panel,
+.datasync-monitor-page .metric-card,
+.datasync-monitor-page .run-row,
+.datasync-monitor-page .log-item,
+.datasync-monitor-page .alert {
+  background: rgba(var(--light-rgb), 0.92) !important;
+  color: var(--default-text-color) !important;
+  border-color: var(--default-border) !important;
+}
+
+.datasync-monitor-page .monitor-title,
+.datasync-monitor-page .monitor-subtitle,
+.datasync-monitor-page .metric-label,
+.datasync-monitor-page .metric-value,
+.datasync-monitor-page .monitor-card-title,
+.datasync-monitor-page .run-row,
+.datasync-monitor-page .run-row .text-muted,
+.datasync-monitor-page .run-metrics,
+.datasync-monitor-page .log-item,
+.datasync-monitor-page .log-item .text-muted,
+.datasync-monitor-page h1,
+.datasync-monitor-page h2,
+.datasync-monitor-page h3,
+.datasync-monitor-page h4,
+.datasync-monitor-page h5,
+.datasync-monitor-page h6,
+.datasync-monitor-page p,
+.datasync-monitor-page span,
+.datasync-monitor-page td,
+.datasync-monitor-page th,
+.datasync-monitor-page button {
+  color: var(--default-text-color) !important;
+}
+
+.monitor-shell-card {
+  min-height: 466px;
+}
+
+.monitor-shell-body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-top: 72px;
 }
 
 .monitor-header {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
   gap: 16px;
+  padding: 20px 24px;
 }
 
 .monitor-hero {
-  background: #ffffff;
-  border: 1px solid #e5edf7;
-  border-radius: 16px;
-  padding: 20px 24px;
-  box-shadow: 0 10px 24px rgba(10, 31, 68, 0.06);
+  flex: 1;
 }
 
 .monitor-back-link {
@@ -23,7 +75,7 @@
 
 .monitor-title {
   margin: 0;
-  color: #1f2d3d !important;
+  color: var(--default-text-color) !important;
   font-size: 1.75rem;
   font-weight: 700;
   line-height: 1.25;
@@ -32,7 +84,7 @@
 
 .monitor-subtitle {
   margin-top: 6px;
-  color: #5f6f86 !important;
+  color: var(--text-muted) !important;
   line-height: 1.5;
 }
 
@@ -50,20 +102,20 @@
 }
 
 .monitor-action-btn-secondary {
-  background: #ffffff;
-  border: 1px solid #cdd9e8;
-  color: #1f2d3d !important;
+  background: rgba(var(--light-rgb), 0.96);
+  border: 1px solid var(--default-border);
+  color: var(--default-text-color) !important;
 }
 
 .monitor-action-btn-secondary:hover,
 .monitor-action-btn-secondary:focus {
-  background: #f4f8fc;
-  border-color: #b8c8dc;
-  color: #1f2d3d !important;
+  background: rgba(var(--primary-rgb), 0.08);
+  border-color: var(--default-border);
+  color: var(--default-text-color) !important;
 }
 
 .monitor-action-btn-outline {
-  background: #ffffff;
+  background: rgba(var(--light-rgb), 0.96);
   border: 1px solid #0d6efd;
   color: #0d6efd !important;
 }
@@ -98,50 +150,71 @@
 
 .metric-card {
   height: 100%;
-  border: 1px solid #e5edf7;
-  border-radius: 12px;
-  background: #fff;
-  padding: 18px;
-  box-shadow: 0 8px 20px rgba(10, 31, 68, 0.05);
+  border: 1px solid var(--default-border);
+  border-radius: 1rem;
+  background: rgba(var(--light-rgb), 0.92) !important;
+  padding: 16px 18px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 .metric-label {
   display: block;
-  color: #5f6f86 !important;
+  color: var(--text-muted) !important;
   font-size: 0.85rem;
   margin-bottom: 8px;
 }
 
 .metric-value {
   display: block;
-  color: #1f2d3d !important;
+  color: var(--default-text-color) !important;
   font-size: 1rem;
   line-height: 1.4;
   word-break: break-word;
 }
 
 .monitor-card-title {
-  color: #1f2d3d !important;
+  color: var(--default-text-color) !important;
   font-weight: 700;
 }
 
 .monitor-panel {
-  border: 1px solid #e5edf7;
+  border: 1px solid var(--default-border);
   border-radius: 14px;
   overflow: hidden;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.75);
   box-shadow: 0 10px 24px rgba(10, 31, 68, 0.05);
 }
 
 .monitor-panel-header {
-  background: #f8fbff;
-  border-bottom: 1px solid #e5edf7;
-  color: #1f2d3d !important;
+  background: rgba(var(--light-rgb), 0.96);
+  border-bottom: 1px solid var(--default-border);
+  color: var(--default-text-color) !important;
 }
 
 .monitor-panel-body {
-  background: #ffffff;
-  color: #1f2d3d !important;
+  background: rgba(var(--light-rgb), 0.92);
+  color: var(--default-text-color) !important;
+}
+
+.monitor-panel-body .table {
+  color: var(--default-text-color) !important;
+}
+
+.monitor-panel-body .table thead th {
+  color: var(--default-text-color) !important;
+  background: rgba(var(--light-rgb), 0.96);
+  border-bottom-color: var(--default-border);
+}
+
+.monitor-panel-body .table tbody td {
+  color: var(--default-text-color) !important;
+  background: rgba(var(--light-rgb), 0.92);
+  border-color: var(--default-border);
+}
+
+.monitor-panel-body .table-hover tbody tr:hover td {
+  color: var(--default-text-color) !important;
+  background: rgba(var(--primary-rgb), 0.08);
 }
 
 .monitor-toolbar {
@@ -173,13 +246,13 @@
 }
 
 .run-row.active {
-  border-color: #007bff;
+  border-color: #0d6efd;
   background: #f3f8ff;
 }
 
 .run-row .text-muted,
 .run-metrics {
-  color: #5f6f86 !important;
+  color: var(--text-muted) !important;
 }
 
 .run-metrics {
@@ -204,15 +277,15 @@
 }
 
 .log-item .text-muted {
-  color: #5f6f86 !important;
+  color: var(--text-muted) !important;
 }
 
 .log-item pre {
   white-space: pre-wrap;
   word-break: break-word;
-  color: #42556d !important;
-  background: #f4f8fc;
-  border: 1px solid #e5edf7;
+  color: var(--default-text-color) !important;
+  background: rgba(var(--light-rgb), 0.96);
+  border: 1px solid var(--default-border);
   border-radius: 8px;
   padding: 10px;
 }
@@ -271,10 +344,11 @@
 
 @media (max-width: 991.98px) {
   .monitor-hero {
-    padding: 18px;
+    width: 100%;
   }
 
   .monitor-header-actions {
+    width: 100%;
     align-items: stretch;
   }
 

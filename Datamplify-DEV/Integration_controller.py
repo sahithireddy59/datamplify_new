@@ -318,7 +318,8 @@ class BambooHrAuth(TokenAuth):
         self.payload = payload
         self.final_result = {}
         self.validate_payload(payload)
-        self.TEST_ENDPOINT = f"/{self.payload['domain'].rstrip('/')}/v1/company_information"
+        self.payload['domain'] = self._normalize_domain(self.payload['domain'])
+        self.TEST_ENDPOINT = f"/{self.payload['domain']}/v1/company_information"
 
 
     def build_headers(self):
@@ -328,6 +329,14 @@ class BambooHrAuth(TokenAuth):
         self.TOKEN_NAME: f"Basic {encoded_key}",
         "Content-Type": "application/json"
         }
+
+    def _normalize_domain(self, domain: str) -> str:
+        normalized = str(domain or '').strip().lower()
+        normalized = normalized.replace('https://', '').replace('http://', '')
+        normalized = normalized.strip('/')
+        if normalized.endswith('.bamboohr.com'):
+            normalized = normalized[:-len('.bamboohr.com')]
+        return normalized
 
 
 class DbtAuth(TokenAuth):

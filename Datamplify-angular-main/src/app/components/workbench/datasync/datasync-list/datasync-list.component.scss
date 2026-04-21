@@ -1,6 +1,232 @@
+.datasync-list-page {
+  color: var(--default-text-color);
+}
+
+.datasync-list-page,
+.datasync-list-page .sync-shell-card,
+.datasync-list-page .sync-shell-body {
+  background: transparent !important;
+}
+
+.sync-shell-card {
+  background: var(--custom-white) !important;
+}
+
+.datasync-list-page .sync-title,
+.datasync-list-page .sync-job-title,
+.datasync-list-page .sync-meta-value,
+.datasync-list-page .btn,
+.datasync-list-page .alert,
+.datasync-list-page h1,
+.datasync-list-page h2,
+.datasync-list-page h3,
+.datasync-list-page h4,
+.datasync-list-page h5,
+.datasync-list-page h6 {
+  color: var(--default-text-color) !important;
+}
+
+.sync-shell-card {
+  min-height: 380px;
+}
+
+.sync-shell-body {
+  min-height: 100vh;
+  gap: 0.6rem;
+  padding-top: 72px;
+}
+
+.sync-toolbar {
+  padding: 0.7rem 0.9rem;
+}
+
+.sync-toolbar-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.sync-title {
+  color: var(--default-text-color) !important;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0 0 0.25rem 0 !important;
+}
+
+.sync-subtitle {
+  color: var(--text-muted) !important;
+  line-height: 1.45;
+  margin: 0 !important;
+}
+
+.sync-alert {
+  margin-bottom: 0;
+}
+
+.sync-state {
+  color: var(--default-text-color);
+}
+
+.empty-state-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--primary-rgb, 13, 110, 253), 0.12);
+  color: #0d6efd;
+  font-size: 1.5rem;
+}
+
+.sync-job-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.sync-job-card {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+  color: var(--default-text-color) !important;
+  position: relative;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  padding: 0.7rem 0.8rem !important;
+}
+
+.sync-job-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(var(--primary-rgb), 0.35) !important;
+  box-shadow: 0 12px 28px rgba(10, 31, 68, 0.12);
+}
+
+.sync-job-main {
+  display: flex;
+  align-items: center;
+  min-width: 180px;
+}
+
+.sync-job-copy {
+  min-width: 0;
+}
+
+.sync-job-icon {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0d6efd;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.sync-job-title {
+  color: var(--default-text-color) !important;
+  font-weight: 600;
+  font-size: 0.88rem;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sync-job-description {
+  color: var(--text-muted) !important;
+  font-size: 0.76rem;
+  line-height: 1.2;
+}
+
+.sync-job-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  flex: 1;
+}
+
+.sync-meta-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 92px;
+  padding: 0.32rem 0.5rem;
+  border: 1px solid rgba(var(--primary-rgb, 13, 110, 253), 0.15);
+  border-radius: 0.65rem;
+  background: rgba(var(--light-rgb), 0.55);
+}
+
+.sync-meta-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted) !important;
+}
+
+.sync-meta-value {
+  color: var(--default-text-color) !important;
+  font-weight: 600;
+  font-size: 0.75rem;
+  word-break: break-word;
+}
+
+.sync-job-side {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 0.45rem;
+  min-width: 132px;
+}
+
+.sync-job-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.28rem;
+  position: relative;
+  z-index: 2;
+}
+
+.sync-job-actions .btn {
+  padding: 0.22rem 0.42rem;
+  font-size: 0.78rem;
+}
+
+.sync-job-actions .btn {
+  position: relative;
+  z-index: 2;
+}
+
+.sync-job-list .text-muted,
+.sync-job-list p,
+.sync-job-list span,
+.sync-job-list small,
+.sync-job-list strong,
+.sync-job-list h1,
+.sync-job-list h2,
+.sync-job-list h3,
+.sync-job-list h4,
+.sync-job-list h5,
+.sync-job-list h6 {
+  color: inherit;
+}
+
+.sync-state h5,
+.sync-state p {
+  color: var(--default-text-color) !important;
+}
+
+.sync-mode-badge {
+  text-transform: capitalize;
+}
+
 .badge {
-  padding: 0.35em 0.65em;
-  font-size: 0.85em;
+  padding: 0.22em 0.48em;
+  font-size: 0.68em;
 }
 
 .badge-success {
@@ -28,26 +254,37 @@
   color: white;
 }
 
-.table-hover tbody tr:hover {
-  background-color: #f8f9fa;
-}
-
-.btn-group .btn {
-  margin: 0 2px;
-}
-
 .sync-fab {
   position: fixed;
   right: 24px;
   bottom: 24px;
-  width: 56px;
-  height: 56px;
+  width: 42px;
+  height: 42px;
   border: none;
   border-radius: 999px;
   background: #0d6efd;
   color: #fff;
-  font-size: 2rem;
+  font-size: 1.45rem;
   line-height: 1;
   box-shadow: 0 12px 28px rgba(13, 110, 253, 0.3);
   z-index: 1100;
+}
+
+@media (max-width: 991.98px) {
+  .sync-job-card {
+    flex-direction: column;
+  }
+
+  .sync-job-main {
+    width: 100%;
+  }
+
+  .sync-job-side {
+    min-width: 0;
+    align-items: flex-start;
+  }
+
+  .sync-job-actions {
+    justify-content: flex-start;
+  }
 }

@@ -3,13 +3,13 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db import transaction
-from django.db.models import OuterRef, Subquery
+from django.db.models import Count, OuterRef, Q, Subquery
 from django.utils import timezone
 from oauth2_provider.contrib.rest_framework import OAuth2Authentication
 from authentication.permissions import CustomIsAuthenticated
 from .models import SyncConnector, SyncJob, SyncTable, SyncRun, SyncLog
 from .serializers import (
-    SyncConnectorSerializer, SyncJobSerializer, SyncJobCreateSerializer,
+    SyncConnectorSerializer, SyncJobListSerializer, SyncJobSerializer, SyncJobCreateSerializer,
     SyncTableSerializer, SyncRunSerializer, SyncRunListSerializer, SyncLogSerializer
 )
 from .connectors import get_connector
@@ -132,6 +132,32 @@ class SyncConnectorViewSet(viewsets.ModelViewSet):
                 'traceback': traceback.format_exc()
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    @action(detail=True, methods=['get'])
+    def list_tables(self, request, pk=None):
+        """Return a lightweight table list for fast initial rendering."""
+        connector = self.get_object()
+
+        if connector.connector_role != 'source':
+            return Response({
+                'error': 'Table listing only available for source connectors'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            connector_instance = get_connector(connector)
+            tables = connector_instance.list_tables()
+
+            return Response({
+                'success': True,
+                'tables': tables,
+                'count': len(tables),
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                'success': False,
+                'error': str(e),
+                'traceback': traceback.format_exc()
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     @action(detail=True, methods=['post'], url_path='discover')
     def discover_schema_legacy(self, request, pk=None):
         return self.discover_schema(request, pk)
@@ -178,6 +204,8 @@ class SyncJobViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'create':
             return SyncJobCreateSerializer
+        if self.action == 'list':
+            return SyncJobListSerializer
         return SyncJobSerializer
     
     def get_queryset(self):
@@ -186,12 +214,18 @@ class SyncJobViewSet(viewsets.ModelViewSet):
             sync_job=OuterRef('pk'),
             status__in=['pending', 'running']
         ).order_by('-created_at')
-        return SyncJob.objects.filter(user_id=user_id).select_related(
+        queryset = SyncJob.objects.filter(user_id=user_id).select_related(
             'source_connector', 'destination_connector'
-        ).prefetch_related('tables').annotate(
+        ).annotate(
             current_run_id=Subquery(active_runs.values('id')[:1]),
             current_run_status=Subquery(active_runs.values('status')[:1]),
+            table_count=Count('tables', filter=Q(tables__is_enabled=True), distinct=True),
         )
+
+        if self.action != 'list':
+            queryset = queryset.prefetch_related('tables')
+
+        return queryset
     
     def perform_create(self, serializer):
         serializer.save(user_id=self.request.user.id)
@@ -249,12 +283,31 @@ class SyncJobViewSet(viewsets.ModelViewSet):
     def pause(self, request, pk=None):
         """Pause a sync job"""
         sync_job = self.get_object()
+        active_runs = SyncRun.objects.filter(
+            sync_job=sync_job,
+            status__in=['pending', 'running']
+        )
+
         sync_job.status = 'paused'
-        sync_job.save()
+        sync_job.save(update_fields=['status', 'updated_at'])
+
+        cancelled_runs = 0
+        for sync_run in active_runs:
+            error_details = dict(sync_run.error_details or {})
+            error_details['previous_job_status'] = 'paused'
+            sync_run.status = 'cancelled'
+            sync_run.error_details = error_details
+            sync_run.completed_at = timezone.now()
+            if sync_run.started_at:
+                duration = (sync_run.completed_at - sync_run.started_at).total_seconds()
+                sync_run.duration_seconds = int(duration)
+            sync_run.save(update_fields=['status', 'error_details', 'completed_at', 'duration_seconds'])
+            cancelled_runs += 1
         
         return Response({
             'success': True,
-            'message': 'Sync job paused'
+            'message': 'Sync job paused and active runs cancelled' if cancelled_runs else 'Sync job paused',
+            'cancelled_runs': cancelled_runs,
         }, status=status.HTTP_200_OK)
     
     @action(detail=True, methods=['post'])

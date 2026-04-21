@@ -116,14 +116,23 @@ class GenericIntegrationSourceConnector(BaseConnector):
         skipped_endpoints = []
 
         for endpoint in self._get_endpoints():
-            try:
-                sample_batch = next(client.stream_batches(endpoint, batch_size=1), [])
-            except Exception as exc:
+            sample_batch = []
+            discovery_error = None
+            if self._should_skip_schema_sampling(endpoint):
+                discovery_error = self._get_sampling_skip_reason(endpoint)
                 skipped_endpoints.append({
                     'name': endpoint,
-                    'reason': self._format_discovery_error(exc),
+                    'reason': discovery_error,
                 })
-                continue
+            else:
+                try:
+                    sample_batch = next(client.stream_batches(endpoint, batch_size=1), [])
+                except Exception as exc:
+                    discovery_error = self._format_discovery_error(exc)
+                    skipped_endpoints.append({
+                        'name': endpoint,
+                        'reason': discovery_error,
+                    })
 
             rows = self._normalize_batch(sample_batch)
             sample_row = rows[0] if rows else {}
@@ -137,6 +146,12 @@ class GenericIntegrationSourceConnector(BaseConnector):
             ]
             primary_key = self._infer_primary_key(columns)
             cursor_field = self._infer_cursor_field(columns, primary_key)
+            supports_history = bool(primary_key)
+
+            if self.connector_type == 'hubspot':
+                primary_key = self._resolve_hubspot_primary_key(columns, primary_key)
+                cursor_field = self._resolve_hubspot_cursor_field(columns, primary_key)
+                supports_history = self._supports_hubspot_history(endpoint, columns, primary_key)
 
             tables.append({
                 'name': endpoint,
@@ -145,14 +160,35 @@ class GenericIntegrationSourceConnector(BaseConnector):
                 'row_count': None,
                 'columns': columns,
                 'supports_incremental': cursor_field is not None,
+                'supports_history': supports_history,
                 'primary_key': primary_key,
                 'cursor_field': cursor_field,
+                'discovery_status': 'partial' if discovery_error else 'ready',
+                'discovery_error': discovery_error,
             })
 
         return {
             'tables': tables,
             'skipped_endpoints': skipped_endpoints,
         }
+
+    def list_tables(self) -> List[Dict[str, Any]]:
+        tables = []
+        for endpoint in self._get_endpoints():
+            tables.append({
+                'name': endpoint,
+                'label': self._build_table_label(endpoint),
+                'destination_name': self._build_destination_name(endpoint),
+                'row_count': None,
+                'columns': [],
+                'supports_incremental': False,
+                'supports_history': False,
+                'primary_key': None,
+                'cursor_field': None,
+                'discovery_status': 'pending',
+                'discovery_error': None,
+            })
+        return tables
 
     def fetch_data(
         self,
@@ -165,8 +201,11 @@ class GenericIntegrationSourceConnector(BaseConnector):
         endpoint = self._resolve_endpoint_name(table_name)
         collected_rows: List[Dict[str, Any]] = []
 
-        for batch in client.stream_batches(endpoint, batch_size=max(limit or 1000, 1000)):
-            collected_rows.extend(self._normalize_batch(batch))
+        try:
+            for batch in client.stream_batches(endpoint, batch_size=max(limit or 1000, 1000)):
+                collected_rows.extend(self._normalize_batch(batch))
+        except Exception as exc:
+            raise PermissionError(self._format_runtime_error(exc)) from exc
 
         if cursor_value and cursor_field:
             collected_rows = [
@@ -224,9 +263,9 @@ class GenericIntegrationSourceConnector(BaseConnector):
             if candidate.lower() in available:
                 return available[candidate.lower()]
         for column in columns:
-            if column['name'].lower().endswith('id'):
+            if self._is_stable_identifier_column(column['name']):
                 return column['name']
-        return columns[0]['name'] if columns else None
+        return None
 
     def _infer_cursor_field(self, columns: List[Dict[str, Any]], primary_key: Optional[str]) -> Optional[str]:
         timestamp_candidates = [
@@ -238,7 +277,62 @@ class GenericIntegrationSourceConnector(BaseConnector):
         for candidate in timestamp_candidates:
             if candidate in available:
                 return available[candidate]
-        return primary_key
+        if primary_key and self._is_stable_identifier_column(primary_key):
+            return primary_key
+        return None
+
+    def _resolve_hubspot_primary_key(self, columns: List[Dict[str, Any]], fallback_primary_key: Optional[str]) -> Optional[str]:
+        available = {column['name'].lower(): column['name'] for column in columns}
+        for candidate in ['id', 'hs_object_id', 'objectid']:
+            if candidate in available:
+                return available[candidate]
+        if fallback_primary_key and self._is_stable_identifier_column(fallback_primary_key):
+            return fallback_primary_key
+        return None
+
+    def _resolve_hubspot_cursor_field(self, columns: List[Dict[str, Any]], primary_key: Optional[str]) -> Optional[str]:
+        available = {column['name'].lower(): column['name'] for column in columns}
+        for candidate in ['hs_lastmodifieddate', 'updatedat', 'updated_at', 'lastmodifieddate', 'createdate']:
+            if candidate in available:
+                return available[candidate]
+        return self._infer_cursor_field(columns, primary_key)
+
+    def _supports_hubspot_history(
+        self,
+        endpoint: str,
+        columns: List[Dict[str, Any]],
+        primary_key: Optional[str],
+    ) -> bool:
+        normalized = endpoint.strip('/').lower()
+        if '/schemas/' in normalized:
+            return False
+        if '/objects/' not in normalized:
+            return False
+        if not columns or not primary_key:
+            return False
+        if not self._is_stable_identifier_column(primary_key):
+            return False
+        return True
+
+    def _is_stable_identifier_column(self, column_name: Optional[str]) -> bool:
+        if not column_name:
+            return False
+
+        normalized = str(column_name).strip().lower()
+        if not normalized:
+            return False
+
+        blocked_names = {
+            'name', 'title', 'label', 'description', 'value', 'text',
+            'email', 'domain', 'slug', 'path', 'url'
+        }
+        if normalized in blocked_names:
+            return False
+
+        if normalized in {'id', 'key', 'objectid', 'hs_object_id'}:
+            return True
+
+        return normalized.endswith('id')
 
     def _normalize_endpoint_name(self, value: str) -> str:
         return re.sub(r'[^a-z0-9]', '', str(value).lower().split('/')[-1])
@@ -310,7 +404,20 @@ class GenericIntegrationSourceConnector(BaseConnector):
         cleaned = re.sub(r'[^a-z0-9]+', '_', label).strip('_')
         return cleaned or 'sync_table'
 
+    def _should_skip_schema_sampling(self, endpoint: str) -> bool:
+        normalized = endpoint.strip('/').lower()
+        return self.connector_type == 'bamboohr' and normalized == 'custom-reports'
+
+    def _get_sampling_skip_reason(self, endpoint: str) -> str:
+        normalized = endpoint.strip('/').lower()
+        if self.connector_type == 'bamboohr' and normalized == 'custom-reports':
+            return 'Schema sampling skipped to avoid slow BambooHR report discovery'
+        return 'Schema sampling skipped'
+
     def _format_discovery_error(self, exc: Exception) -> str:
+        return self._format_runtime_error(exc)
+
+    def _format_runtime_error(self, exc: Exception) -> str:
         message = str(exc)
 
         if 'Required scopes missing' in message:

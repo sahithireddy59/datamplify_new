@@ -117,11 +117,45 @@ class PostgreSQLConnector(BaseConnector):
                 'schema': schema,
                 'row_count': None,
                 'columns': columns,
-                'supports_incremental': True,
+                'supports_incremental': cursor_field is not None,
+                'supports_history': self._is_valid_history_key(primary_key),
                 'primary_key': primary_key,
                 'cursor_field': cursor_field
             })
         
+        cursor.close()
+        return tables
+
+    def list_tables(self) -> List[Dict[str, Any]]:
+        """Return table names quickly without loading full column metadata."""
+        conn = self._get_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        schema = self._get_active_schema()
+
+        cursor.execute("""
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = %s AND table_type = 'BASE TABLE'
+            ORDER BY table_name
+        """, (schema,))
+
+        tables = [
+            {
+                'name': row['table_name'],
+                'label': row['table_name'],
+                'destination_name': row['table_name'],
+                'schema': schema,
+                'row_count': None,
+                'columns': [],
+                'supports_incremental': False,
+                'supports_history': False,
+                'primary_key': None,
+                'cursor_field': None,
+                'discovery_status': 'pending',
+                'discovery_error': None,
+            }
+            for row in cursor.fetchall()
+        ]
         cursor.close()
         return tables
 
@@ -302,7 +336,14 @@ class PostgreSQLConnector(BaseConnector):
             (col['name'] for col in columns if col['name'].lower() in cursor_candidates),
             None
         )
-        return timestamp_field or primary_key or self._infer_identifier_column(columns)
+        if timestamp_field:
+            return timestamp_field
+        if primary_key and self._is_valid_identifier_column(primary_key):
+            return primary_key
+        inferred_identifier = self._infer_identifier_column(columns)
+        if inferred_identifier and self._is_valid_identifier_column(inferred_identifier):
+            return inferred_identifier
+        return None
 
     def _infer_identifier_column(self, columns: List[Dict[str, Any]]) -> Optional[str]:
         id_candidates = ['id', 'empid', 'employee_id', 'emp_id']
@@ -312,10 +353,33 @@ class PostgreSQLConnector(BaseConnector):
                 return by_name[candidate]
 
         suffix_match = next(
-            (col['name'] for col in columns if col['name'].lower().endswith('id')),
+            (col['name'] for col in columns if self._is_valid_identifier_column(col['name'])),
             None
         )
-        return suffix_match or (columns[0]['name'] if columns else None)
+        return suffix_match
+
+    def _is_valid_identifier_column(self, column_name: Optional[str]) -> bool:
+        if not column_name:
+            return False
+
+        normalized = str(column_name).strip().lower()
+        if not normalized:
+            return False
+
+        blocked_names = {
+            'name', 'title', 'label', 'description', 'value', 'text',
+            'email', 'domain', 'slug', 'path', 'url'
+        }
+        if normalized in blocked_names:
+            return False
+
+        if normalized in {'id', 'key', 'objectid', 'hs_object_id', 'empid', 'employee_id', 'emp_id'}:
+            return True
+
+        return normalized.endswith('id')
+
+    def _is_valid_history_key(self, primary_key: Optional[str]) -> bool:
+        return self._is_valid_identifier_column(primary_key)
 
     def _resolve_requested_field(self, columns: List[Dict[str, Any]], requested_field: Optional[str], primary_key: Optional[str]) -> Optional[str]:
         if not columns:
@@ -642,13 +706,11 @@ class PostgreSQLConnector(BaseConnector):
         ]
         insert_columns = source_columns + metadata_columns
         temp_insert_columns = ', '.join([f'"{column}"' for column in insert_columns])
-        temp_insert_values = [[row.get(column) for column in insert_columns] for row in staged_rows]
-        execute_values(
-            cursor,
-            f'INSERT INTO {temp_table} ({temp_insert_columns}) VALUES %s',
-            temp_insert_values,
-            page_size=1000
+        self._copy_insert_data(cursor, temp_table, insert_columns, staged_rows)
+        cursor.execute(
+            f'CREATE INDEX IF NOT EXISTS "temp_history_stage_pk_idx" ON {temp_table} ("{primary_key}")'
         )
+        cursor.execute(f'ANALYZE {temp_table}')
 
         changed_condition = ' OR '.join(
             [f'target."{column}" IS DISTINCT FROM incoming."{column}"' for column in comparison_columns]

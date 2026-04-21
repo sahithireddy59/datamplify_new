@@ -1,69 +1,112 @@
-<div class="container-fluid datasync-monitor-page">
-  <div class="monitor-header mb-4">
-    <div class="monitor-hero">
+<div class="main-container container-fluid TopHeader container-background p-0 datasync-monitor-page">
+  <div class="card mb-0 rounded-0 monitor-shell-card">
+    <div class="card-body monitor-shell-body">
+      <div class="monitor-header glass-card rounded-4 mb-4">
+        <div class="monitor-hero">
       <button class="btn btn-link px-0 mb-2 monitor-back-link" type="button" (click)="goBack()">
         Back to Sync Jobs
       </button>
       <h4 class="monitor-title mb-1">{{ job?.name || 'Sync Monitor' }}</h4>
       <p class="monitor-subtitle mb-0">{{ job?.description || 'Run history, status, and logs for this sync job.' }}</p>
-    </div>
-    <div class="monitor-header-actions d-flex gap-2">
-      <span class="badge" [ngClass]="getStatusClass(getJobDisplayStatus())">{{ getJobDisplayStatus() }}</span>
-      <button class="btn monitor-action-btn monitor-action-btn-secondary monitor-edit-btn" type="button" (click)="editSchedule()">
-        Edit Job Schedule
-      </button>
-      <button class="btn monitor-action-btn monitor-action-btn-outline" type="button" (click)="createNewJob()">
-        Add Sync Job
-      </button>
-      <button class="btn monitor-action-btn monitor-action-btn-primary" type="button" (click)="triggerSync()" [disabled]="loading || isJobRunInProgress()">
-        {{ isJobRunInProgress() ? 'Run In Progress' : 'Start Manual Run' }}
-      </button>
-    </div>
-  </div>
+        </div>
+        <div class="monitor-header-actions d-flex gap-2">
+          <span class="badge" [ngClass]="getStatusClass(getJobDisplayStatus())">{{ getJobDisplayStatus() }}</span>
+          <button class="btn monitor-action-btn monitor-action-btn-secondary monitor-edit-btn" type="button" (click)="editSchedule()">
+            Edit Job Schedule
+          </button>
+          <button class="btn monitor-action-btn monitor-action-btn-outline" type="button" (click)="createNewJob()">
+            Add Sync Job
+          </button>
+          <button class="btn monitor-action-btn monitor-action-btn-primary" type="button" (click)="triggerSync()" [disabled]="loading || isJobRunInProgress()">
+            {{ isJobRunInProgress() ? 'Run In Progress' : 'Start Manual Run' }}
+          </button>
+        </div>
+      </div>
 
-  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+      <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
 
-  <div *ngIf="loading" class="text-center py-5">
-    <div class="spinner-border text-primary" role="status"></div>
-  </div>
+      <div *ngIf="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+      </div>
 
-  <ng-container *ngIf="!loading && job">
+      <ng-container *ngIf="!loading && job">
     <div class="row g-3 mb-4">
       <div class="col-md-3">
-        <div class="metric-card">
+        <div class="glass-card metric-card">
           <span class="metric-label">Mode</span>
           <strong class="metric-value">{{ job.sync_mode || 'N/A' }}</strong>
         </div>
       </div>
       <div class="col-md-3">
-        <div class="metric-card">
+        <div class="glass-card metric-card">
           <span class="metric-label">Frequency</span>
           <strong class="metric-value">{{ job.sync_frequency || 'N/A' }}</strong>
         </div>
       </div>
       <div class="col-md-3">
-        <div class="metric-card">
+        <div class="glass-card metric-card">
           <span class="metric-label">Tables</span>
           <strong class="metric-value">{{ job.table_count || job.tables?.length || 0 }}</strong>
         </div>
       </div>
       <div class="col-md-3">
-        <div class="metric-card">
+        <div class="glass-card metric-card">
           <span class="metric-label">Last Sync</span>
           <strong class="metric-value">{{ formatDate(job.last_sync_at) }}</strong>
         </div>
       </div>
       <div class="col-md-3">
-        <div class="metric-card">
+        <div class="glass-card metric-card">
           <span class="metric-label">Next Sync</span>
           <strong class="metric-value">{{ formatDate(job.next_sync_at) }}</strong>
         </div>
       </div>
     </div>
 
+    <div class="card monitor-panel glass-card mb-4" *ngIf="job.tables?.length">
+      <div class="card-header monitor-panel-header">
+        <div class="monitor-toolbar d-flex justify-content-between align-items-center">
+          <h5 class="card-title monitor-card-title mb-0">Selected Tables</h5>
+          <div class="d-flex gap-2 flex-wrap">
+            <span class="badge badge-success">History: {{ getHistoryTableCount() }}</span>
+            <span class="badge badge-primary">Incremental: {{ getIncrementalTableCount() }}</span>
+            <span class="badge badge-secondary">Resync: {{ getNotApplicableTableCount() }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-body monitor-panel-body">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Source Table</th>
+                <th>Destination Table</th>
+                <th>Mode</th>
+                <th>Cursor</th>
+                <th>Primary Key</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let table of job.tables">
+                <td [title]="table.source_table">{{ getDisplaySourceTableName(table) }}</td>
+                <td [title]="table.destination_table">{{ getDisplayDestinationTableName(table) }}</td>
+                <td>
+                  <span class="badge" [ngClass]="getTableModeBadgeClass(table)">
+                    {{ getTableModeLabel(table) }}
+                  </span>
+                </td>
+                <td>{{ table.cursor_field || '-' }}</td>
+                <td>{{ table.primary_key_field || '-' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <div class="row g-4">
       <div class="col-lg-7">
-        <div class="card monitor-panel">
+        <div class="card monitor-panel glass-card">
           <div class="card-header monitor-panel-header">
             <h5 class="card-title monitor-card-title mb-0">Recent Runs</h5>
           </div>
@@ -98,7 +141,7 @@
       </div>
 
       <div class="col-lg-5">
-        <div class="card monitor-panel">
+        <div class="card monitor-panel glass-card">
           <div class="card-header monitor-panel-header">
             <div class="monitor-toolbar d-flex justify-content-between align-items-center">
               <h5 class="card-title monitor-card-title mb-0">Run Logs</h5>
@@ -130,8 +173,10 @@
         </div>
       </div>
     </div>
-  </ng-container>
-  <button class="sync-fab" type="button" (click)="createNewJob()" title="Add Sync Job">
-    +
-  </button>
+      </ng-container>
+      <button class="sync-fab" type="button" (click)="createNewJob()" title="Add Sync Job">
+        +
+      </button>
+    </div>
+  </div>
 </div>

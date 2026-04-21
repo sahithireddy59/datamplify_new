@@ -1,7 +1,10 @@
 from django.utils import timezone
+from django.core.mail import send_mail
+from django.conf import settings
 from .models import SyncJob, SyncRun, SyncTable, SyncLog, SyncCursor
 from .connectors import get_connector
 from .schedule_utils import calculate_next_sync_at
+from authentication.models import UserProfile
 import traceback
 from datetime import datetime
 
@@ -63,7 +66,10 @@ class SyncEngine:
                 except SyncInterrupted:
                     raise
                 except Exception as e:
-                    self._log('error', f'Failed to sync table {sync_table.source_table}: {str(e)}', sync_table)
+                    if self._is_permission_skip_error(e):
+                        self._log('warning', f'Skipping table {sync_table.source_table}: {str(e)}', sync_table)
+                    else:
+                        self._log('error', f'Failed to sync table {sync_table.source_table}: {str(e)}', sync_table)
                     total_failed += 1
             
             # Update run statistics
@@ -115,6 +121,7 @@ class SyncEngine:
                 self.sync_job.last_sync_at
             )
             self.sync_job.save()
+            self._send_completion_email()
     
     def _test_connections(self):
         """Test source and destination connections"""
@@ -431,6 +438,10 @@ class SyncEngine:
     def _can_stream_write(self, write_mode: str) -> bool:
         return write_mode in ['insert', 'upsert']
 
+    def _is_permission_skip_error(self, error: Exception) -> bool:
+        message = str(error).lower()
+        return 'missing scopes' in message or 'permission_denied' in message
+
     def _set_connector_context(self, sync_table: SyncTable, sync_mode: str):
         context = {
             'sync_job_id': str(self.sync_job.id),
@@ -447,3 +458,39 @@ class SyncEngine:
             self.source_connector.set_runtime_context(**context)
         if hasattr(self.dest_connector, 'set_runtime_context'):
             self.dest_connector.set_runtime_context(**context)
+
+    def _send_completion_email(self):
+        try:
+            user = UserProfile.objects.filter(id=self.sync_job.user_id).only('email', 'username').first()
+            recipient_email = self.sync_job.notification_email or (user.email if user else None)
+            if not recipient_email:
+                return
+
+            subject = f"DataSync job {self.sync_job.name} completed with status {self.sync_run.status}"
+            message = (
+                f"Hi {(user.username if user else recipient_email) or recipient_email},\n\n"
+                f"Your DataSync job has finished.\n\n"
+                f"Job Name: {self.sync_job.name}\n"
+                f"Run Status: {self.sync_run.status}\n"
+                f"Trigger Type: {self.sync_run.trigger_type}\n"
+                f"Tables Synced: {self.sync_run.tables_synced}\n"
+                f"Rows Inserted: {self.sync_run.rows_inserted}\n"
+                f"Rows Updated: {self.sync_run.rows_updated}\n"
+                f"Rows Deleted: {self.sync_run.rows_deleted}\n"
+                f"Rows Failed: {self.sync_run.rows_failed}\n"
+                f"Started At: {self.sync_run.started_at}\n"
+                f"Completed At: {self.sync_run.completed_at}\n"
+            )
+
+            if self.sync_run.error_message:
+                message += f"\nError: {self.sync_run.error_message}\n"
+
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[recipient_email],
+                fail_silently=True,
+            )
+        except Exception:
+            self._log('warning', 'Failed to send sync completion email')

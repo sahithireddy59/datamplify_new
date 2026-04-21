@@ -1,53 +1,88 @@
-<div class="container-fluid datasync-schedule-page">
-  <div class="row justify-content-center">
-    <div class="col-lg-7">
-      <div class="card schedule-card">
-        <div class="card-header schedule-card-header d-flex justify-content-between align-items-center">
-          <div class="schedule-header-copy">
-            <h4 class="card-title schedule-title mb-1">Edit Job Schedule</h4>
-            <p class="schedule-subtitle mb-0">{{ job?.name || 'Sync Job' }}</p>
-          </div>
-          <button class="btn schedule-back-btn" type="button" (click)="cancel()">Back</button>
+<div class="main-container container-fluid TopHeader container-background p-0 datasync-schedule-page">
+  <div class="card mb-0 rounded-0 schedule-shell-card">
+    <div class="card-body schedule-shell-body">
+      <div class="schedule-toolbar glass-card rounded-4">
+        <div class="schedule-toolbar-copy">
+          <h4 class="schedule-page-title mb-1">Edit Sync Schedule</h4>
+          <p class="schedule-page-subtitle mb-0">{{ job?.name || 'Sync Job' }}</p>
         </div>
-        <div class="card-body schedule-card-body">
-          <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+        <button class="btn schedule-back-btn" type="button" (click)="cancel()">Back</button>
+      </div>
 
-          <div *ngIf="loading" class="text-center py-5">
-            <div class="spinner-border text-primary" role="status"></div>
-          </div>
-
-          <div *ngIf="!loading">
-            <div class="mb-3 schedule-field">
-              <label class="form-label schedule-label">Schedule Frequency</label>
-              <select class="form-select schedule-select" [(ngModel)]="syncFrequency">
-                <option value="manual">Manual</option>
-                <option value="15min">Every 15 minutes</option>
-                <option value="hourly">Hourly</option>
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="custom">Custom Cron</option>
-              </select>
+      <div class="row justify-content-center schedule-content-row">
+        <div class="col-xl-8 col-lg-9">
+          <div class="card schedule-card glass-card">
+            <div class="card-header schedule-card-header">
+              <div class="schedule-header-copy">
+                <h5 class="card-title schedule-title mb-1">Schedule Settings</h5>
+                <p class="schedule-subtitle mb-0">Update how often this sync job runs.</p>
+              </div>
             </div>
+            <div class="card-body schedule-card-body">
+              <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
 
-            <div class="mb-3 schedule-field" *ngIf="syncFrequency === 'custom'">
-              <label class="form-label schedule-label">Cron Expression</label>
-              <input
-                type="text"
-                class="form-control schedule-input"
-                [(ngModel)]="cronExpression"
-                placeholder="0 * * * *">
-            </div>
+              <div *ngIf="loading" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+              </div>
 
-            <div class="alert alert-secondary schedule-summary">
-              <strong>Current mode:</strong> {{ job?.sync_mode || 'unknown' }}<br>
-              <strong>Next sync:</strong> {{ job?.next_sync_at ? (job?.next_sync_at | date:'medium') : 'Not scheduled yet' }}
-            </div>
+              <div *ngIf="!loading" class="schedule-form-grid">
+                <div class="schedule-form-panel">
+                  <div class="mb-3 schedule-field">
+                    <label class="form-label schedule-label">Schedule Frequency</label>
+                    <select class="form-select schedule-select" [(ngModel)]="syncFrequency">
+                      <option value="manual">Manual</option>
+                      <option value="15min">Every 15 minutes</option>
+                      <option value="hourly">Hourly</option>
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="custom">Custom Cron</option>
+                    </select>
+                    <small class="schedule-help-text">Choose when the sync job should run automatically.</small>
+                  </div>
 
-            <div class="d-flex justify-content-end gap-2 schedule-actions">
-              <button class="btn schedule-action-btn schedule-action-btn-secondary" type="button" (click)="cancel()">Cancel</button>
-              <button class="btn schedule-action-btn schedule-action-btn-primary" type="button" (click)="saveSchedule()" [disabled]="saving">
-                {{ saving ? 'Saving...' : 'Save Schedule' }}
-              </button>
+                  <div class="mb-3 schedule-field" *ngIf="syncFrequency === 'custom'">
+                    <label class="form-label schedule-label">Cron Expression</label>
+                    <input
+                      type="text"
+                      class="form-control schedule-input"
+                      [(ngModel)]="cronExpression"
+                      placeholder="0 * * * *">
+                    <small class="schedule-help-text">Example: <code>0 * * * *</code> runs every hour.</small>
+                  </div>
+
+                  <div class="mb-3 schedule-field">
+                    <label class="form-label schedule-label">Notification Email</label>
+                    <input
+                      type="email"
+                      class="form-control schedule-input"
+                      [(ngModel)]="notificationEmail"
+                      placeholder="Leave empty to use your login email">
+                    <small class="schedule-help-text">Sync completion mail will be sent to this address.</small>
+                  </div>
+                </div>
+
+                <div class="schedule-summary-panel">
+                  <div class="schedule-summary-card">
+                    <span class="schedule-summary-label">Current mode</span>
+                    <strong class="schedule-summary-value">{{ job?.sync_mode || 'unknown' }}</strong>
+                  </div>
+                  <div class="schedule-summary-card">
+                    <span class="schedule-summary-label">Next sync</span>
+                    <strong class="schedule-summary-value">{{ job?.next_sync_at ? (job?.next_sync_at | date:'medium') : 'Not scheduled yet' }}</strong>
+                  </div>
+                  <div class="schedule-summary-card">
+                    <span class="schedule-summary-label">Notification email</span>
+                    <strong class="schedule-summary-value">{{ notificationEmail || 'Login email' }}</strong>
+                  </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 schedule-actions">
+                  <button class="btn schedule-action-btn schedule-action-btn-secondary" type="button" (click)="cancel()">Cancel</button>
+                  <button class="btn schedule-action-btn schedule-action-btn-primary" type="button" (click)="saveSchedule()" [disabled]="saving">
+                    {{ saving ? 'Saving...' : 'Save Schedule' }}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

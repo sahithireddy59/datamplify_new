@@ -38,6 +38,18 @@ class BaseConnector(ABC):
             list: [{'name': str, 'row_count': int, 'columns': [...]}]
         """
         pass
+
+    def list_tables(self) -> List[Dict[str, Any]]:
+        """
+        Return a lightweight list of tables/objects for fast UI loading.
+
+        Falls back to full schema discovery when a connector does not provide
+        a cheaper implementation.
+        """
+        discovery_result = self.discover_schema()
+        if isinstance(discovery_result, dict):
+            return discovery_result.get('tables', [])
+        return discovery_result
     
     @abstractmethod
     def fetch_data(self, table_name: str, cursor_value: Optional[str] = None, 

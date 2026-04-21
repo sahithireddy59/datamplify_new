@@ -518,7 +518,7 @@ BAMBOOHR_CONFIG = {
 
 BAMBOOHR_KEYS = {'datasets':'datasets','webhooks':'webhooks','custom-reports':'reports','applicant_tracking/applications':'applications',
  'benefit/member_benefit':'members','benefitcoverages':'Benefit Coverages','employeedependents':'Employee Dependents',
- 'employees/directory':'fields','files/view':'categories','meta/time_off/types':'timeOffTypes'}
+ 'employees/directory':'employees','files/view':'categories','meta/time_off/types':'timeOffTypes'}
 
 SHOPIFY_CONFIG = {
     **{e :{
@@ -2402,24 +2402,35 @@ class BambooHrClient:
 
                 if not response :
                     break
-                page +=1
                 key = BAMBOOHR_KEYS.get(endpoint,None)
-                if key :
-                    records = response.get(key)
+
+                if isinstance(response, dict):
+                    if key:
+                        records = response.get(key, [])
+                    else:
+                        records = response
+                    pagination = response.get('pagination')
                 else:
                     records = response
-       
+                    pagination = None
+
+                if isinstance(records, dict):
+                    records = [records]
+                elif not isinstance(records, list):
+                    records = []
+
                 batch.extend(records)
 
 
                 if len(batch) >= batch_size:
                     yield batch
                     batch = []
-                if response.get('pagination',None):
-                    if  response.get('pagination')['total_pages'] == response.get('pagination')['current_page']+1:
+
+                if pagination:
+                    if pagination['total_pages'] <= pagination['current_page'] + 1:
                         break
                     else:
-                        page+=1
+                        page += 1
                 else:
                     break
 

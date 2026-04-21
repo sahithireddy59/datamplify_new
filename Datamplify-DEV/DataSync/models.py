@@ -118,6 +118,7 @@ class SyncJob(models.Model):
     sync_mode = models.CharField(max_length=50, choices=SYNC_MODES, default='full')
     sync_frequency = models.CharField(max_length=20, choices=SYNC_FREQUENCIES, default='manual')
     cron_expression = models.CharField(max_length=100, null=True, blank=True)
+    notification_email = models.EmailField(null=True, blank=True)
     
     # Status
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='configuring')
